@@ -28,6 +28,7 @@ export function DiscoverScreen(_props: Props) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('All');
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [slotChoice, setSlotChoice] = useState<string | null>(null);
   // Skeleton pass on first open — becomes the real fetch state with Supabase.
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -103,8 +104,15 @@ export function DiscoverScreen(_props: Props) {
           list.map((c) => {
             const saved = savedIds.includes(c.id);
             const open = expanded === c.id;
+            const chosen = open ? slotChoice : null;
             return (
-              <Card key={c.id} onPress={() => setExpanded(open ? null : c.id)}>
+              <Card
+                key={c.id}
+                onPress={() => {
+                  setExpanded(open ? null : c.id);
+                  setSlotChoice(null);
+                }}
+              >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
                   <View
                     style={{
@@ -121,11 +129,24 @@ export function DiscoverScreen(_props: Props) {
                     </Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 16, fontWeight: '600', color: t.text }}>{c.name}</Text>
+                    {/* Airbnb result line: name left, star + rating right */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s }}>
+                      <Text numberOfLines={1} style={{ flex: 1, fontSize: 16, fontWeight: '600', color: t.text }}>
+                        {c.name}
+                      </Text>
+                      {c.rating > 0 ? (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                          <Ionicons name="star" size={12} color={t.text} />
+                          <Text style={{ fontSize: 13, fontWeight: '600', color: t.text }}>
+                            {c.rating.toFixed(1)}
+                          </Text>
+                        </View>
+                      ) : null}
+                    </View>
                     <Text style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>
                       {c.category}
-                      {c.rating > 0 ? ` · ${c.rating.toFixed(1)}` : ''}
                       {c.distanceKm > 0 ? ` · ${c.distanceKm} km` : ''}
+                      {c.slots.length > 0 ? ` · ${c.slots.length} slots open` : ''}
                     </Text>
                   </View>
                   <Pressable
@@ -153,28 +174,64 @@ export function DiscoverScreen(_props: Props) {
                   </Pressable>
                 </View>
                 {open && c.slots.length > 0 ? (
-                  <View style={{ marginTop: spacing.m, borderTopWidth: 1, borderTopColor: t.separator, paddingTop: spacing.m }}>
-                    <Text style={[type.label, { color: t.muted, marginBottom: spacing.s }]}>
-                      Next available
-                    </Text>
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.s }}>
-                      {c.slots.map((s) => (
+                  <View style={{ marginTop: spacing.m, borderTopWidth: 1, borderTopColor: t.separator, paddingTop: spacing.m, gap: spacing.s }}>
+                    <Text style={[type.label, { color: t.muted }]}>Next available</Text>
+                    {/* Uber option rows: outcome subline, selected = 2px ink outline */}
+                    {c.slots.map((s) => {
+                      const sel = chosen === s;
+                      return (
                         <Pressable
                           key={s}
                           accessibilityRole="button"
-                          onPress={() => showToast(`Requested ${s} at ${c.name}`)}
+                          accessibilityState={{ selected: sel }}
+                          onPress={() => setSlotChoice(sel ? null : s)}
                           style={({ pressed }) => ({
-                            paddingVertical: 9,
-                            paddingHorizontal: 14,
-                            borderRadius: radii.pill,
-                            backgroundColor: t.accentSoft,
-                            transform: [{ scale: pressed ? 0.94 : 1 }],
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: spacing.m,
+                            paddingVertical: 11,
+                            paddingHorizontal: spacing.m,
+                            borderRadius: radii.l,
+                            borderWidth: sel ? 2 : 1,
+                            borderColor: sel ? t.text : t.border,
+                            backgroundColor: sel ? t.surfaceAlt : t.bg,
+                            transform: [{ scale: pressed ? 0.98 : 1 }],
                           })}
                         >
-                          <Text style={{ fontSize: 13, fontWeight: '600', color: t.accent }}>{s}</Text>
+                          <Ionicons name="time-outline" size={17} color={sel ? t.text : t.muted} />
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>{s}</Text>
+                            <Text style={{ fontSize: 12, color: t.sub, marginTop: 1 }}>
+                              45 min · with first available
+                            </Text>
+                          </View>
+                          {sel ? <Ionicons name="checkmark-circle" size={19} color={t.accent} /> : null}
                         </Pressable>
-                      ))}
-                    </View>
+                      );
+                    })}
+                    {/* CTA names the selection (Uber confirm pattern) */}
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityState={{ disabled: !chosen }}
+                      onPress={() => {
+                        if (!chosen) return;
+                        showToast(`Requested ${chosen} at ${c.name}`);
+                        setExpanded(null);
+                        setSlotChoice(null);
+                      }}
+                      style={({ pressed }) => ({
+                        marginTop: spacing.xs,
+                        paddingVertical: 13,
+                        borderRadius: radii.l,
+                        alignItems: 'center',
+                        backgroundColor: chosen ? t.accent : t.faint,
+                        transform: [{ scale: pressed && chosen ? 0.98 : 1 }],
+                      })}
+                    >
+                      <Text style={{ color: chosen ? t.onAccent : t.sub, fontSize: 15, fontWeight: '700' }}>
+                        {chosen ? `Request ${chosen}` : 'Pick a time'}
+                      </Text>
+                    </Pressable>
                   </View>
                 ) : null}
               </Card>

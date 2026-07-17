@@ -10,7 +10,13 @@ predictable.
 
 **Expo Snack (no install):** open
 [snack.expo.dev/@git/github.com/xin10ylop/eterna](https://snack.expo.dev/@git/github.com/xin10ylop/eterna)
-— run in the browser, or scan the QR with the Expo Go app for a real phone.
+— run in the browser, or scan a QR below with your phone camera / the Expo Go
+app ([iOS](https://apps.apple.com/app/expo-go/id982107779) ·
+[Android](https://play.google.com/store/apps/details?id=host.exp.exponent)).
+
+| `main` | design branch (`claude/eterna-ui-design-research-dgieiv`) |
+| :---: | :---: |
+| ![Snack QR — main](assets/qr/snack-main.png) | ![Snack QR — design branch](assets/qr/snack-branch.png) |
 
 **Locally:**
 
@@ -19,13 +25,13 @@ npm install
 npx expo start
 ```
 
-Scan the QR with Expo Go (iOS/Android).
+Scan the terminal QR with Expo Go (iOS/Android).
 
 ## App map
 
 | Area | What it does |
 | --- | --- |
-| Onboarding | Welcome → value slides → email sign-up (validated) → 6-digit verify → name → birth year + consent → height/weight (metric/imperial) → routine questionnaire → avatar studio → notifications → ready. Adapted from top-app patterns (Tonal, Equinox+, MacroFactor) researched on Mobbin. |
+| Onboarding | Welcome → value slides → sign-up (joined fields, "why we ask" captions) → 6-digit verify → name → birth-year wheel + consent → height/weight wheels (metric/imperial) → routine questionnaire → "preparing your plan" checklist + personalized recap → avatar studio (live pack preview) → ritual-time reminders → confetti "ready" celebration. Patterns researched on Mobbin: Airbnb, Duolingo, Uber, Hims, Cal AI, Apple Health, Stoic. |
 | Home | Rotatable avatar with **fixed zone markers** (hair, face, lips, body, hands, hips, legs). A zone with due items breathes with a soft aura and shows a count; calm zones show a faint glass ring. Swipeable attention cards. Profile lives top-right. |
 | Planning | Calendar-first tab: Month / Week / Day (iOS-style grid + day agenda) with booked appointments, plus a Rituals segment grouping everything by urgency. |
 | Treatment detail | Status, cadence, clinic, reminder toggle, and the full session history: date, exact procedure detail (e.g. "0.5 ml Restylane Kysse — mid-lip"), practitioner **with role** (nurse injector, colorist, laser technician…), products, price, and practitioner notes when they exist. |
@@ -61,14 +67,25 @@ stays on device.
 
 ## Avatar pipeline
 
-The viewer (`src/components/avatar/`) is turntable-ready: it takes N frames
-and drag-rotates through them (with a graceful tilt fallback for a single
-frame). Planned packs, generated with Higgsfield:
+The viewer (`src/components/avatar/`) drag-rotates through an 8-view
+turnaround. Three packs are live in `assets/avatar/`, generated with
+Higgsfield (Nano Banana 4K turnaround sheets, sliced + background-removed by
+`design/` tooling) and mapped from the avatar studio's skin-tone choice:
 
-1. 8-view turnaround of the base figure (image generation)
-2. Variant packs per skin tone / body shape / hair / outfit chosen in the
-   avatar studio
-3. Optionally a true textured GLB mesh (image-to-3D) behind the same props
+1. `base/` — light skin, brown hair (default)
+2. `tan/` — warm tan skin, espresso hair
+3. `deep/` — deep skin, black hair
 
-Marker coordinates are measured per frame, so zone glows stay pinned to the
-body at every angle.
+Next steps: packs for the remaining swatches (hair length/color, outfit,
+body shape) and optionally a true textured GLB mesh behind the same props
+(image-to-3D priced at ~30 Higgsfield credits, ~35 rigged).
+
+## Animation
+
+Micro-animations follow the "Duolingo placement, Stoic volume" rule — only at
+completion moments, never during input. Lottie files in `assets/lottie/`
+(procedurally generated, brand palette): `confetti.json` plays on the
+onboarding "ready" screen and booking success; `sparkles.json` on the
+welcome hero and the "preparing your plan" checklist. Code-driven animation
+(entrances, drawn success check, skeleton shimmer, zone auras) lives in
+`src/components/anim/`.

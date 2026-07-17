@@ -3,9 +3,10 @@ import { Dimensions, Image, Pressable, ScrollView, Text, View } from 'react-nati
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { Screen } from '../../components/ui';
+import { Screen, TimeChip } from '../../components/ui';
 import { Entrance } from '../../components/anim/Entrance';
 import { AvatarViewer } from '../../components/avatar/AvatarViewer';
+import { packForAvatar } from '../../components/avatar/config';
 import { ZoneMarkers } from '../../components/avatar/ZoneMarkers';
 import { ZONES } from '../../data/seed';
 import { needsAttention, nextDueISO, treatmentStatus, zoneAttentionCount } from '../../services/logic';
@@ -89,8 +90,8 @@ export function HomeScreen({ navigation }: Props) {
           })}
         >
           <Image
-            source={require('../../../assets/avatar/front.png')}
-            style={{ height: 96, width: 96 * 0.442, marginTop: 2 }}
+            source={packForAvatar(profile?.avatar).frames[0]}
+            style={{ height: 96, width: 96 * packForAvatar(profile?.avatar).aspect, marginTop: 2 }}
           />
         </Pressable>
       </View>
@@ -98,7 +99,10 @@ export function HomeScreen({ navigation }: Props) {
       {/* avatar */}
       <View style={{ flex: 1, justifyContent: 'center' }}>
         <Entrance spring distance={24}>
-          <AvatarViewer height={Math.min(430, Dimensions.get('window').height * 0.46)}>
+          <AvatarViewer
+            height={Math.min(430, Dimensions.get('window').height * 0.46)}
+            pack={packForAvatar(profile?.avatar)}
+          >
             <ZoneMarkers
               data={zoneData}
               onOpenZone={(zone) => navigation.navigate('ZoneDetail', { zone })}
@@ -140,8 +144,10 @@ export function HomeScreen({ navigation }: Props) {
             decelerationRate="fast"
             contentContainerStyle={{ paddingHorizontal: spacing.xl, gap: spacing.m }}
           >
-            {attention.map(({ tr, status }) => {
+            {attention.map(({ tr }) => {
               const clinic = clinics.find((c) => c.id === tr.clinicId);
+              const zone = ZONES.find((z) => z.id === tr.zone);
+              const due = nextDueISO(tr);
               return (
                 <Pressable
                   key={tr.id}
@@ -154,43 +160,40 @@ export function HomeScreen({ navigation }: Props) {
                     borderWidth: 1,
                     borderColor: t.border,
                     padding: spacing.l,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: spacing.m,
+                    gap: spacing.s,
                     ...cardShadow,
                     transform: [{ scale: pressed ? 0.98 : 1 }],
                   })}
                 >
-                  <View
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 4,
-                      backgroundColor: status === 'overdue' ? t.attention : t.accent,
-                    }}
-                  />
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
-                      {tr.name}
-                    </Text>
-                    <Text numberOfLines={1} style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>
-                      {humanizeDue(nextDueISO(tr))} · {clinic?.name}
-                    </Text>
+                  {/* metric-card anatomy: zone eyebrow left, proximity chip right */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Text style={[type.label, { color: t.accent }]}>{zone?.label ?? 'Ritual'}</Text>
+                    <TimeChip dueISO={due} />
                   </View>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={`Book ${tr.name}`}
-                    onPress={() => navigation.navigate('Book', { treatmentId: tr.id })}
-                    style={({ pressed }) => ({
-                      paddingVertical: 9,
-                      paddingHorizontal: 15,
-                      borderRadius: radii.pill,
-                      backgroundColor: t.accent,
-                      transform: [{ scale: pressed ? 0.94 : 1 }],
-                    })}
-                  >
-                    <Text style={{ color: t.onAccent, fontSize: 14, fontWeight: '600' }}>Book</Text>
-                  </Pressable>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: '600', color: t.text }}>
+                        {tr.name}
+                      </Text>
+                      <Text numberOfLines={1} style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>
+                        {humanizeDue(due)} · {clinic?.name}
+                      </Text>
+                    </View>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Book ${tr.name}`}
+                      onPress={() => navigation.navigate('Book', { treatmentId: tr.id })}
+                      style={({ pressed }) => ({
+                        paddingVertical: 9,
+                        paddingHorizontal: 15,
+                        borderRadius: radii.pill,
+                        backgroundColor: t.accent,
+                        transform: [{ scale: pressed ? 0.94 : 1 }],
+                      })}
+                    >
+                      <Text style={{ color: t.onAccent, fontSize: 14, fontWeight: '600' }}>Book</Text>
+                    </Pressable>
+                  </View>
                 </Pressable>
               );
             })}

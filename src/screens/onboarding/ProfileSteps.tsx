@@ -1,12 +1,25 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Chip, Field, Segmented } from '../../components/ui';
+import { Chip, Field, Segmented, WheelPicker } from '../../components/ui';
 import { OnboardingShell } from './OnboardingShell';
 import { spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
-import { validateHeightCm, validateName, validateWeightKg } from '../../lib/validation';
+import { validateName } from '../../lib/validation';
 import type { RootStackParamList } from '../../navigation/types';
+
+/**
+ * Profile steps. One question per screen; every screen that asks for personal
+ * data carries a one-line "why we ask" caption and a reassurance footnote
+ * (Stoic / Hims intake pattern) — trust is the whole game for body data.
+ */
+
+function WhyWeAsk({ children }: { children: React.ReactNode }) {
+  const t = useTheme();
+  return (
+    <Text style={{ fontSize: 12, color: t.muted, lineHeight: 17 }}>{children}</Text>
+  );
+}
 
 /* ----------------------------------- Name ----------------------------------- */
 
@@ -59,6 +72,7 @@ export function NameScreen({ navigation }: NativeStackScreenProps<RootStackParam
           autoComplete="family-name"
           textContentType="familyName"
         />
+        <WhyWeAsk>Only your first name appears in the app — on your greeting, never shared.</WhyWeAsk>
       </View>
     </OnboardingShell>
   );
@@ -69,12 +83,11 @@ export function NameScreen({ navigation }: NativeStackScreenProps<RootStackParam
 export function BirthdayScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Birthday'>) {
   const t = useTheme();
   const setDraft = useEterna((s) => s.setDraft);
-  const now = new Date();
-  const years = useMemo(
-    () => Array.from({ length: 70 }, (_, i) => now.getFullYear() - 16 - i),
-    [now],
-  );
-  const [year, setYear] = useState<number | null>(null);
+  const years = useMemo(() => {
+    const now = new Date().getFullYear();
+    return Array.from({ length: 70 }, (_, i) => String(now - 16 - i));
+  }, []);
+  const [yearIdx, setYearIdx] = useState(14); // a sensible default, ~30
   const [agreed, setAgreed] = useState(false);
 
   return (
@@ -83,23 +96,14 @@ export function BirthdayScreen({ navigation }: NativeStackScreenProps<RootStackP
       title="What year were you born?"
       subtitle="Used only to tailor treatment cadences to you."
       cta="Continue"
-      ctaDisabled={year === null || !agreed}
+      ctaDisabled={!agreed}
       onNext={() => {
-        if (year === null) return;
-        setDraft({ birthdayISO: `${year}-01-01` });
+        setDraft({ birthdayISO: `${years[yearIdx]}-01-01` });
         navigation.navigate('Metrics');
       }}
     >
-      <View style={{ gap: spacing.l, paddingTop: spacing.s }}>
-        <ScrollView
-          style={{ maxHeight: 260 }}
-          contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.s }}
-          showsVerticalScrollIndicator={false}
-        >
-          {years.map((y) => (
-            <Chip key={y} label={String(y)} selected={year === y} onPress={() => setYear(y)} />
-          ))}
-        </ScrollView>
+      <View style={{ gap: spacing.xl, paddingTop: spacing.s, alignItems: 'center' }}>
+        <WheelPicker items={years} index={yearIdx} onChange={setYearIdx} width={140} />
         <Pressable
           accessibilityRole="checkbox"
           accessibilityState={{ checked: agreed }}
@@ -133,24 +137,27 @@ export function BirthdayScreen({ navigation }: NativeStackScreenProps<RootStackP
 
 /* ------------------------------ Height & weight ------------------------------ */
 
+const CM = Array.from({ length: 61 }, (_, i) => 140 + i); // 140–200
+const KG = Array.from({ length: 101 }, (_, i) => 40 + i); // 40–140
+const IN = Array.from({ length: 25 }, (_, i) => 55 + i); // 4'7"–6'7"
+const LB = Array.from({ length: 211 }, (_, i) => 90 + i); // 90–300
+
+const ftIn = (inches: number) => `${Math.floor(inches / 12)}'${inches % 12}"`;
+
 export function MetricsScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Metrics'>) {
-  const t = useTheme();
   const setDraft = useEterna((s) => s.setDraft);
   const [unit, setUnit] = useState('Metric');
-  const [height, setHeight] = useState('');
-  const [weight, setWeight] = useState('');
-  const [err, setErr] = useState<string | null>(null);
   const metric = unit === 'Metric';
+  // wheels pre-seeded to sensible defaults (Cal AI pattern)
+  const [hIdx, setHIdx] = useState(CM.indexOf(168));
+  const [wIdx, setWIdx] = useState(KG.indexOf(58));
+  const [hIdxIn, setHIdxIn] = useState(IN.indexOf(66));
+  const [wIdxLb, setWIdxLb] = useState(LB.indexOf(128));
 
   const submit = () => {
-    const h = parseFloat(height.replace(',', '.'));
-    const w = parseFloat(weight.replace(',', '.'));
-    const hCm = metric ? h : Math.round(h * 2.54); // inches → cm
-    const wKg = metric ? w : Math.round(w * 0.4536); // lb → kg
-    const e = validateHeightCm(hCm) ?? validateWeightKg(wKg);
-    setErr(e);
-    if (e) return;
-    setDraft({ heightCm: Math.round(hCm), weightKg: Math.round(wKg) });
+    const hCm = metric ? CM[hIdx] : Math.round(IN[hIdxIn] * 2.54);
+    const wKg = metric ? KG[wIdx] : Math.round(LB[wIdxLb] * 0.4536);
+    setDraft({ heightCm: hCm, weightKg: wKg });
     navigation.navigate('Routine');
   };
 
@@ -160,26 +167,51 @@ export function MetricsScreen({ navigation }: NativeStackScreenProps<RootStackPa
       title="Your measurements"
       subtitle="They keep body treatments and dosage history in context."
       cta="Continue"
-      ctaDisabled={!height || !weight}
       onNext={submit}
     >
-      <View style={{ gap: spacing.l, paddingTop: spacing.s }}>
+      <View style={{ gap: spacing.xl, paddingTop: spacing.s }}>
         <Segmented options={['Metric', 'Imperial']} value={unit} onChange={setUnit} />
-        <Field
-          label={metric ? 'Height (cm)' : 'Height (inches)'}
-          value={height}
-          onChangeText={setHeight}
-          placeholder={metric ? '168' : '66'}
-          keyboardType="numeric"
-        />
-        <Field
-          label={metric ? 'Weight (kg)' : 'Weight (lb)'}
-          value={weight}
-          onChangeText={setWeight}
-          placeholder={metric ? '58' : '128'}
-          keyboardType="numeric"
-        />
-        {err ? <Text style={{ color: t.attention, fontSize: 13 }}>{err}</Text> : null}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
+          {metric ? (
+            <>
+              <WheelPicker
+                label="Height"
+                items={CM.map((v) => `${v} cm`)}
+                index={hIdx}
+                onChange={setHIdx}
+                width={120}
+              />
+              <WheelPicker
+                label="Weight"
+                items={KG.map((v) => `${v} kg`)}
+                index={wIdx}
+                onChange={setWIdx}
+                width={120}
+              />
+            </>
+          ) : (
+            <>
+              <WheelPicker
+                label="Height"
+                items={IN.map(ftIn)}
+                index={hIdxIn}
+                onChange={setHIdxIn}
+                width={120}
+              />
+              <WheelPicker
+                label="Weight"
+                items={LB.map((v) => `${v} lb`)}
+                index={wIdxLb}
+                onChange={setWIdxLb}
+                width={120}
+              />
+            </>
+          )}
+        </View>
+        <WhyWeAsk>
+          This never limits what you can do in Eterna — it only keeps practitioner dosage notes in
+          context.
+        </WhyWeAsk>
       </View>
     </OnboardingShell>
   );
@@ -211,7 +243,7 @@ export function RoutineScreen({ navigation }: NativeStackScreenProps<RootStackPa
       ctaDisabled={picked.length === 0}
       onNext={() => {
         setDraft({ routine: picked });
-        navigation.navigate('AvatarStudio');
+        navigation.navigate('Plan');
       }}
     >
       <View style={{ gap: spacing.xl, paddingTop: spacing.s }}>
@@ -225,6 +257,7 @@ export function RoutineScreen({ navigation }: NativeStackScreenProps<RootStackPa
             </View>
           </View>
         ))}
+        <WhyWeAsk>This builds your ritual plan — nothing here is ever shared.</WhyWeAsk>
       </View>
     </OnboardingShell>
   );

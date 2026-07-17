@@ -3,6 +3,7 @@ import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Chip } from '../../components/ui';
 import { OnboardingShell } from './OnboardingShell';
+import { packForAvatar } from '../../components/avatar/config';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import {
@@ -71,9 +72,11 @@ export function AvatarStudioScreen({
   const setAvatar = useEterna((s) => s.setAvatar);
   const avatar = profile ? profile.avatar : draft.avatar;
 
+  const pack = packForAvatar(avatar);
+
   return (
     <OnboardingShell
-      step={fromProfile ? null : 4}
+      step={fromProfile ? null : 5}
       title="Make her yours"
       subtitle="Skin, shape, hair and outfit — your avatar should feel like you."
       cta={fromProfile ? 'Save' : 'Continue'}
@@ -82,12 +85,12 @@ export function AvatarStudioScreen({
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: spacing.xl, paddingTop: spacing.s }}>
         <View style={{ alignItems: 'center' }}>
           <Image
-            source={require('../../../assets/avatar/front.png')}
-            style={{ height: 200, width: 200 * 0.442, resizeMode: 'contain' }}
+            source={pack.frames[0]}
+            style={{ height: 200, width: 200 * pack.aspect, resizeMode: 'contain' }}
             accessibilityLabel="Avatar preview"
           />
           <Text style={{ fontSize: 12, color: t.muted, marginTop: spacing.s, textAlign: 'center' }}>
-            Preview renders update as new avatar packs are added.
+            Rendered with Higgsfield — the preview follows your skin tone.
           </Text>
         </View>
 
@@ -123,7 +126,7 @@ export function AvatarStudioScreen({
           }}
         >
           <Text style={{ fontSize: 13, color: t.text, lineHeight: 19 }}>
-            Rotate her on the Home screen — a full 3D avatar arrives with the next render pack.
+            Drag her on the Home screen to spin the full 8-view turnaround.
           </Text>
         </View>
       </ScrollView>

@@ -19,17 +19,17 @@ const ACCENTS: Record<AccentName, { accent: string; accentSoft: string; onAccent
 export function getTheme(accent: AccentName) {
   const a = ACCENTS[accent];
   return {
-    // grounds
-    bg: '#FFFFFF',
-    surface: '#F6F6F8',
-    surfaceAlt: '#FBFBFC',
-    border: '#ECECEF',
-    separator: '#E9E9EC',
-    // ink
-    text: '#1C1C1E',
-    sub: '#6E6E73',
-    muted: '#AEAEB4',
-    faint: '#D9D9DE',
+    // grounds — warm neutrals (Hims-style cream, not cool gray)
+    bg: '#FEFCFA',
+    surface: '#F6F1EB',
+    surfaceAlt: '#FBF8F4',
+    border: '#ECE5DC',
+    separator: '#EDE7DF',
+    // ink — warm near-black
+    text: '#211D19',
+    sub: '#6F6862',
+    muted: '#A9A096',
+    faint: '#DDD5CA',
     // accent
     accent: a.accent,
     accentSoft: a.accentSoft,
@@ -38,9 +38,9 @@ export function getTheme(accent: AccentName) {
     attention: a.accent,
     positive: '#5E9C57',
     // chrome
-    tabBg: 'rgba(255,255,255,0.96)',
-    overlay: 'rgba(22,18,16,0.42)',
-    shadow: 'rgba(30,30,40,0.14)',
+    tabBg: 'rgba(254,252,250,0.96)',
+    overlay: 'rgba(24,19,15,0.42)',
+    shadow: 'rgba(42,34,26,0.14)',
   } as const;
 }
 

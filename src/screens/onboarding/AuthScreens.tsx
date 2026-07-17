@@ -1,9 +1,10 @@
 import React, { useRef, useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Field, GhostButton } from '../../components/ui';
+import { GhostButton, LinkText } from '../../components/ui';
+import { AnimatedCheck } from '../../components/anim/AnimatedCheck';
 import { OnboardingShell } from './OnboardingShell';
-import { spacing } from '../../theme';
+import { radii, spacing } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import { passwordStrength } from '../../lib/validation';
 import type { RootStackParamList } from '../../navigation/types';
@@ -13,7 +14,60 @@ import type { RootStackParamList } from '../../navigation/types';
  * render and behave like the real thing, but nothing is required and no
  * account is created. The full validated flow lives in git history and
  * returns when Supabase auth lands.
+ *
+ * Layout follows Airbnb's sign-up sheet: email + password joined into one
+ * bordered group, a "why we ask" caption under each section, underlined
+ * links, and a disabled-until-valid feel without actually blocking the demo.
  */
+
+function JoinedFields({
+  children,
+  error,
+}: {
+  children: React.ReactNode;
+  error?: boolean;
+}) {
+  const t = useTheme();
+  return (
+    <View
+      style={{
+        borderWidth: 1,
+        borderColor: error ? t.attention : t.border,
+        borderRadius: radii.m,
+        backgroundColor: t.surfaceAlt,
+        overflow: 'hidden',
+      }}
+    >
+      {children}
+    </View>
+  );
+}
+
+function JoinedInput({
+  last,
+  ...props
+}: React.ComponentProps<typeof TextInput> & { last?: boolean }) {
+  const t = useTheme();
+  return (
+    <TextInput
+      placeholderTextColor={t.muted}
+      {...props}
+      style={{
+        paddingHorizontal: 14,
+        paddingVertical: 14,
+        fontSize: 16,
+        color: t.text,
+        borderBottomWidth: last ? 0 : StyleSheet.hairlineWidth,
+        borderBottomColor: t.separator,
+      }}
+    />
+  );
+}
+
+function Caption({ children }: { children: React.ReactNode }) {
+  const t = useTheme();
+  return <Text style={{ fontSize: 12, color: t.muted, lineHeight: 17 }}>{children}</Text>;
+}
 
 export function SignUpScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'SignUp'>) {
   const t = useTheme();
@@ -35,58 +89,59 @@ export function SignUpScreen({ navigation }: NativeStackScreenProps<RootStackPar
       }}
       footer={<GhostButton title="I already have an account" onPress={() => navigation.navigate('SignIn')} />}
     >
-      <View style={{ gap: spacing.l, paddingTop: spacing.s }}>
-        <Field
-          label="Email"
-          value={email}
-          onChangeText={setEmail}
-          placeholder="you@example.com"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-          autoComplete="email"
-          textContentType="emailAddress"
-        />
-        <View style={{ gap: 6 }}>
-          <Field
-            label="Password"
+      <View style={{ gap: spacing.m, paddingTop: spacing.s }}>
+        <JoinedFields>
+          <JoinedInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
+            textContentType="emailAddress"
+            accessibilityLabel="Email"
+          />
+          <JoinedInput
+            last
             value={pw}
             onChangeText={setPw}
-            placeholder="At least 8 characters"
+            placeholder="Password (8+ characters)"
             secureTextEntry
             autoCapitalize="none"
             autoComplete="new-password"
             textContentType="newPassword"
+            accessibilityLabel="Password"
           />
-          {pw.length > 0 ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s }}>
-              <View style={{ flexDirection: 'row', gap: 4, flex: 1 }}>
-                {[0, 1, 2].map((i) => (
-                  <View
-                    key={i}
-                    style={{
-                      flex: 1,
-                      height: 4,
-                      borderRadius: 2,
-                      backgroundColor: i < strength ? t.accent : t.faint,
-                    }}
-                  />
-                ))}
-              </View>
-              <Text style={{ fontSize: 12, color: t.sub }}>{strengthLabel}</Text>
+        </JoinedFields>
+        {pw.length > 0 ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s }}>
+            <View style={{ flexDirection: 'row', gap: 4, flex: 1 }}>
+              {[0, 1, 2].map((i) => (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: 4,
+                    borderRadius: 2,
+                    backgroundColor: i < strength ? t.accent : t.faint,
+                  }}
+                />
+              ))}
             </View>
-          ) : null}
-        </View>
-        <Text style={{ fontSize: 12, color: t.muted }}>
-          Demo preview: you can continue without filling this in.
-        </Text>
+            <Text style={{ fontSize: 12, color: t.sub }}>{strengthLabel}</Text>
+          </View>
+        ) : null}
+        <Caption>
+          We'll email booking confirmations and ritual reminders — nothing else. Demo preview: you
+          can continue without filling this in.
+        </Caption>
       </View>
     </OnboardingShell>
   );
 }
 
 export function SignInScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'SignIn'>) {
-  const t = useTheme();
   const setDraft = useEterna((s) => s.setDraft);
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
@@ -102,31 +157,32 @@ export function SignInScreen({ navigation }: NativeStackScreenProps<RootStackPar
       }}
       footer={<GhostButton title="Create an account instead" onPress={() => navigation.navigate('SignUp')} />}
     >
-      <View style={{ gap: spacing.l, paddingTop: spacing.s }}>
-        <Field
-          label="Email"
-          value={email}
-          onChangeText={setEmail}
-          placeholder="you@example.com"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-          autoComplete="email"
-          textContentType="emailAddress"
-        />
-        <Field
-          label="Password"
-          value={pw}
-          onChangeText={setPw}
-          placeholder="Your password"
-          secureTextEntry
-          autoCapitalize="none"
-          autoComplete="password"
-          textContentType="password"
-        />
-        <Text style={{ fontSize: 12, color: t.muted }}>
-          Demo preview: you can continue without filling this in.
-        </Text>
+      <View style={{ gap: spacing.m, paddingTop: spacing.s }}>
+        <JoinedFields>
+          <JoinedInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
+            textContentType="emailAddress"
+            accessibilityLabel="Email"
+          />
+          <JoinedInput
+            last
+            value={pw}
+            onChangeText={setPw}
+            placeholder="Password"
+            secureTextEntry
+            autoCapitalize="none"
+            autoComplete="password"
+            textContentType="password"
+            accessibilityLabel="Password"
+          />
+        </JoinedFields>
+        <Caption>Demo preview: you can continue without filling this in.</Caption>
       </View>
     </OnboardingShell>
   );
@@ -136,56 +192,73 @@ export function VerifyScreen({ navigation }: NativeStackScreenProps<RootStackPar
   const t = useTheme();
   const email = useEterna((s) => s.draft.email);
   const [code, setCode] = useState('');
+  const [done, setDone] = useState(false);
   const inputRef = useRef<TextInput>(null);
+
+  const onChange = (v: string) => {
+    const digits = v.replace(/\D/g, '').slice(0, 6);
+    setCode(digits);
+    if (digits.length === 6 && !done) setDone(true);
+  };
 
   return (
     <OnboardingShell
       step={null}
       title="Check your inbox"
-      subtitle={`We sent a 6-digit code to ${email || 'your email'}. Demo preview: continue any time.`}
+      subtitle={`Enter the 6-digit code we sent to ${email || 'your email'}. Demo preview: continue any time.`}
       cta="Verify"
       onNext={() => navigation.navigate('Name')}
-      footer={<GhostButton title="Resend code" onPress={() => setCode('')} />}
+      footer={
+        <View style={{ alignItems: 'center', paddingVertical: 6 }}>
+          <LinkText onPress={() => { setCode(''); setDone(false); }}>
+            Didn't get it? Send again
+          </LinkText>
+        </View>
+      }
     >
-      <View style={{ paddingTop: spacing.l, gap: spacing.m }}>
-        <TextInput
-          ref={inputRef}
-          value={code}
-          onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
-          keyboardType="number-pad"
-          textContentType="oneTimeCode"
-          autoComplete="one-time-code"
-          style={{ position: 'absolute', opacity: 0, height: 1, width: 1 }}
-        />
+      <View style={{ paddingTop: spacing.l, gap: spacing.l, alignItems: 'center' }}>
+        {/* one bordered field, wide letterspaced digits (Airbnb confirm-code pattern) */}
         <View
-          style={{ flexDirection: 'row', gap: spacing.s, justifyContent: 'center' }}
+          style={{ width: '100%' }}
           onStartShouldSetResponder={() => {
             inputRef.current?.focus();
             return true;
           }}
         >
-          {Array.from({ length: 6 }).map((_, i) => {
-            const ch = code[i] ?? '';
-            const active = i === code.length;
-            return (
-              <View
-                key={i}
-                style={{
-                  width: 46,
-                  height: 56,
-                  borderRadius: 12,
-                  borderWidth: active ? 2 : 1,
-                  borderColor: active ? t.accent : t.border,
-                  backgroundColor: t.surface,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Text style={{ fontSize: 24, fontWeight: '600', color: t.text }}>{ch}</Text>
-              </View>
-            );
-          })}
+          <TextInput
+            ref={inputRef}
+            value={code}
+            onChangeText={onChange}
+            keyboardType="number-pad"
+            textContentType="oneTimeCode"
+            autoComplete="one-time-code"
+            caretHidden
+            accessibilityLabel="6-digit code"
+            style={{
+              width: '100%',
+              paddingVertical: 18,
+              borderRadius: radii.m,
+              borderWidth: code.length > 0 && code.length < 6 ? 2 : 1,
+              borderColor: done ? t.positive : code.length > 0 ? t.accent : t.border,
+              backgroundColor: t.surfaceAlt,
+              textAlign: 'center',
+              fontSize: 28,
+              fontWeight: '600',
+              letterSpacing: 14,
+              color: t.text,
+            }}
+            placeholder="······"
+            placeholderTextColor={t.faint}
+          />
         </View>
+        {done ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s }}>
+            <AnimatedCheck size={28} />
+            <Text style={{ fontSize: 14, fontWeight: '600', color: t.positive }}>
+              Code looks good
+            </Text>
+          </View>
+        ) : null}
       </View>
     </OnboardingShell>
   );

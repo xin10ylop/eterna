@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { IconButton, Screen, SectionLabel } from '../../components/ui';
+import { IconButton, LedgerRow, Screen, SectionLabel } from '../../components/ui';
 import { AnimatedCheck } from '../../components/anim/AnimatedCheck';
+import { Confetti } from '../../components/anim/Lottie';
 import { Entrance } from '../../components/anim/Entrance';
 import { addDays, formatLong, monthShort, todayISO, weekdayShort } from '../../lib/dates';
 import { formatEUR } from '../../lib/money';
@@ -43,12 +44,13 @@ export function BookScreen({ navigation, route }: Props) {
     return (
       <Screen>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.l }}>
+          <Confetti size={260} style={{ position: 'absolute', top: '12%' }} />
           <AnimatedCheck
             onDone={() => {
               setTimeout(() => {
                 showToast(`Booked ${formatLong(day)} at ${time}`);
                 navigation.goBack();
-              }, 350);
+              }, 900);
             }}
           />
           <Entrance delay={500}>
@@ -56,6 +58,23 @@ export function BookScreen({ navigation, route }: Props) {
             <Text style={{ fontSize: 15, color: t.sub, textAlign: 'center', marginTop: 4 }}>
               {tr.name} · {formatLong(day)} at {time}
             </Text>
+          </Entrance>
+          {/* expectation-setting summary (Uber post-booking sheet) */}
+          <Entrance delay={650} distance={12}>
+            <View
+              style={{
+                backgroundColor: t.surfaceAlt,
+                borderWidth: 1,
+                borderColor: t.border,
+                borderRadius: radii.l,
+                paddingVertical: spacing.m,
+                paddingHorizontal: spacing.l,
+              }}
+            >
+              <Text style={{ fontSize: 13, color: t.sub, textAlign: 'center' }}>
+                {clinic?.name} · {formatEUR(tr.priceEUR)} · reminder 5 days before
+              </Text>
+            </View>
           </Entrance>
         </View>
       </Screen>
@@ -126,7 +145,7 @@ export function BookScreen({ navigation, route }: Props) {
         {/* time grid */}
         <View style={{ paddingHorizontal: spacing.xl, gap: spacing.s }}>
           <SectionLabel>Pick a time</SectionLabel>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.s }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.s, justifyContent: 'space-between' }}>
             {times.map((x) => {
               const sel = time === x;
               return (
@@ -152,6 +171,28 @@ export function BookScreen({ navigation, route }: Props) {
                 </Pressable>
               );
             })}
+          </View>
+        </View>
+        {/* price breakdown ledger (Airbnb receipt pattern) */}
+        <View style={{ paddingHorizontal: spacing.xl, gap: spacing.s }}>
+          <SectionLabel>Price details</SectionLabel>
+          <View
+            style={{
+              backgroundColor: t.surfaceAlt,
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: t.border,
+              borderRadius: radii.l,
+              paddingVertical: spacing.s,
+              paddingHorizontal: spacing.l,
+            }}
+          >
+            <LedgerRow label={`${tr.name} × 1 session`} value={formatEUR(tr.priceEUR)} />
+            <LedgerRow label="Booking fee" value="€0" muted />
+            <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: t.separator, marginVertical: 4 }} />
+            <LedgerRow label="Total" value={formatEUR(tr.priceEUR)} bold />
+            <Text style={{ fontSize: 12, color: t.muted, paddingBottom: 4 }}>
+              Paid at the clinic · free reschedule up to 24h before
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -189,16 +230,23 @@ export function BookScreen({ navigation, route }: Props) {
             setConfirmed(true);
           }}
           style={({ pressed }) => ({
-            paddingVertical: 15,
-            paddingHorizontal: 30,
+            paddingVertical: day && time ? 10 : 15,
+            paddingHorizontal: 28,
             borderRadius: radii.l,
+            alignItems: 'center',
             backgroundColor: day && time ? t.accent : t.faint,
             transform: [{ scale: pressed && day && time ? 0.97 : 1 }],
           })}
         >
+          {/* CTA names the selection (Uber Reserve pattern) */}
           <Text style={{ color: day && time ? t.onAccent : t.sub, fontSize: 16, fontWeight: '700' }}>
             Confirm
           </Text>
+          {day && time ? (
+            <Text style={{ color: t.onAccent, fontSize: 11, fontWeight: '500', opacity: 0.85 }}>
+              {formatLong(day)} · {time}
+            </Text>
+          ) : null}
         </Pressable>
       </View>
     </Screen>

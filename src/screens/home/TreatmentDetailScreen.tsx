@@ -74,9 +74,35 @@ export function TreatmentDetailScreen({ navigation, route }: Props) {
             <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: statusColor }} />
             <Text style={[type.label, { color: statusColor }]}>{statusLine}</Text>
           </View>
-          <Text style={{ fontSize: 14, color: t.sub, marginTop: 6 }}>
-            Every {tr.cadenceWeeks} weeks · usually {formatEUR(tr.priceEUR)} · {clinic?.name}
-          </Text>
+          {/* centered stat plaque, hairline-separated (Airbnb listing header) */}
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginTop: spacing.m,
+              paddingVertical: spacing.s,
+            }}
+          >
+            <View style={{ flex: 1, alignItems: 'center' }}>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: t.text }}>
+                {tr.cadenceWeeks} wks
+              </Text>
+              <Text style={{ fontSize: 11, color: t.muted, marginTop: 1 }}>cadence</Text>
+            </View>
+            <View style={{ width: StyleSheet.hairlineWidth, alignSelf: 'stretch', backgroundColor: t.separator }} />
+            <View style={{ flex: 1, alignItems: 'center' }}>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: t.text }}>
+                {formatEUR(tr.priceEUR)}
+              </Text>
+              <Text style={{ fontSize: 11, color: t.muted, marginTop: 1 }}>usual price</Text>
+            </View>
+            <View style={{ width: StyleSheet.hairlineWidth, alignSelf: 'stretch', backgroundColor: t.separator }} />
+            <View style={{ flex: 1, alignItems: 'center' }}>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: t.text }}>{ordered.length}</Text>
+              <Text style={{ fontSize: 11, color: t.muted, marginTop: 1 }}>sessions</Text>
+            </View>
+          </View>
+          <Text style={{ fontSize: 13, color: t.sub }}>{clinic?.name}</Text>
           <View style={{ flexDirection: 'row', gap: spacing.s, marginTop: spacing.l }}>
             <View style={{ flex: 1 }}>
               <PrimaryButton

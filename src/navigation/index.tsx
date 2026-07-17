@@ -11,6 +11,7 @@ import { WelcomeScreen } from '../screens/onboarding/WelcomeScreen';
 import { FeaturesScreen } from '../screens/onboarding/FeaturesScreen';
 import { SignInScreen, SignUpScreen, VerifyScreen } from '../screens/onboarding/AuthScreens';
 import { BirthdayScreen, MetricsScreen, NameScreen, RoutineScreen } from '../screens/onboarding/ProfileSteps';
+import { PlanScreen } from '../screens/onboarding/PlanScreen';
 import { AvatarStudioScreen } from '../screens/onboarding/AvatarStudioScreen';
 import { NotificationsScreen, ReadyScreen } from '../screens/onboarding/FinishScreens';
 
@@ -144,6 +145,7 @@ export function RootNavigator() {
             <Stack.Screen name="Birthday" component={BirthdayScreen} />
             <Stack.Screen name="Metrics" component={MetricsScreen} />
             <Stack.Screen name="Routine" component={RoutineScreen} />
+            <Stack.Screen name="Plan" component={PlanScreen} />
             <Stack.Screen name="AvatarStudio" component={AvatarStudioScreen} />
             <Stack.Screen name="Notifications" component={NotificationsScreen} />
             <Stack.Screen name="Ready" component={ReadyScreen} />

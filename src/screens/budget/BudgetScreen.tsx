@@ -126,9 +126,39 @@ export function BudgetScreen({ navigation }: Props) {
           </View>
         </Card>
 
+        {/* insight sentence (Apple Health Highlights pattern) */}
+        <Card>
+          <SectionLabel>Highlights</SectionLabel>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: t.text, lineHeight: 23 }}>
+            {nextMonth > spent + booked
+              ? 'Next month is set to cost more than this one — two rituals fall due together.'
+              : 'Next month is on track to cost less than this one.'}
+          </Text>
+          <View style={{ flexDirection: 'row', gap: spacing.l, marginTop: spacing.m }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: t.accent }} />
+              <Text style={{ fontSize: 13, color: t.sub }}>This month {formatEUR(spent + booked)}</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: t.faint }} />
+              <Text style={{ fontSize: 13, color: t.sub }}>Next {formatEUR(nextMonth)}</Text>
+            </View>
+          </View>
+        </Card>
+
         {/* six month bars */}
         <Card>
           <SectionLabel>Last months</SectionLabel>
+          {/* stat header: value + range (Apple Health chart grammar) */}
+          <View style={{ marginBottom: spacing.m }}>
+            <Text style={{ fontSize: 26, fontWeight: '700', color: t.text, letterSpacing: -0.5 }}>
+              {formatEUR(Math.round(months.reduce((x, m) => x + m.spent + m.booked, 0) / Math.max(1, months.length)))}
+              <Text style={{ fontSize: 14, fontWeight: '500', color: t.sub }}>  monthly average</Text>
+            </Text>
+            <Text style={{ fontSize: 12, color: t.muted, marginTop: 1 }}>
+              {monthShort(months[0]?.monthISO ?? todayISO())} – {monthShort(months[months.length - 1]?.monthISO ?? todayISO())}
+            </Text>
+          </View>
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: spacing.s, height: 110 }}>
             {months.map((m) => {
               const h = ((m.spent + m.booked) / maxMonth) * 84;

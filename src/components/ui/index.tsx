@@ -3,18 +3,21 @@ import {
   ActivityIndicator,
   Animated,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
   type StyleProp,
   type TextInputProps,
+  type TextStyle,
   type ViewStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { cardShadow, radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
+import { diffDays, todayISO } from '../../lib/dates';
 
 /* ---------------------------------- Screen -------------------------------- */
 
@@ -451,6 +454,256 @@ export function StepDots({ total, index }: { total: number; index: number }) {
         }}
       />
     </View>
+  );
+}
+
+/* -------------------------------- Option card -------------------------------- */
+
+/**
+ * Full-width selectable answer card (Duolingo / Hims intake pattern):
+ * leading icon, label, optional qualifier; selected = tinted fill + accent
+ * border + accent ink, with a check square when multi-select.
+ */
+export function OptionCard({
+  icon,
+  label,
+  sublabel,
+  qualifier,
+  selected,
+  multi,
+  onPress,
+}: {
+  icon?: keyof typeof Ionicons.glyphMap;
+  label: string;
+  sublabel?: string;
+  qualifier?: string;
+  selected?: boolean;
+  multi?: boolean;
+  onPress: () => void;
+}) {
+  const t = useTheme();
+  return (
+    <Pressable
+      accessibilityRole={multi ? 'checkbox' : 'button'}
+      accessibilityState={multi ? { checked: !!selected } : { selected: !!selected }}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.m,
+        paddingVertical: 14,
+        paddingHorizontal: spacing.l,
+        borderRadius: radii.l,
+        backgroundColor: selected ? t.accentSoft : t.bg,
+        borderWidth: selected ? 1.5 : 1,
+        borderColor: selected ? t.accent : t.border,
+        transform: [{ scale: pressed ? 0.98 : 1 }],
+      })}
+    >
+      {multi ? (
+        <View
+          style={{
+            width: 22,
+            height: 22,
+            borderRadius: 6,
+            borderWidth: 1.5,
+            borderColor: selected ? t.accent : t.muted,
+            backgroundColor: selected ? t.accent : 'transparent',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {selected ? <Ionicons name="checkmark" size={14} color={t.onAccent} /> : null}
+        </View>
+      ) : icon ? (
+        <Ionicons name={icon} size={20} color={selected ? t.accent : t.sub} />
+      ) : null}
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 15, fontWeight: '600', color: selected ? t.accent : t.text }}>
+          {label}
+        </Text>
+        {sublabel ? (
+          <Text style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>{sublabel}</Text>
+        ) : null}
+      </View>
+      {qualifier ? <Text style={{ fontSize: 13, color: t.muted }}>{qualifier}</Text> : null}
+    </Pressable>
+  );
+}
+
+/* --------------------------------- Time chip --------------------------------- */
+
+/**
+ * Relative-proximity pill (Airbnb Trips pattern): "Overdue" / "Today" /
+ * "In 3 days" / "In 2 wks". Overdue is the only alarmed state.
+ */
+export function TimeChip({ dueISO }: { dueISO: string }) {
+  const t = useTheme();
+  const days = diffDays(todayISO(), dueISO);
+  const label =
+    days < 0 ? 'Overdue' : days === 0 ? 'Today' : days === 1 ? 'Tomorrow'
+    : days < 14 ? `In ${days} days` : `In ${Math.round(days / 7)} wks`;
+  const alarmed = days < 0;
+  return (
+    <View
+      style={{
+        paddingVertical: 4,
+        paddingHorizontal: 10,
+        borderRadius: radii.pill,
+        backgroundColor: alarmed ? t.accent : t.surface,
+        borderWidth: alarmed ? 0 : StyleSheet.hairlineWidth,
+        borderColor: t.border,
+      }}
+    >
+      <Text style={{ fontSize: 11, fontWeight: '700', color: alarmed ? t.onAccent : t.sub }}>
+        {label}
+      </Text>
+    </View>
+  );
+}
+
+/* ---------------------------------- Ledger ----------------------------------- */
+
+/** Receipt-style breakdown rows (Airbnb price details): label left, amount right. */
+export function LedgerRow({
+  label,
+  value,
+  bold,
+  muted,
+}: {
+  label: string;
+  value: string;
+  bold?: boolean;
+  muted?: boolean;
+}) {
+  const t = useTheme();
+  const color = muted ? t.sub : t.text;
+  const weight = bold ? ('700' as const) : ('400' as const);
+  return (
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 }}>
+      <Text style={{ fontSize: 15, fontWeight: weight, color }}>{label}</Text>
+      <Text style={{ fontSize: 15, fontWeight: weight, color }}>{value}</Text>
+    </View>
+  );
+}
+
+/* -------------------------------- Wheel picker -------------------------------- */
+
+const WHEEL_ITEM_H = 44;
+
+/**
+ * Snap-scroll wheel (Cal AI height/weight pattern): capsule highlight on the
+ * center row, neighbors fade. ScrollView-based so it works everywhere.
+ */
+export function WheelPicker({
+  items,
+  index,
+  onChange,
+  width = 110,
+  label,
+}: {
+  items: string[];
+  index: number;
+  onChange: (i: number) => void;
+  width?: number;
+  label?: string;
+}) {
+  const t = useTheme();
+  const sv = useRef<ScrollView>(null);
+  const H = WHEEL_ITEM_H * 5;
+  useEffect(() => {
+    // position on mount (and when the item set swaps, e.g. metric<->imperial)
+    const id = setTimeout(() => sv.current?.scrollTo({ y: index * WHEEL_ITEM_H, animated: false }), 0);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items.length]);
+  return (
+    <View style={{ alignItems: 'center', gap: spacing.s }}>
+      {label ? <Text style={[type.label, { color: t.muted }]}>{label}</Text> : null}
+      <View style={{ width, height: H }}>
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: WHEEL_ITEM_H * 2,
+            left: 0,
+            right: 0,
+            height: WHEEL_ITEM_H,
+            borderRadius: radii.m,
+            backgroundColor: t.surface,
+            borderWidth: 1,
+            borderColor: t.border,
+          }}
+        />
+        <ScrollView
+          ref={sv}
+          showsVerticalScrollIndicator={false}
+          snapToInterval={WHEEL_ITEM_H}
+          decelerationRate="fast"
+          contentContainerStyle={{ paddingVertical: WHEEL_ITEM_H * 2 }}
+          onMomentumScrollEnd={(e) => {
+            const i = Math.min(
+              items.length - 1,
+              Math.max(0, Math.round(e.nativeEvent.contentOffset.y / WHEEL_ITEM_H)),
+            );
+            if (i !== index) onChange(i);
+          }}
+        >
+          {items.map((it, i) => {
+            const d = Math.abs(i - index);
+            return (
+              <Pressable
+                key={it}
+                accessibilityRole="button"
+                accessibilityLabel={it}
+                onPress={() => {
+                  sv.current?.scrollTo({ y: i * WHEEL_ITEM_H, animated: true });
+                  onChange(i);
+                }}
+                style={{ height: WHEEL_ITEM_H, alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Text
+                  style={{
+                    fontSize: d === 0 ? 20 : 17,
+                    fontWeight: d === 0 ? '700' : '500',
+                    color: d === 0 ? t.text : d === 1 ? t.sub : t.faint,
+                  }}
+                >
+                  {it}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
+    </View>
+  );
+}
+
+/* --------------------------------- Link text ---------------------------------- */
+
+/** Airbnb link idiom: underline, ink color — never blue. */
+export function LinkText({
+  children,
+  onPress,
+  style,
+}: {
+  children: React.ReactNode;
+  onPress: () => void;
+  style?: StyleProp<TextStyle>;
+}) {
+  const t = useTheme();
+  return (
+    <Text
+      accessibilityRole="link"
+      onPress={onPress}
+      style={[
+        { fontSize: 14, fontWeight: '600', color: t.text, textDecorationLine: 'underline' },
+        style,
+      ]}
+    >
+      {children}
+    </Text>
   );
 }
 

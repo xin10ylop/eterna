@@ -4,7 +4,7 @@ import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { Card, Screen, SectionLabel, Segmented } from '../../components/ui';
+import { Card, Screen, SectionLabel, Segmented, TimeChip } from '../../components/ui';
 import {
   addDays,
   addMonths,
@@ -62,6 +62,14 @@ function ScheduleView({ nav }: { nav: Props['navigation'] }) {
   const clinics = useEterna((s) => s.clinics);
 
   const eventsOn = (iso: string) => appointments.filter((a) => a.dateISO === iso);
+  // predicted (not yet booked) due dates — rendered as outlined markers,
+  // solid = booked (Apple Health's solid-vs-hatched cycle language)
+  const predicted = useMemo(() => {
+    const booked = new Set(appointments.map((a) => a.treatmentId));
+    return new Set(
+      treatments.filter((tr) => !booked.has(tr.id)).map((tr) => nextDueISO(tr)),
+    );
+  }, [appointments, treatments]);
 
   const dayAgenda = (
     <View style={{ gap: spacing.s }}>
@@ -155,7 +163,19 @@ function ScheduleView({ nav }: { nav: Props['navigation'] }) {
             selected={selected}
             onSelect={setSelected}
             hasEvents={(iso) => eventsOn(iso).length > 0}
+            isPredicted={(iso) => predicted.has(iso)}
           />
+          {/* marker legend */}
+          <View style={{ flexDirection: 'row', gap: spacing.l, justifyContent: 'center' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.accent }} />
+              <Text style={{ fontSize: 11, color: t.muted }}>Booked</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, borderWidth: 1, borderColor: t.accent }} />
+              <Text style={{ fontSize: 11, color: t.muted }}>Predicted due</Text>
+            </View>
+          </View>
           {dayAgenda}
         </View>
       ) : null}
@@ -245,11 +265,13 @@ function MonthGrid({
   selected,
   onSelect,
   hasEvents,
+  isPredicted,
 }: {
   anchor: string;
   selected: string;
   onSelect: (iso: string) => void;
   hasEvents: (iso: string) => boolean;
+  isPredicted?: (iso: string) => boolean;
 }) {
   const t = useTheme();
   const cells = useMemo(() => {
@@ -300,15 +322,26 @@ function MonthGrid({
                 {hasEvents(iso) ? (
                   <View
                     style={{
-                      width: 4,
-                      height: 4,
-                      borderRadius: 2,
-                      backgroundColor: sel ? t.accent : t.accent,
+                      width: 5,
+                      height: 5,
+                      borderRadius: 3,
+                      backgroundColor: t.accent,
+                      marginTop: 1,
+                    }}
+                  />
+                ) : isPredicted?.(iso) ? (
+                  <View
+                    style={{
+                      width: 5,
+                      height: 5,
+                      borderRadius: 3,
+                      borderWidth: 1,
+                      borderColor: t.accent,
                       marginTop: 1,
                     }}
                   />
                 ) : (
-                  <View style={{ height: 5 }} />
+                  <View style={{ height: 6 }} />
                 )}
               </Pressable>
             );
@@ -360,14 +393,17 @@ function RitualsView({ nav }: { nav: Props['navigation'] }) {
       ) : null}
       {groups.map((g) => (
         <View key={g.title} style={{ gap: spacing.s }}>
-          <Text style={[type.label, { color: g.color }]}>{g.title}</Text>
+          {/* colored-dot group label (Apple Health log grouping) */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: g.color }} />
+            <Text style={[type.label, { color: g.color }]}>{g.title}</Text>
+          </View>
           {g.items.map((tr) => {
             const clinic = clinics.find((c) => c.id === tr.clinicId);
             const appt = appointments.find((a) => a.treatmentId === tr.id);
             return (
               <Card key={tr.id} onPress={() => nav.navigate('TreatmentDetail', { treatmentId: tr.id })}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
-                  <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: g.color }} />
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>{tr.name}</Text>
                     <Text style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>
@@ -376,7 +412,11 @@ function RitualsView({ nav }: { nav: Props['navigation'] }) {
                         : `${humanizeDue(nextDueISO(tr))} · ${clinic?.name}`}
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={16} color={t.muted} />
+                  {appt ? (
+                    <Ionicons name="chevron-forward" size={16} color={t.muted} />
+                  ) : (
+                    <TimeChip dueISO={nextDueISO(tr)} />
+                  )}
                 </View>
               </Card>
             );

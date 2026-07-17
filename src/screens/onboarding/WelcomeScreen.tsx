@@ -3,6 +3,7 @@ import { Animated, Easing, Image, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { GhostButton, PrimaryButton, Screen } from '../../components/ui';
 import { Entrance } from '../../components/anim/Entrance';
+import { Sparkles } from '../../components/anim/Lottie';
 import { spacing, type } from '../../theme';
 import { useTheme } from '../../store';
 import type { RootStackParamList } from '../../navigation/types';
@@ -27,11 +28,14 @@ export function WelcomeScreen({ navigation }: Props) {
     <Screen>
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.l }}>
         <Entrance spring distance={28}>
-          <Image
-            source={require('../../../assets/avatar/front.png')}
-            style={{ height: 320, width: 320 * 0.442, resizeMode: 'contain' }}
-            accessibilityLabel="Eterna avatar"
-          />
+          <View>
+            <Sparkles size={130} style={{ position: 'absolute', top: -14, right: -56, opacity: 0.7 }} />
+            <Image
+              source={require('../../../assets/avatar/front.png')}
+              style={{ height: 320, width: 320 * 0.442, resizeMode: 'contain' }}
+              accessibilityLabel="Eterna avatar"
+            />
+          </View>
         </Entrance>
         <Animated.Text
           style={{
