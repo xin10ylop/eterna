@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Chip, IconButton, PrimaryButton, Screen, SectionLabel } from '../../components/ui';
+import { AnimatedCheck } from '../../components/anim/AnimatedCheck';
+import { Entrance } from '../../components/anim/Entrance';
 import { addDays, formatLong, todayISO } from '../../lib/dates';
 import { formatEUR } from '../../lib/money';
 import { spacing, type } from '../../theme';
@@ -23,9 +25,34 @@ export function BookScreen({ navigation, route }: Props) {
   const times = ['09:30', '11:00', '14:30', '16:15', '18:00'];
   const [day, setDay] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
 
   if (!tr) return <Screen><Text style={{ marginTop: 100, textAlign: 'center', color: t.sub }}>Treatment not found.</Text></Screen>;
   const clinic = clinics.find((c) => c.id === tr.clinicId);
+
+  // Success moment: the check draws itself, then the sheet closes.
+  if (confirmed && day && time) {
+    return (
+      <Screen>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.l }}>
+          <AnimatedCheck
+            onDone={() => {
+              setTimeout(() => {
+                showToast(`Booked ${formatLong(day)} at ${time}`);
+                navigation.goBack();
+              }, 350);
+            }}
+          />
+          <Entrance delay={500}>
+            <Text style={[type.title, { color: t.text, textAlign: 'center' }]}>Booked</Text>
+            <Text style={{ fontSize: 15, color: t.sub, textAlign: 'center', marginTop: 4 }}>
+              {tr.name} · {formatLong(day)} at {time}
+            </Text>
+          </Entrance>
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen>
@@ -65,8 +92,7 @@ export function BookScreen({ navigation, route }: Props) {
           onPress={() => {
             if (!day || !time) return;
             book(tr.id, day, time);
-            showToast(`Booked ${formatLong(day)} at ${time}`);
-            navigation.goBack();
+            setConfirmed(true);
           }}
         />
         <Pressable onPress={() => navigation.goBack()}>

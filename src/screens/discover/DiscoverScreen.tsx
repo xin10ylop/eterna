@@ -1,10 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Chip, Screen } from '../../components/ui';
+import { ClinicCardSkeleton } from '../../components/anim/Shimmer';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import type { RootStackParamList, TabParamList } from '../../navigation/types';
@@ -27,6 +28,12 @@ export function DiscoverScreen(_props: Props) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('All');
   const [expanded, setExpanded] = useState<string | null>(null);
+  // Skeleton pass on first open — becomes the real fetch state with Supabase.
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const id = setTimeout(() => setLoading(false), 700);
+    return () => clearTimeout(id);
+  }, []);
 
   const list = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -81,7 +88,14 @@ export function DiscoverScreen(_props: Props) {
         contentContainerStyle={{ gap: spacing.m, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
       >
-        {list.length === 0 ? (
+        {loading ? (
+          <>
+            <ClinicCardSkeleton />
+            <ClinicCardSkeleton />
+            <ClinicCardSkeleton />
+            <ClinicCardSkeleton />
+          </>
+        ) : list.length === 0 ? (
           <Card>
             <Text style={{ fontSize: 14, color: t.sub }}>No places match your search.</Text>
           </Card>

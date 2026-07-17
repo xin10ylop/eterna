@@ -3,6 +3,8 @@ import { Animated, Image, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { GhostButton, PrimaryButton, Screen } from '../../components/ui';
+import { AnimatedCheck } from '../../components/anim/AnimatedCheck';
+import { Entrance } from '../../components/anim/Entrance';
 import { OnboardingShell } from './OnboardingShell';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
@@ -71,17 +73,22 @@ export function ReadyScreen({ navigation: _n }: NativeStackScreenProps<RootStack
   return (
     <Screen>
       <Animated.View style={{ flex: 1, opacity: fade, alignItems: 'center', justifyContent: 'center', gap: spacing.l }}>
-        <Image
-          source={require('../../../assets/avatar/front.png')}
-          style={{ height: 300, width: 300 * 0.442, resizeMode: 'contain' }}
-          accessibilityLabel="Your avatar"
-        />
-        <Text style={[type.title, { color: t.text, textAlign: 'center' }]}>
-          {firstName ? `${firstName}, your space is ready` : 'Your space is ready'}
-        </Text>
-        <Text style={{ fontSize: 15, color: t.sub, textAlign: 'center', maxWidth: 280, lineHeight: 22 }}>
-          Your rituals are on the avatar. Tap a glowing area to see what needs attention.
-        </Text>
+        <AnimatedCheck size={64} />
+        <Entrance spring delay={500} distance={26}>
+          <Image
+            source={require('../../../assets/avatar/front.png')}
+            style={{ height: 280, width: 280 * 0.442, resizeMode: 'contain' }}
+            accessibilityLabel="Your avatar"
+          />
+        </Entrance>
+        <Entrance delay={750}>
+          <Text style={[type.title, { color: t.text, textAlign: 'center' }]}>
+            {firstName ? `${firstName}, your space is ready` : 'Your space is ready'}
+          </Text>
+          <Text style={{ fontSize: 15, color: t.sub, textAlign: 'center', maxWidth: 280, lineHeight: 22, marginTop: 6 }}>
+            Your rituals are on the avatar. Tap a glowing area to see what needs attention.
+          </Text>
+        </Entrance>
       </Animated.View>
       <View style={{ paddingBottom: spacing.xxl }}>
         <PrimaryButton title="Enter Eterna" onPress={complete} />

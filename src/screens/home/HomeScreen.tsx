@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { Screen } from '../../components/ui';
+import { Entrance } from '../../components/anim/Entrance';
 import { AvatarViewer } from '../../components/avatar/AvatarViewer';
 import { ZoneMarkers } from '../../components/avatar/ZoneMarkers';
 import { ZONES } from '../../data/seed';
@@ -96,15 +97,17 @@ export function HomeScreen({ navigation }: Props) {
 
       {/* avatar */}
       <View style={{ flex: 1, justifyContent: 'center' }}>
-        <AvatarViewer height={Math.min(430, Dimensions.get('window').height * 0.46)}>
-          <ZoneMarkers
-            data={zoneData}
-            onOpenZone={(zone) => navigation.navigate('ZoneDetail', { zone })}
-          />
-        </AvatarViewer>
-        <Text style={{ textAlign: 'center', fontSize: 12, color: t.muted, marginTop: spacing.s }}>
-          Drag to rotate · tap a glow to open
-        </Text>
+        <Entrance spring distance={24}>
+          <AvatarViewer height={Math.min(430, Dimensions.get('window').height * 0.46)}>
+            <ZoneMarkers
+              data={zoneData}
+              onOpenZone={(zone) => navigation.navigate('ZoneDetail', { zone })}
+            />
+          </AvatarViewer>
+          <Text style={{ textAlign: 'center', fontSize: 12, color: t.muted, marginTop: spacing.s }}>
+            Drag to rotate · tap a glow to open
+          </Text>
+        </Entrance>
       </View>
 
       {/* attention rail */}
