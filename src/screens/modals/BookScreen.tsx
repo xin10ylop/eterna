@@ -14,7 +14,7 @@ import type { RootStackParamList } from '../../navigation/types';
 type Props = NativeStackScreenProps<RootStackParamList, 'Book'>;
 
 /**
- * Booking — Airbnb-style: horizontal date cards, a time grid, and a pinned
+ * Booking, Airbnb-style: horizontal date cards, a time grid, and a pinned
  * bottom bar with the price on the left and the primary action on the right.
  * Ends in a drawn-check success moment.
  */

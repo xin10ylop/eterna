@@ -682,7 +682,7 @@ export function WheelPicker({
 
 /* --------------------------------- Link text ---------------------------------- */
 
-/** Airbnb link idiom: underline, ink color — never blue. */
+/** Airbnb link idiom: underline, ink color, never blue. */
 export function LinkText({
   children,
   onPress,

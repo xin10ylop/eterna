@@ -1,4 +1,4 @@
-/** Input validation. Small, explicit validators — no schema library needed
+/** Input validation. Small, explicit validators, no schema library needed
  *  yet; when Supabase lands these become the client side of shared zod
  *  schemas. Every validator returns `null` when valid, or a user-readable
  *  message describing exactly how to fix the input. */
@@ -39,7 +39,7 @@ export function validateCode(code: string): string | null {
   return null;
 }
 
-/** Height 120–220 cm, weight 35–200 kg — generous adult ranges. */
+/** Height 120–220 cm, weight 35–200 kg, generous adult ranges. */
 export function validateHeightCm(v: number): string | null {
   if (!Number.isFinite(v) || v < 120 || v > 220) return 'Enter a height between 120 and 220 cm.';
   return null;

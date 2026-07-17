@@ -31,7 +31,7 @@ type Props = CompositeScreenProps<
 >;
 
 /**
- * Planning — the calendar-first tab (renamed from "Rituals").
+ * Planning, the calendar-first tab (renamed from "Rituals").
  * Two segments: Schedule (iOS-style month/week/day calendar of appointments)
  * and Rituals (the cadence list grouped by urgency). Month-grid + selected-day
  * agenda pattern adapted from pliability's calendar on Mobbin.
@@ -62,7 +62,7 @@ function ScheduleView({ nav }: { nav: Props['navigation'] }) {
   const clinics = useEterna((s) => s.clinics);
 
   const eventsOn = (iso: string) => appointments.filter((a) => a.dateISO === iso);
-  // predicted (not yet booked) due dates — rendered as outlined markers,
+  // predicted (not yet booked) due dates, rendered as outlined markers,
   // solid = booked (Apple Health's solid-vs-hatched cycle language)
   const predicted = useMemo(() => {
     const booked = new Set(appointments.map((a) => a.treatmentId));

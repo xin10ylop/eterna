@@ -91,11 +91,8 @@ export interface Appointment {
 export type TreatmentStatus = 'overdue' | 'dueSoon' | 'scheduled' | 'onTrack';
 
 export interface AvatarConfig {
-  skinTone: number; // index into SKIN_TONES
-  bodyShape: number; // index into BODY_SHAPES
-  hairColor: number; // index into HAIR_COLORS
-  hairLength: number; // index into HAIR_LENGTHS
-  outfitColor: number; // index into OUTFIT_COLORS
+  skinTone: number; // 0..5, index into SKIN_TONES
+  hairLook: number; // 0..2, index into HAIR_LOOKS (Long / Bob / Blonde)
 }
 
 export interface Profile {

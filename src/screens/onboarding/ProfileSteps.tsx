@@ -11,7 +11,7 @@ import type { RootStackParamList } from '../../navigation/types';
 /**
  * Profile steps. One question per screen; every screen that asks for personal
  * data carries a one-line "why we ask" caption and a reassurance footnote
- * (Stoic / Hims intake pattern) — trust is the whole game for body data.
+ * (Stoic / Hims intake pattern), trust is the whole game for body data.
  */
 
 function WhyWeAsk({ children }: { children: React.ReactNode }) {
@@ -72,7 +72,7 @@ export function NameScreen({ navigation }: NativeStackScreenProps<RootStackParam
           autoComplete="family-name"
           textContentType="familyName"
         />
-        <WhyWeAsk>Only your first name appears in the app — on your greeting, never shared.</WhyWeAsk>
+        <WhyWeAsk>Only your first name appears in the app, on your greeting, never shared.</WhyWeAsk>
       </View>
     </OnboardingShell>
   );
@@ -209,7 +209,7 @@ export function MetricsScreen({ navigation }: NativeStackScreenProps<RootStackPa
           )}
         </View>
         <WhyWeAsk>
-          This never limits what you can do in Eterna — it only keeps practitioner dosage notes in
+          This never limits what you can do in Eterna, it only keeps practitioner dosage notes in
           context.
         </WhyWeAsk>
       </View>
@@ -269,7 +269,7 @@ export function RoutineScreen({ navigation }: NativeStackScreenProps<RootStackPa
     <OnboardingShell
       step={3}
       title="What do you keep up with?"
-      subtitle="Select everything in your routine — you can always add more later."
+      subtitle="Select everything in your routine, you can always add more later."
       cta={picked.length ? `Continue with ${picked.length}` : 'Select at least one'}
       ctaDisabled={picked.length === 0}
       onNext={() => {
@@ -295,7 +295,7 @@ export function RoutineScreen({ navigation }: NativeStackScreenProps<RootStackPa
             </View>
           </View>
         ))}
-        <WhyWeAsk>This builds your ritual plan — nothing here is ever shared.</WhyWeAsk>
+        <WhyWeAsk>This builds your ritual plan, nothing here is ever shared.</WhyWeAsk>
       </View>
     </OnboardingShell>
   );

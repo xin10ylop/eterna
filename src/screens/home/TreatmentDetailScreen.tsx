@@ -13,7 +13,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'TreatmentDetail'>;
 
 /**
  * Full treatment record: current status, cadence, practitioner, and the
- * complete session history — what was done, by whom (role, not assumed
+ * complete session history, what was done, by whom (role, not assumed
  * "doctor"), which products, at what price, plus practitioner notes when
  * they exist.
  */
@@ -129,7 +129,7 @@ export function TreatmentDetailScreen({ navigation, route }: Props) {
             title="Remind me 5 days before"
             right={<IOSSwitch on={tr.reminderOn} onToggle={() => toggleReminder(tr.id)} />}
           />
-          <Row title="Clinic" subtitle={clinic ? `${clinic.name} · ${clinic.distanceKm} km` : '—'} last />
+          <Row title="Clinic" subtitle={clinic ? `${clinic.name} · ${clinic.distanceKm} km` : 'Not set'} last />
         </Card>
 
         {/* history */}

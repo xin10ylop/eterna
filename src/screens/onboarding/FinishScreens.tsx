@@ -6,6 +6,7 @@ import { GhostButton, IOSSwitch, PrimaryButton, Screen } from '../../components/
 import { AnimatedCheck } from '../../components/anim/AnimatedCheck';
 import { Confetti } from '../../components/anim/Lottie';
 import { Entrance } from '../../components/anim/Entrance';
+import { packFor } from '../../components/avatar/config';
 import { OnboardingShell } from './OnboardingShell';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
@@ -15,7 +16,7 @@ import type { RootStackParamList } from '../../navigation/types';
 
 /**
  * Notification priming reframed as scheduling your own ritual times (Stoic
- * pattern): pick when Eterna may nudge you, then one rationale line — the
+ * pattern): pick when Eterna may nudge you, then one rationale line, the
  * permission ask becomes self-care planning instead of an interruption.
  */
 export function NotificationsScreen({
@@ -77,7 +78,7 @@ export function NotificationsScreen({
           </Text>
         </View>
         <Text style={{ fontSize: 12, color: t.muted, lineHeight: 17 }}>
-          Gentle reminders at the times you chose keep rituals on rhythm — you can change them any
+          Gentle reminders at the times you chose keep rituals on rhythm, you can change them any
           time in Profile.
         </Text>
       </View>
@@ -115,6 +116,7 @@ export function ReadyScreen({ navigation: _n }: NativeStackScreenProps<RootStack
   const complete = useEterna((s) => s.completeOnboarding);
   const firstName = useEterna((s) => s.draft.firstName);
   const routine = useEterna((s) => s.draft.routine);
+  const avatarPack = packFor(useEterna((s) => s.draft.avatar));
   const fade = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -129,8 +131,8 @@ export function ReadyScreen({ navigation: _n }: NativeStackScreenProps<RootStack
           <AnimatedCheck size={56} />
           <Entrance spring delay={400} distance={26}>
             <Image
-              source={require('../../../assets/avatar/base/b0.png')}
-              style={{ height: 260, width: 260 * 0.4304, resizeMode: 'contain', marginTop: spacing.m }}
+              source={avatarPack.frames[0]}
+              style={{ height: 260, width: 260 * avatarPack.aspect, resizeMode: 'contain', marginTop: spacing.m }}
               accessibilityLabel="Your avatar"
             />
           </Entrance>

@@ -4,7 +4,7 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { useTheme } from '../../store';
 
 /**
- * Success check — the ring draws itself, then the check strokes in.
+ * Success check, the ring draws itself, then the check strokes in.
  * Used at moments of completion (booking confirmed, onboarding done).
  * Pure SVG stroke-dash animation, no asset dependencies.
  */

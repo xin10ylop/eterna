@@ -12,7 +12,7 @@ import type { RootStackParamList } from '../../navigation/types';
 /**
  * "Preparing your plan" (Stoic / Cal AI pattern): a sequential checklist that
  * checks off while sparkles play, then reveals a personalized recap of what
- * Eterna will do with the questionnaire answers — the promise before the
+ * Eterna will do with the questionnaire answers, the promise before the
  * avatar studio asks for anything more.
  */
 
@@ -76,12 +76,12 @@ export function PlanScreen({ navigation }: NativeStackScreenProps<RootStackParam
     {
       icon: 'body-outline' as const,
       title: `${routine.length} rituals on your avatar`,
-      body: `Across ${zoneCount} ${zoneCount === 1 ? 'zone' : 'zones'} — each one glows softly when it needs attention.`,
+      body: `Across ${zoneCount} ${zoneCount === 1 ? 'zone' : 'zones'}, each one glows softly when it needs attention.`,
     },
     {
       icon: 'time-outline' as const,
       title: 'Cadences tuned to you',
-      body: 'Roots, filler, lashes — each on its own rhythm, remembered with every session.',
+      body: 'Roots, filler, lashes, each on its own rhythm, remembered with every session.',
     },
     {
       icon: 'wallet-outline' as const,
@@ -94,7 +94,7 @@ export function PlanScreen({ navigation }: NativeStackScreenProps<RootStackParam
     <OnboardingShell
       step={4}
       title={ready ? (firstName ? `${firstName}, here's your plan` : "Here's your plan") : 'One moment…'}
-      subtitle={ready ? 'Built from your answers — refine it any time.' : 'Eterna is preparing your space.'}
+      subtitle={ready ? 'Built from your answers, refine it any time.' : 'Eterna is preparing your space.'}
       cta="Continue"
       ctaDisabled={!ready}
       onNext={() => navigation.navigate('AvatarStudio')}

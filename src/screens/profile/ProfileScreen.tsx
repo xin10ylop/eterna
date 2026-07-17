@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Card, Chip, GhostButton, IOSSwitch, IconButton, Row, Screen, SectionLabel } from '../../components/ui';
 import { spacing, type, type AccentName } from '../../theme';
 import { useEterna, useTheme } from '../../store';
+import { packFor } from '../../components/avatar/config';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
@@ -45,8 +46,8 @@ export function ProfileScreen({ navigation }: Props) {
               }}
             >
               <Image
-                source={require('../../../assets/avatar/front.png')}
-                style={{ height: 140, width: 140 * 0.442, marginTop: 4 }}
+                source={packFor(profile?.avatar).frames[0]}
+                style={{ height: 140, width: 140 * packFor(profile?.avatar).aspect, marginTop: 4 }}
               />
             </View>
             <View style={{ flex: 1 }}>
@@ -68,7 +69,7 @@ export function ProfileScreen({ navigation }: Props) {
         <Card style={{ paddingVertical: 4 }}>
           <Row
             title="Avatar"
-            subtitle="Skin, shape, hair, outfit"
+            subtitle="Skin tone and hair"
             onPress={() => navigation.navigate('AvatarStudio', { fromProfile: true })}
           />
           <Row

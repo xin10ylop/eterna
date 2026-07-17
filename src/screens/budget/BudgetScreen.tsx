@@ -49,7 +49,7 @@ function SpendRing({ fraction, size = 108 }: { fraction: number; size?: number }
 }
 
 /**
- * Budget — hero total + booked/expected forecast + 6-month bars + zone
+ * Budget, hero total + booked/expected forecast + 6-month bars + zone
  * breakdown + upcoming appointment costs. Layout adapted from Apple Wallet's
  * spending summary and Cleo's category rows (Mobbin).
  */
@@ -131,7 +131,7 @@ export function BudgetScreen({ navigation }: Props) {
           <SectionLabel>Highlights</SectionLabel>
           <Text style={{ fontSize: 16, fontWeight: '600', color: t.text, lineHeight: 23 }}>
             {nextMonth > spent + booked
-              ? 'Next month is set to cost more than this one — two rituals fall due together.'
+              ? 'Next month is set to cost more than this one, two rituals fall due together.'
               : 'Next month is on track to cost less than this one.'}
           </Text>
           <View style={{ flexDirection: 'row', gap: spacing.l, marginTop: spacing.m }}>

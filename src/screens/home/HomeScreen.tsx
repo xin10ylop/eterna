@@ -6,7 +6,7 @@ import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { Screen, TimeChip } from '../../components/ui';
 import { Entrance } from '../../components/anim/Entrance';
 import { AvatarViewer } from '../../components/avatar/AvatarViewer';
-import { packForAvatar } from '../../components/avatar/config';
+import { packFor } from '../../components/avatar/config';
 import { ZoneMarkers } from '../../components/avatar/ZoneMarkers';
 import { ZONES } from '../../data/seed';
 import { needsAttention, nextDueISO, treatmentStatus, zoneAttentionCount } from '../../services/logic';
@@ -90,8 +90,8 @@ export function HomeScreen({ navigation }: Props) {
           })}
         >
           <Image
-            source={packForAvatar(profile?.avatar).frames[0]}
-            style={{ height: 96, width: 96 * packForAvatar(profile?.avatar).aspect, marginTop: 2 }}
+            source={packFor(profile?.avatar).frames[0]}
+            style={{ height: 96, width: 96 * packFor(profile?.avatar).aspect, marginTop: 2 }}
           />
         </Pressable>
       </View>
@@ -101,7 +101,7 @@ export function HomeScreen({ navigation }: Props) {
         <Entrance spring distance={24}>
           <AvatarViewer
             height={Math.min(430, Dimensions.get('window').height * 0.46)}
-            pack={packForAvatar(profile?.avatar)}
+            pack={packFor(profile?.avatar)}
           >
             <ZoneMarkers
               data={zoneData}

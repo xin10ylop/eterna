@@ -28,7 +28,7 @@ import { AddRitualScreen } from '../screens/modals/AddRitualScreen';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tabs = createBottomTabNavigator<TabParamList>();
 
-/** Placeholder for the center tab — the button intercepts and opens Add. */
+/** Placeholder for the center tab, the button intercepts and opens Add. */
 function NullScreen() {
   return null;
 }

@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Dimensions, Image, ScrollView, Text, View, type ImageSourcePropType } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { PrimaryButton, Screen } from '../../components/ui';
-import { BASE_PACK, DEEP_PACK, TAN_PACK } from '../../components/avatar/config';
+import { PACKS } from '../../components/avatar/config';
 import { spacing, type } from '../../theme';
 import { useTheme } from '../../store';
 import type { RootStackParamList } from '../../navigation/types';
@@ -11,7 +11,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Features'>;
 
 /**
  * Value slides, editorial register (Airbnb values-interstitial anatomy):
- * small-caps eyebrow, serif statement, one quiet body line — with the
+ * small-caps eyebrow, serif statement, one quiet body line, with the
  * Higgsfield avatar renders as the imagery.
  */
 const SLIDES: {
@@ -24,23 +24,23 @@ const SLIDES: {
   {
     eyebrow: 'The avatar',
     title: 'Your beauty, mapped',
-    body: 'Every treatment lives on her — hair, face, lips, hands, body. A soft glow shows what needs attention.',
-    image: BASE_PACK.frames[0],
-    aspect: BASE_PACK.aspect,
+    body: 'Every treatment lives on her: hair, face, lips, hands, body. A soft glow shows what needs attention.',
+    image: PACKS[0][0].frames[0],
+    aspect: PACKS[0][0].aspect,
   },
   {
     eyebrow: 'The memory',
     title: 'Never lose track again',
-    body: 'Roots, filler, lashes, laser — each on its own rhythm, remembered with every product and practitioner note.',
-    image: TAN_PACK.frames[1],
-    aspect: TAN_PACK.aspect,
+    body: 'Roots, filler, lashes, laser: each on its own rhythm, remembered with every product and practitioner note.',
+    image: PACKS[3][2].frames[0],
+    aspect: PACKS[3][2].aspect,
   },
   {
     eyebrow: 'The plan',
     title: 'Plan it. Budget it.',
-    body: 'See what is coming in a calendar, and know what this month — and next — will cost before it happens.',
-    image: DEEP_PACK.frames[7],
-    aspect: DEEP_PACK.aspect,
+    body: 'See what is coming in a calendar, and know what this month and next will cost before it happens.',
+    image: PACKS[5][0].frames[0],
+    aspect: PACKS[5][0].aspect,
   },
 ];
 

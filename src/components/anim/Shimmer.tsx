@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { radii } from '../../theme';
 import { useTheme } from '../../store';
 
-/** Skeleton shimmer bar — shown while content is "fetching".
+/** Skeleton shimmer bar, shown while content is "fetching".
  *  A soft light band sweeps across a muted base. */
 export function Shimmer({
   width = '100%',

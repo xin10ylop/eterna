@@ -17,7 +17,7 @@ type Props = CompositeScreenProps<
 
 const FILTERS = ['All', 'Hair', 'Skin', 'Nails', 'Lashes & Brows', 'Spa'];
 
-/** Discover — find and save new places. Booking a specific ritual lives in
+/** Discover, find and save new places. Booking a specific ritual lives in
  *  the Book flow; here you explore, save, and request open slots. */
 export function DiscoverScreen(_props: Props) {
   const t = useTheme();
@@ -29,7 +29,7 @@ export function DiscoverScreen(_props: Props) {
   const [filter, setFilter] = useState('All');
   const [expanded, setExpanded] = useState<string | null>(null);
   const [slotChoice, setSlotChoice] = useState<string | null>(null);
-  // Skeleton pass on first open — becomes the real fetch state with Supabase.
+  // Skeleton pass on first open, becomes the real fetch state with Supabase.
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const id = setTimeout(() => setLoading(false), 700);

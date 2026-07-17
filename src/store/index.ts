@@ -29,11 +29,8 @@ interface OnboardingDraft {
 }
 
 const defaultAvatar: AvatarConfig = {
-  skinTone: 1,
-  bodyShape: 1,
-  hairColor: 1,
-  hairLength: 2,
-  outfitColor: 0,
+  skinTone: 0,
+  hairLook: 0,
 };
 
 const emptyDraft: OnboardingDraft = {
@@ -217,7 +214,7 @@ export const useEterna = create<EternaState>((set, get) => ({
   },
 }));
 
-/** Theme hook — accent-aware, single source of truth for colors. */
+/** Theme hook, accent-aware, single source of truth for colors. */
 import { getTheme } from '../theme';
 export function useTheme() {
   const accent = useEterna((s) => s.accent);

@@ -11,7 +11,7 @@ import { addDays, addWeeks, todayISO } from '../lib/dates';
 /**
  * Demo dataset. Everything is derived from "today" so the demo always shows
  * a believable mix of overdue / due-soon / on-track and a forecastable
- * budget. Replace this module with a Supabase-backed repository later — the
+ * budget. Replace this module with a Supabase-backed repository later, the
  * shapes are the contract, not the values.
  */
 
@@ -74,25 +74,25 @@ const pr = (id: string): Practitioner => PRACTITIONERS.find((p) => p.id === id) 
 /** Rich visit history. Detail strings carry the clinical specifics; notes
  *  appear only when the practitioner actually left them. */
 export const SESSIONS: Session[] = [
-  // Lip filler — the flagship example of deep history
+  // Lip filler, the flagship example of deep history
   {
     id: 's-lip1', treatmentId: 't-lipfiller', dateISO: addWeeks(T, -12), clinicId: 'c2',
     practitioner: pr('pr2'), priceEUR: 280,
-    detail: '0.5 ml Restylane Kysse — mid-lip volume + border definition',
+    detail: '0.5 ml Restylane Kysse, mid-lip volume + border definition',
     products: ['Restylane Kysse 0.5 ml', 'Topical lidocaine 4%'],
     notes: 'Slight asymmetry on the left corrected from last time. Review at 2 weeks; client happy with shape. Next time consider 0.3 ml top-up only.',
   },
   {
     id: 's-lip2', treatmentId: 't-lipfiller', dateISO: addWeeks(T, -25), clinicId: 'c2',
     practitioner: pr('pr2'), priceEUR: 280,
-    detail: '0.5 ml Restylane Kysse — full lip refresh',
+    detail: '0.5 ml Restylane Kysse, full lip refresh',
     products: ['Restylane Kysse 0.5 ml'],
     notes: 'Mild bruising expected 3–4 days. Arnica advised.',
   },
   {
     id: 's-lip3', treatmentId: 't-lipfiller', dateISO: addWeeks(T, -38), clinicId: 'c5',
     practitioner: pr('pr1'), priceEUR: 300,
-    detail: '0.55 ml Juvéderm Volbella — first session, conservative volume',
+    detail: '0.55 ml Juvéderm Volbella, first session, conservative volume',
     products: ['Juvéderm Volbella 0.55 ml'],
   },
   // Botox
@@ -119,7 +119,7 @@ export const SESSIONS: Session[] = [
     id: 's-roots2', treatmentId: 't-roots', dateISO: addWeeks(T, -13), clinicId: 'c1',
     practitioner: pr('pr3'), priceEUR: 95,
     detail: 'Root color 5.3 + brightness refresh on lengths',
-    notes: 'Move to 6-week cadence — regrowth visible at week 5.',
+    notes: 'Move to 6-week cadence, regrowth visible at week 5.',
   },
   // Cut
   {
@@ -144,26 +144,26 @@ export const SESSIONS: Session[] = [
   {
     id: 's-mas1', treatmentId: 't-massage', dateISO: addWeeks(T, -2), clinicId: 'c7',
     practitioner: pr('pr6'), priceEUR: 85,
-    detail: '60 min deep tissue — shoulders and lower back focus',
+    detail: '60 min deep tissue, shoulders and lower back focus',
     notes: 'Recurring tension right trapezius; stretch routine suggested.',
   },
   // Manicure
   {
     id: 's-man1', treatmentId: 't-mani', dateISO: addWeeks(T, -3), clinicId: 'c4',
     practitioner: pr('pr5'), priceEUR: 45,
-    detail: 'Gel — almond shape, shade "Ballet Slipper"',
+    detail: 'Gel, almond shape, shade "Ballet Slipper"',
     products: ['OPI GelColor'],
   },
   {
     id: 's-man2', treatmentId: 't-mani', dateISO: addWeeks(T, -6), clinicId: 'c4',
     practitioner: pr('pr5'), priceEUR: 45,
-    detail: 'Gel — almond shape, shade "Terracotta"',
+    detail: 'Gel, almond shape, shade "Terracotta"',
   },
   // Laser
   {
     id: 's-las1', treatmentId: 't-laserbody', dateISO: addWeeks(T, -4), clinicId: 'c5',
     practitioner: pr('pr7'), priceEUR: 120,
-    detail: 'Session 4 of 8 — bikini + underarms, Candela GentleMax',
+    detail: 'Session 4 of 8, bikini + underarms, Candela GentleMax',
     notes: 'Energy raised to 16 J/cm². No adverse reaction.',
   },
   // Pedicure
@@ -180,7 +180,7 @@ export const SESSIONS: Session[] = [
   },
 ];
 
-/** Booked future visits — these drive the calendar and the budget forecast. */
+/** Booked future visits, these drive the calendar and the budget forecast. */
 export const APPOINTMENTS: Appointment[] = [
   { id: 'a1', treatmentId: 't-lipfiller', dateISO: addDays(T, 3), timeLabel: '15:30', clinicId: 'c2', priceEUR: 280 },
   { id: 'a2', treatmentId: 't-mani', dateISO: addDays(T, 6), timeLabel: '10:30', clinicId: 'c4', priceEUR: 45 },
@@ -189,8 +189,12 @@ export const APPOINTMENTS: Appointment[] = [
   { id: 'a5', treatmentId: 't-roots', dateISO: addDays(T, 24), timeLabel: '14:30', clinicId: 'c1', priceEUR: 95 },
 ];
 
+/** Six skin tones, porcelain to deep. Every tone has its own render pack. */
 export const SKIN_TONES = ['#F6E3D5', '#EFCFB6', '#DDAE8B', '#B97F5C', '#8D5A3B', '#5C3A26'];
-export const BODY_SHAPES = ['Slim', 'Balanced', 'Curvy'];
-export const HAIR_COLORS = ['#3B2A20', '#6B4A33', '#A3703F', '#C99D62', '#1E1B1A', '#8C8C8C'];
-export const HAIR_LENGTHS = ['Short', 'Medium', 'Long'];
-export const OUTFIT_COLORS = ['#EFE6D8', '#D9C6B8', '#C05F79', '#8B6BA6', '#5F8352', '#1C1C1E'];
+
+/** Hair looks. Each (skin tone × look) pairing is a distinct render pack. */
+export const HAIR_LOOKS: { key: 'long' | 'bob' | 'blonde'; label: string; swatch: string }[] = [
+  { key: 'long', label: 'Long', swatch: '#4A342A' },
+  { key: 'bob', label: 'Bob', swatch: '#4A342A' },
+  { key: 'blonde', label: 'Blonde', swatch: '#C99D62' },
+];

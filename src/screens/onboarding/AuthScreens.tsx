@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import { GhostButton, LinkText } from '../../components/ui';
 import { AnimatedCheck } from '../../components/anim/AnimatedCheck';
 import { OnboardingShell } from './OnboardingShell';
@@ -10,7 +11,7 @@ import { passwordStrength } from '../../lib/validation';
 import type { RootStackParamList } from '../../navigation/types';
 
 /**
- * Auth screens — DISPLAY ONLY for now (per product decision): the fields
+ * Auth screens, DISPLAY ONLY for now (per product decision): the fields
  * render and behave like the real thing, but nothing is required and no
  * account is created. The full validated flow lives in git history and
  * returns when Supabase auth lands.
@@ -67,6 +68,63 @@ function JoinedInput({
 function Caption({ children }: { children: React.ReactNode }) {
   const t = useTheme();
   return <Text style={{ fontSize: 12, color: t.muted, lineHeight: 17 }}>{children}</Text>;
+}
+
+/** "or" rule between email and social auth (Airbnb / Etsy pattern). */
+function OrDivider() {
+  const t = useTheme();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
+      <View style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: t.separator }} />
+      <Text style={{ fontSize: 12, color: t.muted }}>or</Text>
+      <View style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: t.separator }} />
+    </View>
+  );
+}
+
+/** Outlined social auth button: brand glyph left, centered label (display-only). */
+function SocialButton({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  onPress: () => void;
+}) {
+  const t = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.s,
+        paddingVertical: 15,
+        borderRadius: radii.m + 2,
+        borderWidth: 1,
+        borderColor: t.border,
+        backgroundColor: t.bg,
+        opacity: pressed ? 0.7 : 1,
+      })}
+    >
+      <Ionicons name={icon} size={19} color={t.text} />
+      <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>{label}</Text>
+    </Pressable>
+  );
+}
+
+/** Apple + Google, stacked. Display-only: continues the demo flow. */
+function SocialAuth({ onContinue }: { onContinue: () => void }) {
+  return (
+    <View style={{ gap: spacing.s }}>
+      <SocialButton icon="logo-apple" label="Continue with Apple" onPress={onContinue} />
+      <SocialButton icon="logo-google" label="Continue with Google" onPress={onContinue} />
+    </View>
+  );
 }
 
 export function SignUpScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'SignUp'>) {
@@ -133,9 +191,16 @@ export function SignUpScreen({ navigation }: NativeStackScreenProps<RootStackPar
           </View>
         ) : null}
         <Caption>
-          We'll email booking confirmations and ritual reminders — nothing else. Demo preview: you
+          We'll email booking confirmations and ritual reminders, nothing else. Demo preview: you
           can continue without filling this in.
         </Caption>
+        <OrDivider />
+        <SocialAuth
+          onContinue={() => {
+            setDraft({ email: 'you@icloud.com' });
+            navigation.navigate('Name');
+          }}
+        />
       </View>
     </OnboardingShell>
   );
@@ -183,6 +248,13 @@ export function SignInScreen({ navigation }: NativeStackScreenProps<RootStackPar
           />
         </JoinedFields>
         <Caption>Demo preview: you can continue without filling this in.</Caption>
+        <OrDivider />
+        <SocialAuth
+          onContinue={() => {
+            setDraft({ email: 'you@icloud.com' });
+            navigation.navigate('Name');
+          }}
+        />
       </View>
     </OnboardingShell>
   );

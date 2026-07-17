@@ -6,14 +6,14 @@ import type { ZoneId } from '../../types';
 import { useTheme } from '../../store';
 
 /**
- * Fixed zone markers — the "aura" treatment.
+ * Fixed zone markers, the "aura" treatment.
  *
  * Every zone has ONE fixed marker (hair, face, lips, body, hands, hips,
  * legs); the zone aggregates all of its treatments, so the map never gets
  * crowded no matter how much the user tracks.
  *
  * Visual language:
- * - Calm zone: a faint "glass" ring that recedes — visible, never loud.
+ * - Calm zone: a faint "glass" ring that recedes, visible, never loud.
  * - Attention zone: a soft luminous aura (radial gradient, no hard edge)
  *   with a crisp core, breathing slowly. Feels like light under the skin
  *   rather than a badge stuck on top.

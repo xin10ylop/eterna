@@ -1,5 +1,5 @@
 /**
- * Auth service — mock implementation.
+ * Auth service, mock implementation.
  *
  * The interface is the contract; `MockAuthService` will be replaced by a
  * `SupabaseAuthService` implementing the same methods. Security posture even

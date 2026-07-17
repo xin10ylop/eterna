@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, Easing } from 'react-native';
 
 /**
- * Staged entrance — fade + rise with a soft spring. Give siblings
+ * Staged entrance, fade + rise with a soft spring. Give siblings
  * increasing `delay` for an orchestrated page-load sequence.
  */
 export function Entrance({

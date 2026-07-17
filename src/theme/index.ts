@@ -19,13 +19,13 @@ const ACCENTS: Record<AccentName, { accent: string; accentSoft: string; onAccent
 export function getTheme(accent: AccentName) {
   const a = ACCENTS[accent];
   return {
-    // grounds — warm neutrals (Hims-style cream, not cool gray)
+    // grounds, warm neutrals (Hims-style cream, not cool gray)
     bg: '#FEFCFA',
     surface: '#F6F1EB',
     surfaceAlt: '#FBF8F4',
     border: '#ECE5DC',
     separator: '#EDE7DF',
-    // ink — warm near-black
+    // ink, warm near-black
     text: '#211D19',
     sub: '#6F6862',
     muted: '#A9A096',
@@ -51,7 +51,7 @@ const serifFamily = Platform.select({ ios: 'Georgia', android: 'serif', default:
 export const type = {
   /** Brand serif for the wordmark and hero moments. */
   serif: serifFamily,
-  /** Editorial serif display — onboarding questions, greetings, hero lines. */
+  /** Editorial serif display, onboarding questions, greetings, hero lines. */
   display: {
     fontFamily: serifFamily,
     fontSize: 28,
