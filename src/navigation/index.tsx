@@ -1,0 +1,173 @@
+import React from 'react';
+import { Pressable, View } from 'react-native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator, type BottomTabBarButtonProps } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
+import { useEterna, useTheme } from '../store';
+import type { RootStackParamList, TabParamList } from './types';
+
+import { WelcomeScreen } from '../screens/onboarding/WelcomeScreen';
+import { FeaturesScreen } from '../screens/onboarding/FeaturesScreen';
+import { SignInScreen, SignUpScreen, VerifyScreen } from '../screens/onboarding/AuthScreens';
+import { BirthdayScreen, MetricsScreen, NameScreen, RoutineScreen } from '../screens/onboarding/ProfileSteps';
+import { AvatarStudioScreen } from '../screens/onboarding/AvatarStudioScreen';
+import { NotificationsScreen, ReadyScreen } from '../screens/onboarding/FinishScreens';
+
+import { HomeScreen } from '../screens/home/HomeScreen';
+import { ZoneDetailScreen } from '../screens/home/ZoneDetailScreen';
+import { TreatmentDetailScreen } from '../screens/home/TreatmentDetailScreen';
+import { PlanningScreen } from '../screens/planning/PlanningScreen';
+import { DiscoverScreen } from '../screens/discover/DiscoverScreen';
+import { BudgetScreen } from '../screens/budget/BudgetScreen';
+import { ProfileScreen } from '../screens/profile/ProfileScreen';
+import { BookScreen } from '../screens/modals/BookScreen';
+import { AddRitualScreen } from '../screens/modals/AddRitualScreen';
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tabs = createBottomTabNavigator<TabParamList>();
+
+/** Placeholder for the center tab — the button intercepts and opens Add. */
+function NullScreen() {
+  return null;
+}
+
+function AddTabButton(props: BottomTabBarButtonProps) {
+  const t = useTheme();
+  return (
+    <View style={{ flex: 1, alignItems: 'center' }}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Add a ritual"
+        onPress={props.onPress as never}
+        style={({ pressed }) => ({
+          width: 52,
+          height: 52,
+          borderRadius: 26,
+          backgroundColor: t.accent,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: -18,
+          shadowColor: t.accent,
+          shadowOpacity: 0.4,
+          shadowRadius: 10,
+          shadowOffset: { width: 0, height: 5 },
+          elevation: 5,
+          transform: [{ scale: pressed ? 0.92 : 1 }],
+        })}
+      >
+        <Ionicons name="add" size={26} color={t.onAccent} />
+      </Pressable>
+    </View>
+  );
+}
+
+function MainTabs() {
+  const t = useTheme();
+  return (
+    <Tabs.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarActiveTintColor: t.accent,
+        tabBarInactiveTintColor: t.muted,
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
+        tabBarStyle: {
+          backgroundColor: t.tabBg,
+          borderTopColor: t.border,
+        },
+        tabBarIcon: ({ color, focused }) => {
+          const size = 24;
+          switch (route.name) {
+            case 'Home':
+              return <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />;
+            case 'Planning':
+              return <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={size} color={color} />;
+            case 'Discover':
+              return <Ionicons name={focused ? 'location' : 'location-outline'} size={size} color={color} />;
+            case 'Budget':
+              return <Ionicons name={focused ? 'wallet' : 'wallet-outline'} size={size} color={color} />;
+            default:
+              return null;
+          }
+        },
+      })}
+    >
+      <Tabs.Screen name="Home" component={HomeScreen} />
+      <Tabs.Screen name="Planning" component={PlanningScreen} />
+      <Tabs.Screen
+        name="Add"
+        component={NullScreen}
+        options={{
+          tabBarLabel: () => null,
+          tabBarButton: (props) => <AddTabButton {...props} />,
+        }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.getParent()?.navigate('AddRitual' as never);
+          },
+        })}
+      />
+      <Tabs.Screen name="Discover" component={DiscoverScreen} />
+      <Tabs.Screen name="Budget" component={BudgetScreen} />
+    </Tabs.Navigator>
+  );
+}
+
+export function RootNavigator() {
+  const t = useTheme();
+  const isSignedIn = useEterna((s) => s.isSignedIn);
+
+  const navTheme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      background: t.bg,
+      primary: t.accent,
+      card: t.bg,
+      text: t.text,
+      border: t.border,
+    },
+  };
+
+  return (
+    <NavigationContainer theme={navTheme}>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {!isSignedIn ? (
+          <Stack.Group>
+            <Stack.Screen name="Welcome" component={WelcomeScreen} />
+            <Stack.Screen name="Features" component={FeaturesScreen} />
+            <Stack.Screen name="SignUp" component={SignUpScreen} />
+            <Stack.Screen name="SignIn" component={SignInScreen} />
+            <Stack.Screen name="Verify" component={VerifyScreen} />
+            <Stack.Screen name="Name" component={NameScreen} />
+            <Stack.Screen name="Birthday" component={BirthdayScreen} />
+            <Stack.Screen name="Metrics" component={MetricsScreen} />
+            <Stack.Screen name="Routine" component={RoutineScreen} />
+            <Stack.Screen name="AvatarStudio" component={AvatarStudioScreen} />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} />
+            <Stack.Screen name="Ready" component={ReadyScreen} />
+          </Stack.Group>
+        ) : (
+          <Stack.Group>
+            <Stack.Screen name="Tabs" component={MainTabs} />
+            <Stack.Screen name="ZoneDetail" component={ZoneDetailScreen} />
+            <Stack.Screen name="TreatmentDetail" component={TreatmentDetailScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen
+              name="AvatarStudio"
+              component={AvatarStudioScreen}
+              options={{ presentation: 'modal' }}
+            />
+            <Stack.Screen name="Book" component={BookScreen} options={{ presentation: 'modal' }} />
+            <Stack.Screen
+              name="AddRitual"
+              component={AddRitualScreen}
+              options={{ presentation: 'modal' }}
+            />
+          </Stack.Group>
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
