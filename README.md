@@ -8,24 +8,26 @@ predictable.
 
 ## Preview
 
-**Expo Snack (no install):** open
-[snack.expo.dev/@git/github.com/xin10ylop/eterna](https://snack.expo.dev/@git/github.com/xin10ylop/eterna)
-— run in the browser, or scan a QR below with your phone camera / the Expo Go
-app ([iOS](https://apps.apple.com/app/expo-go/id982107779) ·
-[Android](https://play.google.com/store/apps/details?id=host.exp.exponent)).
-
-| `main` | design branch (`claude/eterna-ui-design-research-dgieiv`) |
-| :---: | :---: |
-| ![Snack QR — main](assets/qr/snack-main.png) | ![Snack QR — design branch](assets/qr/snack-branch.png) |
-
-**Locally:**
+**On your phone:** install Expo Go
+([iOS](https://apps.apple.com/app/expo-go/id982107779) ·
+[Android](https://play.google.com/store/apps/details?id=host.exp.exponent)),
+then:
 
 ```bash
 npm install
-npx expo start
+npx expo start --tunnel
 ```
 
-Scan the terminal QR with Expo Go (iOS/Android).
+Scan the QR the terminal prints — it deep-links straight into Expo Go.
+(`--tunnel` works from any network; plain `npx expo start` needs the phone
+and computer on the same Wi-Fi.)
+
+**In the browser:** `npm run web`.
+
+> Expo removed Snack's `@git` repo-import URLs (they now 404 for every
+> repository), so this README no longer links a Snack preview. For a
+> scan-anytime QR without a laptop, publish an EAS Update channel on each
+> push — requires an Expo account token in CI.
 
 ## App map
 
