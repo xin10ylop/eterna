@@ -3,6 +3,7 @@ import { ScrollView, Text, View } from 'react-native';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import Svg, { Circle } from 'react-native-svg';
 import { Card, Screen, SectionLabel } from '../../components/ui';
 import { ZONES } from '../../data/seed';
 import {
@@ -21,6 +22,31 @@ type Props = CompositeScreenProps<
   BottomTabScreenProps<TabParamList, 'Budget'>,
   NativeStackScreenProps<RootStackParamList>
 >;
+
+/** Progress ring: spent portion of the month's planned total. */
+function SpendRing({ fraction, size = 108 }: { fraction: number; size?: number }) {
+  const t = useTheme();
+  const R = 44;
+  const LEN = 2 * Math.PI * R;
+  const f = Math.min(1, Math.max(0, fraction));
+  return (
+    <Svg width={size} height={size} viewBox="0 0 108 108">
+      <Circle cx="54" cy="54" r={R} stroke={t.accentSoft} strokeWidth={11} fill="none" />
+      <Circle
+        cx="54"
+        cy="54"
+        r={R}
+        stroke={t.accent}
+        strokeWidth={11}
+        fill="none"
+        strokeLinecap="round"
+        strokeDasharray={`${LEN}`}
+        strokeDashoffset={LEN * (1 - f)}
+        transform="rotate(-90 54 54)"
+      />
+    </Svg>
+  );
+}
 
 /**
  * Budget — hero total + booked/expected forecast + 6-month bars + zone
@@ -71,10 +97,18 @@ export function BudgetScreen({ navigation }: Props) {
       >
         {/* hero */}
         <Card>
-          <Text style={[type.label, { color: t.muted }]}>Spent this month</Text>
-          <Text style={{ fontSize: 40, fontWeight: '700', color: t.text, letterSpacing: -1, marginTop: 4 }}>
-            {formatEUR(spent)}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.l }}>
+            <View style={{ flex: 1 }}>
+              <Text style={[type.label, { color: t.muted }]}>Spent this month</Text>
+              <Text style={{ fontSize: 38, fontWeight: '700', color: t.text, letterSpacing: -1, marginTop: 4 }}>
+                {formatEUR(spent)}
+              </Text>
+              <Text style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>
+                of {formatEUR(spent + booked)} planned
+              </Text>
+            </View>
+            <SpendRing fraction={spent + booked > 0 ? spent / (spent + booked) : 0} />
+          </View>
           <View style={{ flexDirection: 'row', gap: spacing.l, marginTop: spacing.m }}>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 13, color: t.sub }}>Still booked this month</Text>

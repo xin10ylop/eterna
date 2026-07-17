@@ -1,19 +1,22 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Chip, IconButton, PrimaryButton, Screen, SectionLabel } from '../../components/ui';
+import { IconButton, Screen, SectionLabel } from '../../components/ui';
 import { AnimatedCheck } from '../../components/anim/AnimatedCheck';
 import { Entrance } from '../../components/anim/Entrance';
-import { addDays, formatLong, todayISO } from '../../lib/dates';
+import { addDays, formatLong, monthShort, todayISO, weekdayShort } from '../../lib/dates';
 import { formatEUR } from '../../lib/money';
-import { spacing, type } from '../../theme';
+import { cardShadow, radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Book'>;
 
-/** Simple two-step booking: pick a day chip, pick a time, confirm.
- *  Date + slot pattern following Booking.com's picker (Mobbin). */
+/**
+ * Booking — Airbnb-style: horizontal date cards, a time grid, and a pinned
+ * bottom bar with the price on the left and the primary action on the right.
+ * Ends in a drawn-check success moment.
+ */
 export function BookScreen({ navigation, route }: Props) {
   const t = useTheme();
   const tr = useEterna((s) => s.treatments.find((x) => x.id === route.params.treatmentId));
@@ -21,16 +24,21 @@ export function BookScreen({ navigation, route }: Props) {
   const book = useEterna((s) => s.book);
   const showToast = useEterna((s) => s.showToast);
 
-  const days = useMemo(() => Array.from({ length: 6 }, (_, i) => addDays(todayISO(), i + 1)), []);
-  const times = ['09:30', '11:00', '14:30', '16:15', '18:00'];
+  const days = useMemo(() => Array.from({ length: 10 }, (_, i) => addDays(todayISO(), i + 1)), []);
+  const times = ['09:30', '11:00', '13:15', '14:30', '16:15', '18:00'];
   const [day, setDay] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
 
-  if (!tr) return <Screen><Text style={{ marginTop: 100, textAlign: 'center', color: t.sub }}>Treatment not found.</Text></Screen>;
+  if (!tr) {
+    return (
+      <Screen>
+        <Text style={{ marginTop: 100, textAlign: 'center', color: t.sub }}>Treatment not found.</Text>
+      </Screen>
+    );
+  }
   const clinic = clinics.find((c) => c.id === tr.clinicId);
 
-  // Success moment: the check draws itself, then the sheet closes.
   if (confirmed && day && time) {
     return (
       <Screen>
@@ -55,49 +63,141 @@ export function BookScreen({ navigation, route }: Props) {
   }
 
   return (
-    <Screen>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m, paddingTop: spacing.s }}>
+    <Screen padded={false}>
+      <View style={{ paddingHorizontal: spacing.xl, flexDirection: 'row', alignItems: 'center', gap: spacing.m, paddingTop: spacing.s }}>
         <IconButton name="close" onPress={() => navigation.goBack()} accessibilityLabel="Close" />
         <View style={{ flex: 1 }}>
           <Text style={[type.title, { color: t.text }]}>Book {tr.name.toLowerCase()}</Text>
-          <Text style={{ fontSize: 14, color: t.sub, marginTop: 2 }}>
-            {clinic?.name} · usually {formatEUR(tr.priceEUR)}
+          <Text style={{ fontSize: 14, color: t.sub, marginTop: 2 }}>{clinic?.name}</Text>
+        </View>
+      </View>
+
+      <ScrollView
+        style={{ marginTop: spacing.xl }}
+        contentContainerStyle={{ paddingBottom: 140, gap: spacing.xl }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* date cards */}
+        <View style={{ gap: spacing.s }}>
+          <View style={{ paddingHorizontal: spacing.xl }}>
+            <SectionLabel>Pick a day</SectionLabel>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: spacing.xl, gap: spacing.s }}
+          >
+            {days.map((d) => {
+              const sel = day === d;
+              return (
+                <Pressable
+                  key={d}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: sel }}
+                  onPress={() => setDay(d)}
+                  style={({ pressed }) => ({
+                    width: 66,
+                    paddingVertical: 12,
+                    borderRadius: radii.l,
+                    alignItems: 'center',
+                    gap: 2,
+                    backgroundColor: sel ? t.accent : t.bg,
+                    borderWidth: sel ? 0 : StyleSheet.hairlineWidth,
+                    borderColor: t.border,
+                    ...(sel ? {} : cardShadow),
+                    transform: [{ scale: pressed ? 0.95 : 1 }],
+                  })}
+                >
+                  <Text style={{ fontSize: 11, fontWeight: '600', color: sel ? t.onAccent : t.muted }}>
+                    {weekdayShort(d).toUpperCase()}
+                  </Text>
+                  <Text style={{ fontSize: 20, fontWeight: '700', color: sel ? t.onAccent : t.text }}>
+                    {Number(d.slice(8))}
+                  </Text>
+                  <Text style={{ fontSize: 11, fontWeight: '500', color: sel ? t.onAccent : t.muted }}>
+                    {monthShort(d)}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        {/* time grid */}
+        <View style={{ paddingHorizontal: spacing.xl, gap: spacing.s }}>
+          <SectionLabel>Pick a time</SectionLabel>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.s }}>
+            {times.map((x) => {
+              const sel = time === x;
+              return (
+                <Pressable
+                  key={x}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: sel }}
+                  onPress={() => setTime(x)}
+                  style={({ pressed }) => ({
+                    width: '30%',
+                    paddingVertical: 13,
+                    borderRadius: radii.m,
+                    alignItems: 'center',
+                    backgroundColor: sel ? t.accent : t.surface,
+                    borderWidth: StyleSheet.hairlineWidth,
+                    borderColor: sel ? t.accent : t.border,
+                    transform: [{ scale: pressed ? 0.95 : 1 }],
+                  })}
+                >
+                  <Text style={{ fontSize: 15, fontWeight: '600', color: sel ? t.onAccent : t.text }}>
+                    {x}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* pinned price + action bar (Airbnb pattern) */}
+      <View
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.m,
+          paddingHorizontal: spacing.xl,
+          paddingTop: spacing.m,
+          paddingBottom: spacing.xxl,
+          backgroundColor: t.bg,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: t.border,
+        }}
+      >
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: t.text }}>{formatEUR(tr.priceEUR)}</Text>
+          <Text style={{ fontSize: 12, color: t.sub }}>
+            {day && time ? `${formatLong(day)} · ${time}` : 'usual price'}
           </Text>
         </View>
-      </View>
-
-      <View style={{ marginTop: spacing.xl, gap: spacing.l, flex: 1 }}>
-        <View style={{ gap: spacing.s }}>
-          <SectionLabel>Day</SectionLabel>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.s }}>
-            {days.map((d) => (
-              <Chip key={d} label={formatLong(d)} selected={day === d} onPress={() => setDay(d)} />
-            ))}
-          </View>
-        </View>
-        <View style={{ gap: spacing.s }}>
-          <SectionLabel>Time</SectionLabel>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.s }}>
-            {times.map((x) => (
-              <Chip key={x} label={x} selected={time === x} onPress={() => setTime(x)} />
-            ))}
-          </View>
-        </View>
-      </View>
-
-      <View style={{ paddingBottom: spacing.xxl, gap: spacing.s }}>
-        <PrimaryButton
-          title={day && time ? `Confirm ${formatLong(day)} · ${time}` : 'Pick a day and time'}
-          disabled={!day || !time}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !day || !time }}
           onPress={() => {
             if (!day || !time) return;
             book(tr.id, day, time);
             setConfirmed(true);
           }}
-        />
-        <Pressable onPress={() => navigation.goBack()}>
-          <Text style={{ textAlign: 'center', color: t.accent, fontSize: 15, fontWeight: '600', paddingVertical: 8 }}>
-            Not now
+          style={({ pressed }) => ({
+            paddingVertical: 15,
+            paddingHorizontal: 30,
+            borderRadius: radii.l,
+            backgroundColor: day && time ? t.accent : t.faint,
+            transform: [{ scale: pressed && day && time ? 0.97 : 1 }],
+          })}
+        >
+          <Text style={{ color: day && time ? t.onAccent : t.sub, fontSize: 16, fontWeight: '700' }}>
+            Confirm
           </Text>
         </Pressable>
       </View>

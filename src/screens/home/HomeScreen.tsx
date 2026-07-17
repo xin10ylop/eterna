@@ -10,7 +10,7 @@ import { ZoneMarkers } from '../../components/avatar/ZoneMarkers';
 import { ZONES } from '../../data/seed';
 import { needsAttention, nextDueISO, treatmentStatus, zoneAttentionCount } from '../../services/logic';
 import { humanizeDue } from '../../lib/dates';
-import { radii, spacing, type } from '../../theme';
+import { cardShadow, radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import type { RootStackParamList, TabParamList } from '../../navigation/types';
 
@@ -116,12 +116,15 @@ export function HomeScreen({ navigation }: Props) {
           <View
             style={{
               marginHorizontal: spacing.xl,
-              backgroundColor: t.surface,
-              borderRadius: radii.l,
+              backgroundColor: t.bg,
+              borderRadius: radii.card,
+              borderWidth: 1,
+              borderColor: t.border,
               padding: spacing.l,
               flexDirection: 'row',
               alignItems: 'center',
               gap: spacing.m,
+              ...cardShadow,
             }}
           >
             <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: t.positive }} />
@@ -146,12 +149,15 @@ export function HomeScreen({ navigation }: Props) {
                   onPress={() => navigation.navigate('TreatmentDetail', { treatmentId: tr.id })}
                   style={({ pressed }) => ({
                     width: cardW,
-                    backgroundColor: t.surface,
-                    borderRadius: radii.l,
+                    backgroundColor: t.bg,
+                    borderRadius: radii.card,
+                    borderWidth: 1,
+                    borderColor: t.border,
                     padding: spacing.l,
                     flexDirection: 'row',
                     alignItems: 'center',
                     gap: spacing.m,
+                    ...cardShadow,
                     transform: [{ scale: pressed ? 0.98 : 1 }],
                   })}
                 >

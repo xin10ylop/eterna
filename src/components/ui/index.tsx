@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { radii, spacing, type } from '../../theme';
+import { cardShadow, radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 
 /* ---------------------------------- Screen -------------------------------- */
@@ -154,11 +154,12 @@ export function Card({
 }) {
   const t = useTheme();
   const base: ViewStyle = {
-    backgroundColor: t.surface,
-    borderRadius: radii.l,
+    backgroundColor: t.bg,
+    borderRadius: radii.card,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: t.border,
     padding: spacing.l,
+    ...cardShadow,
   };
   if (!onPress) return <View style={[base, style]}>{children}</View>;
   return (
@@ -421,21 +422,34 @@ export function ProgressBar({ value, height = 6 }: { value: number; height?: num
   );
 }
 
+/** Duolingo-style chunky progress bar: one rounded track, animated fill. */
 export function StepDots({ total, index }: { total: number; index: number }) {
   const t = useTheme();
+  const v = useRef(new Animated.Value(index / total)).current;
+  useEffect(() => {
+    Animated.timing(v, {
+      toValue: (index + 1) / total,
+      duration: 350,
+      useNativeDriver: false,
+    }).start();
+  }, [index, total, v]);
   return (
-    <View style={{ flexDirection: 'row', gap: 6 }}>
-      {Array.from({ length: total }).map((_, i) => (
-        <View
-          key={i}
-          style={{
-            height: 4,
-            flex: 1,
-            borderRadius: 2,
-            backgroundColor: i <= index ? t.accent : t.surface,
-          }}
-        />
-      ))}
+    <View
+      style={{
+        height: 10,
+        borderRadius: 5,
+        backgroundColor: t.surface,
+        overflow: 'hidden',
+      }}
+    >
+      <Animated.View
+        style={{
+          height: '100%',
+          borderRadius: 5,
+          backgroundColor: t.accent,
+          width: v.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
+        }}
+      />
     </View>
   );
 }

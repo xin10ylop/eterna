@@ -10,10 +10,10 @@ import { Platform } from 'react-native';
 export type AccentName = 'Terracotta' | 'Rosé' | 'Mauve' | 'Sage';
 
 const ACCENTS: Record<AccentName, { accent: string; accentSoft: string; onAccent: string }> = {
-  Terracotta: { accent: '#B4634A', accentSoft: '#F6EAE4', onAccent: '#FFFFFF' },
-  'Rosé': { accent: '#C05F79', accentSoft: '#F8E9EE', onAccent: '#FFFFFF' },
-  Mauve: { accent: '#8B6BA6', accentSoft: '#EFE9F5', onAccent: '#FFFFFF' },
-  Sage: { accent: '#5F8352', accentSoft: '#E9F0E2', onAccent: '#FFFFFF' },
+  Terracotta: { accent: '#94472F', accentSoft: '#F3E2DA', onAccent: '#FFFFFF' },
+  'Rosé': { accent: '#A94A63', accentSoft: '#F8E9EE', onAccent: '#FFFFFF' },
+  Mauve: { accent: '#7A5A96', accentSoft: '#EFE9F5', onAccent: '#FFFFFF' },
+  Sage: { accent: '#52733F', accentSoft: '#E9F0E2', onAccent: '#FFFFFF' },
 };
 
 export function getTheme(accent: AccentName) {
@@ -63,4 +63,13 @@ export const type = {
 };
 
 export const spacing = { xs: 4, s: 8, m: 12, l: 16, xl: 24, xxl: 32 };
-export const radii = { s: 8, m: 12, l: 16, xl: 24, pill: 100 };
+export const radii = { s: 8, m: 12, l: 16, card: 20, xl: 24, pill: 100 };
+
+/** Airbnb-style soft elevation for white cards on the porcelain ground. */
+export const cardShadow = {
+  shadowColor: '#1C1C1E',
+  shadowOpacity: 0.06,
+  shadowRadius: 14,
+  shadowOffset: { width: 0, height: 4 },
+  elevation: 2,
+} as const;
