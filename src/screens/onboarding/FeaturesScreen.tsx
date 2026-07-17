@@ -1,29 +1,46 @@
 import React, { useRef, useState } from 'react';
-import { Dimensions, ScrollView, Text, View } from 'react-native';
+import { Dimensions, Image, ScrollView, Text, View, type ImageSourcePropType } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
 import { PrimaryButton, Screen } from '../../components/ui';
-import { radii, spacing, type } from '../../theme';
+import { BASE_PACK, DEEP_PACK, TAN_PACK } from '../../components/avatar/config';
+import { spacing, type } from '../../theme';
 import { useTheme } from '../../store';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Features'>;
 
-const SLIDES: { icon: keyof typeof Ionicons.glyphMap; title: string; body: string }[] = [
+/**
+ * Value slides, editorial register (Airbnb values-interstitial anatomy):
+ * small-caps eyebrow, serif statement, one quiet body line — with the
+ * Higgsfield avatar renders as the imagery.
+ */
+const SLIDES: {
+  eyebrow: string;
+  title: string;
+  body: string;
+  image: ImageSourcePropType;
+  aspect: number;
+}[] = [
   {
-    icon: 'body-outline',
+    eyebrow: 'The avatar',
     title: 'Your beauty, mapped',
-    body: 'Every treatment lives on your avatar — hair, face, lips, hands, body. One glance shows what needs attention.',
+    body: 'Every treatment lives on her — hair, face, lips, hands, body. A soft glow shows what needs attention.',
+    image: BASE_PACK.frames[0],
+    aspect: BASE_PACK.aspect,
   },
   {
-    icon: 'time-outline',
+    eyebrow: 'The memory',
     title: 'Never lose track again',
-    body: 'Roots, filler, lashes, laser — each on its own rhythm. Eterna remembers every session, product and practitioner note.',
+    body: 'Roots, filler, lashes, laser — each on its own rhythm, remembered with every product and practitioner note.',
+    image: TAN_PACK.frames[1],
+    aspect: TAN_PACK.aspect,
   },
   {
-    icon: 'wallet-outline',
+    eyebrow: 'The plan',
     title: 'Plan it. Budget it.',
-    body: 'See upcoming appointments in a calendar and know what this month — and next — will cost before it happens.',
+    body: 'See what is coming in a calendar, and know what this month — and next — will cost before it happens.',
+    image: DEEP_PACK.frames[7],
+    aspect: DEEP_PACK.aspect,
   },
 ];
 
@@ -47,20 +64,36 @@ export function FeaturesScreen({ navigation }: Props) {
             <View key={s.title} style={{ width: W, alignItems: 'center', gap: spacing.l, paddingHorizontal: spacing.s }}>
               <View
                 style={{
-                  width: 96,
-                  height: 96,
-                  borderRadius: radii.xl,
-                  backgroundColor: t.accentSoft,
+                  width: 190,
+                  height: 230,
                   alignItems: 'center',
-                  justifyContent: 'center',
+                  justifyContent: 'flex-end',
                 }}
               >
-                <Ionicons name={s.icon} size={44} color={t.accent} />
+                {/* soft blush ellipse behind the figure */}
+                <View
+                  style={{
+                    position: 'absolute',
+                    bottom: 6,
+                    width: 170,
+                    height: 170,
+                    borderRadius: 85,
+                    backgroundColor: t.accentSoft,
+                  }}
+                />
+                <Image
+                  source={s.image}
+                  style={{ height: 220, width: 220 * s.aspect, resizeMode: 'contain' }}
+                  accessibilityLabel={s.eyebrow}
+                />
               </View>
-              <Text style={[type.title, { color: t.text, textAlign: 'center' }]}>{s.title}</Text>
-              <Text style={{ fontSize: 15, lineHeight: 22, color: t.sub, textAlign: 'center', maxWidth: 300 }}>
-                {s.body}
-              </Text>
+              <View style={{ alignItems: 'center', gap: spacing.s }}>
+                <Text style={[type.label, { color: t.accent }]}>{s.eyebrow}</Text>
+                <Text style={[type.display, { color: t.text, textAlign: 'center' }]}>{s.title}</Text>
+                <Text style={{ fontSize: 15, lineHeight: 22, color: t.sub, textAlign: 'center', maxWidth: 300 }}>
+                  {s.body}
+                </Text>
+              </View>
             </View>
           ))}
         </ScrollView>

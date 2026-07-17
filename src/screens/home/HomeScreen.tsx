@@ -68,7 +68,7 @@ export function HomeScreen({ navigation }: Props) {
         }}
       >
         <View style={{ flex: 1 }}>
-          <Text style={[type.largeTitle, { color: t.text }]}>
+          <Text style={[type.display, { color: t.text }]}>
             Good {dayPart}, {profile?.firstName ?? 'you'}
           </Text>
           <Text style={{ fontSize: 15, color: t.sub, marginTop: 2 }}>{line}</Text>

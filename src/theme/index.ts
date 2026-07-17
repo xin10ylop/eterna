@@ -46,9 +46,18 @@ export function getTheme(accent: AccentName) {
 
 export type Theme = ReturnType<typeof getTheme>;
 
+const serifFamily = Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia' }) as string;
+
 export const type = {
   /** Brand serif for the wordmark and hero moments. */
-  serif: Platform.select({ ios: 'Georgia', android: 'serif', default: 'Georgia' }) as string,
+  serif: serifFamily,
+  /** Editorial serif display — onboarding questions, greetings, hero lines. */
+  display: {
+    fontFamily: serifFamily,
+    fontSize: 28,
+    fontWeight: '600' as const,
+    letterSpacing: -0.2,
+  },
   largeTitle: { fontSize: 30, fontWeight: '700' as const, letterSpacing: -0.5 },
   title: { fontSize: 22, fontWeight: '700' as const, letterSpacing: -0.3 },
   headline: { fontSize: 17, fontWeight: '600' as const },

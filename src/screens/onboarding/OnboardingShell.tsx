@@ -57,7 +57,7 @@ export function OnboardingShell({
           </View>
 
           <View style={{ gap: 6 }}>
-            <Text style={[type.largeTitle, { color: t.text }]}>{title}</Text>
+            <Text style={[type.display, { color: t.text }]}>{title}</Text>
             {subtitle ? <Text style={[type.body, { color: t.sub, lineHeight: 21 }]}>{subtitle}</Text> : null}
           </View>
 

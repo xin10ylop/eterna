@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Chip, Field, Segmented, WheelPicker } from '../../components/ui';
+import { Field, OptionCard, Segmented, WheelPicker } from '../../components/ui';
 import { OnboardingShell } from './OnboardingShell';
 import { spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
@@ -219,11 +219,42 @@ export function MetricsScreen({ navigation }: NativeStackScreenProps<RootStackPa
 
 /* ------------------------------- Routine picker ------------------------------ */
 
-const ROUTINE_GROUPS: { title: string; items: string[] }[] = [
-  { title: 'Hair', items: ['Roots touch-up', 'Cut & style', 'Keratin', 'Extensions'] },
-  { title: 'Face', items: ['Botox', 'Hydrafacial', 'Lip filler', 'Brows & lashes', 'Skin boosters'] },
-  { title: 'Nails', items: ['Gel manicure', 'Pedicure'] },
-  { title: 'Body', items: ['Laser hair removal', 'Waxing', 'Massage', 'Body contouring'] },
+const ROUTINE_GROUPS: { title: string; items: { name: string; hint: string }[] }[] = [
+  {
+    title: 'Hair',
+    items: [
+      { name: 'Roots touch-up', hint: 'every 4–6 weeks' },
+      { name: 'Cut & style', hint: 'every 6–8 weeks' },
+      { name: 'Keratin', hint: 'every 3–4 months' },
+      { name: 'Extensions', hint: 'every 6–8 weeks' },
+    ],
+  },
+  {
+    title: 'Face',
+    items: [
+      { name: 'Botox', hint: 'every 3–4 months' },
+      { name: 'Hydrafacial', hint: 'every 4 weeks' },
+      { name: 'Lip filler', hint: 'every 4–6 months' },
+      { name: 'Brows & lashes', hint: 'every 3–4 weeks' },
+      { name: 'Skin boosters', hint: 'every 2–3 months' },
+    ],
+  },
+  {
+    title: 'Nails',
+    items: [
+      { name: 'Gel manicure', hint: 'every 2–3 weeks' },
+      { name: 'Pedicure', hint: 'every 3–4 weeks' },
+    ],
+  },
+  {
+    title: 'Body',
+    items: [
+      { name: 'Laser hair removal', hint: 'every 4–8 weeks' },
+      { name: 'Waxing', hint: 'every 3–5 weeks' },
+      { name: 'Massage', hint: 'whenever you need it' },
+      { name: 'Body contouring', hint: 'course of sessions' },
+    ],
+  },
 ];
 
 export function RoutineScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Routine'>) {
@@ -250,9 +281,16 @@ export function RoutineScreen({ navigation }: NativeStackScreenProps<RootStackPa
         {ROUTINE_GROUPS.map((g) => (
           <View key={g.title} style={{ gap: spacing.s }}>
             <Text style={[type.label, { color: t.muted }]}>{g.title}</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.s }}>
+            <View style={{ gap: spacing.s }}>
               {g.items.map((item) => (
-                <Chip key={item} label={item} selected={picked.includes(item)} onPress={() => toggle(item)} />
+                <OptionCard
+                  key={item.name}
+                  multi
+                  label={item.name}
+                  sublabel={item.hint}
+                  selected={picked.includes(item.name)}
+                  onPress={() => toggle(item.name)}
+                />
               ))}
             </View>
           </View>

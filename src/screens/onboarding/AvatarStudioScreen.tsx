@@ -1,9 +1,9 @@
-import React from 'react';
-import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Pressable, ScrollView, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Chip } from '../../components/ui';
 import { OnboardingShell } from './OnboardingShell';
-import { packForAvatar } from '../../components/avatar/config';
+import { PACKS, matchPack } from '../../components/avatar/config';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import {
@@ -16,12 +16,53 @@ import {
 import type { RootStackParamList } from '../../navigation/types';
 
 /**
- * Avatar customization. Choices persist on the profile and define which
- * avatar render pack the app requests. Additional packs (per skin tone,
- * body shape, hair, outfit) are generated with Higgsfield and slot into
- * `components/avatar/config.ts` — until a matching pack exists, the default
- * render represents the avatar and the selection is kept.
+ * Avatar customization. Six Higgsfield render packs are live (skin tones,
+ * blonde, short bob, curvy); `matchPack` picks the closest one and the
+ * caption says honestly when a combination is approximate. The preview
+ * keeps every pack's front frame mounted and crossfades opacity, so
+ * switching is instant and smooth rather than a decode-lag pop.
  */
+
+const PREVIEW_H = 210;
+
+function PackPreview({ activeKey }: { activeKey: string }) {
+  const fades = useRef(
+    Object.fromEntries(PACKS.map((d) => [d.key, new Animated.Value(d.key === activeKey ? 1 : 0)])),
+  ).current;
+
+  useEffect(() => {
+    Animated.parallel(
+      PACKS.map((d) =>
+        Animated.timing(fades[d.key], {
+          toValue: d.key === activeKey ? 1 : 0,
+          duration: 220,
+          useNativeDriver: true,
+        }),
+      ),
+    ).start();
+  }, [activeKey, fades]);
+
+  const width = PREVIEW_H * 0.46;
+  return (
+    <View style={{ height: PREVIEW_H, width, alignItems: 'center', justifyContent: 'flex-end' }}>
+      {PACKS.map((d) => (
+        <Animated.Image
+          key={d.key}
+          source={d.pack.frames[0]}
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            height: PREVIEW_H,
+            width: PREVIEW_H * d.pack.aspect,
+            resizeMode: 'contain',
+            opacity: fades[d.key],
+          }}
+          accessibilityLabel={d.key === activeKey ? 'Avatar preview' : undefined}
+        />
+      ))}
+    </View>
+  );
+}
 
 function Swatches({
   colors,
@@ -66,31 +107,40 @@ export function AvatarStudioScreen({
   route,
 }: NativeStackScreenProps<RootStackParamList, 'AvatarStudio'>) {
   const t = useTheme();
-  const fromProfile = route.params?.fromProfile ?? false;
   const profile = useEterna((s) => s.profile);
   const draft = useEterna((s) => s.draft);
   const setAvatar = useEterna((s) => s.setAvatar);
+  const showToast = useEterna((s) => s.showToast);
   const avatar = profile ? profile.avatar : draft.avatar;
+  // Signed-in users can only be here from Profile (modal) — exit by going
+  // back. Deciding on profile presence instead of route params makes the
+  // exit safe on every path ('Notifications' only exists pre-sign-in).
+  const editingFromProfile = !!profile || (route.params?.fromProfile ?? false);
 
-  const pack = packForAvatar(avatar);
+  const match = matchPack(avatar);
 
   return (
     <OnboardingShell
-      step={fromProfile ? null : 5}
+      step={editingFromProfile ? null : 5}
       title="Make her yours"
       subtitle="Skin, shape, hair and outfit — your avatar should feel like you."
-      cta={fromProfile ? 'Save' : 'Continue'}
-      onNext={() => (fromProfile ? navigation.goBack() : navigation.navigate('Notifications'))}
+      cta={editingFromProfile ? 'Save' : 'Continue'}
+      onNext={() => {
+        if (editingFromProfile) {
+          showToast('Saved — she follows your look');
+          navigation.goBack();
+        } else {
+          navigation.navigate('Notifications');
+        }
+      }}
     >
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: spacing.xl, paddingTop: spacing.s }}>
-        <View style={{ alignItems: 'center' }}>
-          <Image
-            source={pack.frames[0]}
-            style={{ height: 200, width: 200 * pack.aspect, resizeMode: 'contain' }}
-            accessibilityLabel="Avatar preview"
-          />
-          <Text style={{ fontSize: 12, color: t.muted, marginTop: spacing.s, textAlign: 'center' }}>
-            Rendered with Higgsfield — the preview follows your skin tone.
+        <View style={{ alignItems: 'center', gap: spacing.s }}>
+          <PackPreview activeKey={match.key} />
+          <Text style={{ fontSize: 12, color: t.muted, textAlign: 'center', maxWidth: 280 }}>
+            {match.exact
+              ? 'Rendered with Higgsfield — she follows your choices.'
+              : 'Closest live render shown — this exact combination is still being rendered.'}
           </Text>
         </View>
 
@@ -126,7 +176,8 @@ export function AvatarStudioScreen({
           }}
         >
           <Text style={{ fontSize: 13, color: t.text, lineHeight: 19 }}>
-            Drag her on the Home screen to spin the full 8-view turnaround.
+            Six render packs are live — skin tones, blonde, short bob, curvy. Every remaining
+            combination gets its own pack as they render, and your choices are saved either way.
           </Text>
         </View>
       </ScrollView>
