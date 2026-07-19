@@ -1,17 +1,17 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
-import { ZONES } from '../../data/seed';
+import { AVATAR_MARKERS } from '../../data/seed';
 import type { ZoneId } from '../../types';
 import { useTheme } from '../../store';
 
 /**
- * Fixed zone markers on the avatar.
+ * Four fixed markers on the avatar — hair, face, body, hands.
  *
- * Every zone shows a small, refined "glass bead" at its fixed body position
- * so the map is always legible. A zone that needs attention lifts into a soft
- * accent dome (radial glow) with a solid core and a gentle breath, plus a
- * count when several items are due. Calm and clean — no hard-edged blobs.
+ * Each shows a small, refined "glass bead" at its fixed position so the map is
+ * always legible. A marker that needs attention lifts into a soft accent dome
+ * (radial glow) with a solid core and a gentle breath, plus a count when
+ * several items are due. Calm and clean — no hard-edged blobs.
  */
 
 export interface ZoneMarkerDatum {
@@ -136,24 +136,27 @@ export function ZoneMarkers({
 }) {
   return (
     <View style={{ position: 'absolute', inset: 0 }} pointerEvents="box-none">
-      {ZONES.map((z) => {
-        const d = data.find((x) => x.zone === z.id);
+      {AVATAR_MARKERS.map((m) => {
+        const count = m.zones.reduce(
+          (s, z) => s + (data.find((x) => x.zone === z)?.attentionCount ?? 0),
+          0,
+        );
         return (
           <View
-            key={z.id}
+            key={m.id}
             style={{
               position: 'absolute',
-              left: `${z.marker.xPct}%`,
-              top: `${z.marker.yPct}%`,
+              left: `${m.marker.xPct}%`,
+              top: `${m.marker.yPct}%`,
               marginLeft: -HIT / 2,
               marginTop: -HIT / 2,
             }}
           >
             <Marker
-              attention={(d?.attentionCount ?? 0) > 0}
-              count={d?.attentionCount ?? 0}
-              label={z.label}
-              onPress={() => onOpenZone(z.id)}
+              attention={count > 0}
+              count={count}
+              label={m.label}
+              onPress={() => onOpenZone(m.id)}
             />
           </View>
         );

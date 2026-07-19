@@ -82,18 +82,26 @@ export function HomeScreen({ navigation }: Props) {
           accessibilityLabel="Open profile"
           onPress={() => navigation.navigate('Profile')}
           style={({ pressed }) => ({
-            width: 40,
-            height: 40,
-            borderRadius: 20,
+            width: 42,
+            height: 42,
+            borderRadius: 21,
             backgroundColor: t.accentSoft,
-            overflow: 'hidden',
             alignItems: 'center',
+            justifyContent: 'center',
             borderWidth: 1,
             borderColor: t.border,
             transform: [{ scale: pressed ? 0.92 : 1 }],
           })}
         >
-          <Text style={{ fontSize: 15, fontWeight: '700', color: t.accent, lineHeight: 38 }}>
+          <Text
+            style={{
+              fontSize: 15,
+              fontWeight: '700',
+              color: t.accent,
+              includeFontPadding: false,
+              textAlignVertical: 'center',
+            }}
+          >
             {initials}
           </Text>
         </Pressable>
@@ -105,7 +113,6 @@ export function HomeScreen({ navigation }: Props) {
           <AvatarFigure
             height={Math.min(440, Dimensions.get('window').height * 0.46)}
             skinTone={profile?.avatar?.skinTone ?? 0}
-            hairLength={profile?.avatar?.hairLength ?? 0}
             hairColor={profile?.avatar?.hairColor ?? 0}
           >
             <ZoneMarkers

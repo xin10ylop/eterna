@@ -156,11 +156,11 @@ export function RootNavigator() {
             <Stack.Screen name="ZoneDetail" component={ZoneDetailScreen} />
             <Stack.Screen name="TreatmentDetail" component={TreatmentDetailScreen} />
             <Stack.Screen name="Profile" component={ProfileScreen} />
-            <Stack.Screen
-              name="AvatarStudio"
-              component={AvatarStudioScreen}
-              options={{ presentation: 'fullScreenModal' }}
-            />
+            {/* Distinct route name from the onboarding AvatarStudio: a shared
+                name across the two conditional groups made the main app
+                present over the studio (draggable back to it). A plain card
+                push here also removes the drag-to-dismiss. */}
+            <Stack.Screen name="AvatarEdit" component={AvatarStudioScreen} />
             <Stack.Screen name="Book" component={BookScreen} options={{ presentation: 'modal' }} />
             <Stack.Screen
               name="AddRitual"

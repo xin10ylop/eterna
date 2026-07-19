@@ -94,7 +94,7 @@ export function FeaturesScreen({ navigation }: Props) {
           ))}
         </View>
       </View>
-      <View style={{ paddingBottom: spacing.xxl }}>
+      <View style={{ paddingBottom: spacing.xxl, paddingTop: spacing.xl }}>
         <PrimaryButton
           title={page < SLIDES.length - 1 ? 'Next' : 'Create my account'}
           onPress={() => {

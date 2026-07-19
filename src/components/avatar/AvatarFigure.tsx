@@ -16,14 +16,12 @@ import { useTheme } from '../../store';
 export function AvatarFigure({
   height,
   skinTone,
-  hairLength,
   hairColor,
   children,
   style,
 }: {
   height: number;
   skinTone: number;
-  hairLength: number;
   hairColor: number;
   children?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
@@ -31,25 +29,26 @@ export function AvatarFigure({
   const t = useTheme();
   const width = height * FRONT_ASPECT;
 
-  // a small stack of layers; the newest fades in over the rest
+  // a small stack of layers; the newest fades in over the rest. Because every
+  // variant is the same figure recolored, a short fade reads as the color
+  // simply changing — nothing shifts.
   const [layers, setLayers] = useState(() => [
-    { key: 0, src: frontAt(skinTone, hairLength, hairColor), anim: new Animated.Value(1) },
+    { key: 0, src: frontAt(skinTone, hairColor), anim: new Animated.Value(1) },
   ]);
   const nextKey = useRef(1);
-  const lastSig = useRef(`${skinTone}-${hairLength}-${hairColor}`);
+  const lastSig = useRef(`${skinTone}-${hairColor}`);
 
   useEffect(() => {
-    const sig = `${skinTone}-${hairLength}-${hairColor}`;
+    const sig = `${skinTone}-${hairColor}`;
     if (sig === lastSig.current) return;
     lastSig.current = sig;
     const anim = new Animated.Value(0);
-    const layer = { key: nextKey.current++, src: frontAt(skinTone, hairLength, hairColor), anim };
+    const layer = { key: nextKey.current++, src: frontAt(skinTone, hairColor), anim };
     setLayers((prev) => [...prev, layer]);
-    Animated.timing(anim, { toValue: 1, duration: 240, useNativeDriver: true }).start(() => {
-      // once fully faded in, drop the layers beneath it
+    Animated.timing(anim, { toValue: 1, duration: 180, useNativeDriver: true }).start(() => {
       setLayers((prev) => prev.slice(prev.indexOf(layer)));
     });
-  }, [skinTone, hairLength, hairColor]);
+  }, [skinTone, hairColor]);
 
   return (
     <View style={[{ alignItems: 'center' }, style]}>

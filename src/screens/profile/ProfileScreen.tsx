@@ -68,7 +68,7 @@ export function ProfileScreen({ navigation }: Props) {
           <Row
             title="Avatar"
             subtitle="Skin tone and hair"
-            onPress={() => navigation.navigate('AvatarStudio', { fromProfile: true })}
+            onPress={() => navigation.navigate('AvatarEdit')}
           />
           <Row
             title="Notifications"

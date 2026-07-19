@@ -3,7 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { IconButton, PrimaryButton, Screen } from '../../components/ui';
 import { AvatarFigure } from '../../components/avatar/AvatarFigure';
-import { HAIR_COLORS, HAIR_LENGTHS, SKIN_TONES } from '../../data/seed';
+import { HAIR_COLORS, SKIN_TONES } from '../../data/seed';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import type { RootStackParamList } from '../../navigation/types';
@@ -73,7 +73,7 @@ function PillPicker({
 
 export function AvatarStudioScreen({
   navigation,
-}: NativeStackScreenProps<RootStackParamList, 'AvatarStudio'>) {
+}: NativeStackScreenProps<RootStackParamList, 'AvatarStudio' | 'AvatarEdit'>) {
   const t = useTheme();
   const profile = useEterna((s) => s.profile);
   const draft = useEterna((s) => s.draft);
@@ -101,12 +101,7 @@ export function AvatarStudioScreen({
 
       {/* static preview */}
       <View style={{ flex: 1, justifyContent: 'center' }}>
-        <AvatarFigure
-          height={300}
-          skinTone={avatar.skinTone}
-          hairLength={avatar.hairLength}
-          hairColor={avatar.hairColor}
-        />
+        <AvatarFigure height={300} skinTone={avatar.skinTone} hairColor={avatar.hairColor} />
       </View>
 
       {/* pickers */}
@@ -135,15 +130,6 @@ export function AvatarStudioScreen({
               );
             })}
           </View>
-        </View>
-
-        <View style={{ gap: spacing.s }}>
-          <Text style={[type.label, { color: t.muted }]}>Hair length</Text>
-          <PillPicker
-            options={HAIR_LENGTHS.map((l) => ({ label: l }))}
-            value={avatar.hairLength}
-            onChange={(i) => setAvatar({ hairLength: i })}
-          />
         </View>
 
         <View style={{ gap: spacing.s }}>

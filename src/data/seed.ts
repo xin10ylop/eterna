@@ -5,6 +5,7 @@ import type {
   Session,
   Treatment,
   Zone,
+  ZoneId,
 } from '../types';
 import { addDays, addWeeks, todayISO } from '../lib/dates';
 
@@ -15,8 +16,6 @@ import { addDays, addWeeks, todayISO } from '../lib/dates';
  * shapes are the contract, not the values.
  */
 
-// Marker positions are % of the avatar display box (calibrated to the
-// uniform front-figure framing in assets/avatar/fronts, aspect ~0.472).
 export const ZONES: Zone[] = [
   { id: 'hair', label: 'Hair', marker: { xPct: 50, yPct: 3 } },
   { id: 'face', label: 'Face', marker: { xPct: 50, yPct: 7 } },
@@ -25,6 +24,23 @@ export const ZONES: Zone[] = [
   { id: 'hands', label: 'Hands', marker: { xPct: 18, yPct: 52 } },
   { id: 'hips', label: 'Hips', marker: { xPct: 50, yPct: 45 } },
   { id: 'legs', label: 'Legs', marker: { xPct: 50, yPct: 73 } },
+];
+
+/**
+ * The four markers shown on the Home avatar (hair, face, body, hands). Each
+ * aggregates related zones so the figure stays uncluttered; tapping opens the
+ * primary zone. Positions are % of the avatar display box.
+ */
+export const AVATAR_MARKERS: {
+  id: ZoneId;
+  label: string;
+  zones: ZoneId[];
+  marker: { xPct: number; yPct: number };
+}[] = [
+  { id: 'hair', label: 'Hair', zones: ['hair'], marker: { xPct: 50, yPct: 3 } },
+  { id: 'face', label: 'Face', zones: ['face', 'lips'], marker: { xPct: 50, yPct: 8 } },
+  { id: 'torso', label: 'Body', zones: ['torso', 'hips', 'legs'], marker: { xPct: 50, yPct: 33 } },
+  { id: 'hands', label: 'Hands', zones: ['hands'], marker: { xPct: 18, yPct: 52 } },
 ];
 
 export const PRACTITIONERS: Practitioner[] = [
@@ -191,11 +207,8 @@ export const APPOINTMENTS: Appointment[] = [
   { id: 'a5', treatmentId: 't-roots', dateISO: addDays(T, 24), timeLabel: '14:30', clinicId: 'c1', priceEUR: 95 },
 ];
 
-/** Five skin tones (match the real render tones), light to deep. */
-export const SKIN_TONES = ['#F0D5BE', '#D9AC82', '#B9835C', '#8A5A3B', '#5C3A26'];
-
-/** Hair length options. */
-export const HAIR_LENGTHS = ['Long', 'Short'];
+/** Five skin tones (match the recolored render tones), light to deep. */
+export const SKIN_TONES = ['#EBC6A6', '#D0A074', '#B07A50', '#8A5A3B', '#5C3A26'];
 
 /** Hair colors (applied as a hair-only recolor on the render). */
 export const HAIR_COLORS: { label: string; swatch: string }[] = [
