@@ -29,8 +29,7 @@ interface OnboardingDraft {
 }
 
 const defaultAvatar: AvatarConfig = {
-  skinTone: 0,
-  hairLook: 0,
+  edition: 0,
 };
 
 const emptyDraft: OnboardingDraft = {

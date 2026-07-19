@@ -1,23 +1,20 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
-import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { ZONES } from '../../data/seed';
 import type { ZoneId } from '../../types';
 import { useTheme } from '../../store';
 
 /**
- * Fixed zone markers, the "aura" treatment.
+ * Fixed zone markers, minimal treatment.
  *
  * Every zone has ONE fixed marker (hair, face, lips, body, hands, hips,
  * legs); the zone aggregates all of its treatments, so the map never gets
  * crowded no matter how much the user tracks.
  *
- * Visual language:
- * - Calm zone: a faint "glass" ring that recedes, visible, never loud.
- * - Attention zone: a soft luminous aura (radial gradient, no hard edge)
- *   with a crisp core, breathing slowly. Feels like light under the skin
- *   rather than a badge stuck on top.
- * - A zone tracking 2+ due items shows a tiny count so nothing hides.
+ * Visual language (calm, no glowing domes over the figure):
+ * - Calm zone: invisible. Nothing sits on the body when nothing is due.
+ * - Attention zone: a small crisp dot with a thin expanding ring that
+ *   pulses once every few seconds, plus a tiny count when 2+ items are due.
  */
 
 export interface ZoneMarkerDatum {
@@ -25,23 +22,7 @@ export interface ZoneMarkerDatum {
   attentionCount: number;
 }
 
-const AURA = 56; // aura canvas size
 const HIT = 44; // minimum touch target
-
-function Aura({ color }: { color: string }) {
-  return (
-    <Svg width={AURA} height={AURA} viewBox={`0 0 ${AURA} ${AURA}`}>
-      <Defs>
-        <RadialGradient id="aura" cx="50%" cy="50%" r="50%">
-          <Stop offset="0%" stopColor={color} stopOpacity={0.55} />
-          <Stop offset="45%" stopColor={color} stopOpacity={0.22} />
-          <Stop offset="100%" stopColor={color} stopOpacity={0} />
-        </RadialGradient>
-      </Defs>
-      <Circle cx={AURA / 2} cy={AURA / 2} r={AURA / 2} fill="url(#aura)" />
-    </Svg>
-  );
-}
 
 function Marker({
   attention,
@@ -55,83 +36,71 @@ function Marker({
   label: string;
 }) {
   const t = useTheme();
-  const breath = useRef(new Animated.Value(0)).current;
+  const ring = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (!attention) return;
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(breath, { toValue: 1, duration: 1400, useNativeDriver: true }),
-        Animated.timing(breath, { toValue: 0, duration: 1400, useNativeDriver: true }),
+        Animated.timing(ring, { toValue: 1, duration: 1600, useNativeDriver: true }),
+        Animated.delay(1200),
+        Animated.timing(ring, { toValue: 0, duration: 0, useNativeDriver: true }),
       ]),
     );
     loop.start();
     return () => loop.stop();
-  }, [attention, breath]);
+  }, [attention, ring]);
+
+  if (!attention) return null;
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${label}${attention ? `, ${count} due` : ''}`}
+      accessibilityLabel={`${label}, ${count} due`}
       onPress={onPress}
       style={{ width: HIT, height: HIT, alignItems: 'center', justifyContent: 'center' }}
     >
-      {attention ? (
-        <>
-          <Animated.View
-            style={{
-              position: 'absolute',
-              opacity: breath.interpolate({ inputRange: [0, 1], outputRange: [0.65, 1] }),
-              transform: [
-                { scale: breath.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1.12] }) },
-              ],
-            }}
-          >
-            <Aura color={t.accent} />
-          </Animated.View>
-          <View
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: 4,
-              backgroundColor: t.accent,
-              borderWidth: 1,
-              borderColor: 'rgba(255,255,255,0.9)',
-            }}
-          />
-          {count > 1 ? (
-            <View
-              style={{
-                position: 'absolute',
-                top: 4,
-                right: 2,
-                minWidth: 15,
-                height: 15,
-                borderRadius: 8,
-                paddingHorizontal: 3,
-                backgroundColor: t.accent,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderWidth: 1,
-                borderColor: '#FFFFFF',
-              }}
-            >
-              <Text style={{ color: t.onAccent, fontSize: 9, fontWeight: '700' }}>{count}</Text>
-            </View>
-          ) : null}
-        </>
-      ) : (
+      {/* one thin ring, expanding and fading */}
+      <Animated.View
+        style={{
+          position: 'absolute',
+          width: 18,
+          height: 18,
+          borderRadius: 9,
+          borderWidth: 1.5,
+          borderColor: t.accent,
+          opacity: ring.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 0.55, 0] }),
+          transform: [{ scale: ring.interpolate({ inputRange: [0, 1], outputRange: [0.7, 2.1] }) }],
+        }}
+      />
+      <View
+        style={{
+          width: 11,
+          height: 11,
+          borderRadius: 6,
+          backgroundColor: t.accent,
+          borderWidth: 1.5,
+          borderColor: '#FFFFFF',
+        }}
+      />
+      {count > 1 ? (
         <View
           style={{
-            width: 14,
+            position: 'absolute',
+            top: 6,
+            right: 4,
+            minWidth: 14,
             height: 14,
             borderRadius: 7,
-            borderWidth: 1.2,
-            borderColor: 'rgba(255,255,255,0.95)',
-            backgroundColor: 'rgba(28,28,30,0.10)',
+            paddingHorizontal: 3,
+            backgroundColor: t.text,
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
-        />
-      )}
+        >
+          <Text style={{ color: t.bg, fontSize: 9, fontWeight: '700' }}>{count}</Text>
+        </View>
+      ) : null}
     </Pressable>
   );
 }

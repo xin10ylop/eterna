@@ -42,17 +42,17 @@ function AddTabButton(props: BottomTabBarButtonProps) {
         accessibilityLabel="Add a ritual"
         onPress={props.onPress as never}
         style={({ pressed }) => ({
-          width: 52,
-          height: 52,
-          borderRadius: 26,
+          width: 46,
+          height: 46,
+          borderRadius: 23,
           backgroundColor: t.accent,
           alignItems: 'center',
           justifyContent: 'center',
-          marginTop: -18,
+          marginTop: -8,
           shadowColor: t.accent,
-          shadowOpacity: 0.4,
-          shadowRadius: 10,
-          shadowOffset: { width: 0, height: 5 },
+          shadowOpacity: 0.35,
+          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 4 },
           elevation: 5,
           transform: [{ scale: pressed ? 0.92 : 1 }],
         })}
@@ -159,7 +159,7 @@ export function RootNavigator() {
             <Stack.Screen
               name="AvatarStudio"
               component={AvatarStudioScreen}
-              options={{ presentation: 'modal' }}
+              options={{ presentation: 'fullScreenModal' }}
             />
             <Stack.Screen name="Book" component={BookScreen} options={{ presentation: 'modal' }} />
             <Stack.Screen

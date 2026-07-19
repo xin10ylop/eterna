@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Dimensions, Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { Dimensions, Pressable, ScrollView, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -54,7 +54,12 @@ export function HomeScreen({ navigation }: Props) {
         ? '1 thing needs attention'
         : `${attention.length} things need attention`;
 
-  const cardW = Math.min(280, Dimensions.get('window').width * 0.68);
+  // full-width-minus-margins cards: with snapToInterval = cardW + gap the
+  // snapped card sits centered, equal margins both sides
+  const cardW = Dimensions.get('window').width - spacing.xl * 2;
+  const initials = (
+    (profile?.firstName?.[0] ?? 'Y') + (profile?.lastName?.[0] ?? '')
+  ).toUpperCase();
 
   return (
     <Screen padded={false}>
@@ -89,10 +94,9 @@ export function HomeScreen({ navigation }: Props) {
             transform: [{ scale: pressed ? 0.92 : 1 }],
           })}
         >
-          <Image
-            source={packFor(profile?.avatar).frames[0]}
-            style={{ height: 96, width: 96 * packFor(profile?.avatar).aspect, marginTop: 2 }}
-          />
+          <Text style={{ fontSize: 15, fontWeight: '700', color: t.accent, lineHeight: 38 }}>
+            {initials}
+          </Text>
         </Pressable>
       </View>
 
@@ -100,7 +104,7 @@ export function HomeScreen({ navigation }: Props) {
       <View style={{ flex: 1, justifyContent: 'center' }}>
         <Entrance spring distance={24}>
           <AvatarViewer
-            height={Math.min(430, Dimensions.get('window').height * 0.46)}
+            height={Math.min(430, Dimensions.get('window').height * 0.44)}
             pack={packFor(profile?.avatar)}
           >
             <ZoneMarkers
@@ -109,13 +113,13 @@ export function HomeScreen({ navigation }: Props) {
             />
           </AvatarViewer>
           <Text style={{ textAlign: 'center', fontSize: 12, color: t.muted, marginTop: spacing.s }}>
-            Drag to rotate · tap a glow to open
+            Drag to spin her · tap a dot to open
           </Text>
         </Entrance>
       </View>
 
       {/* attention rail */}
-      <View style={{ paddingBottom: spacing.m, minHeight: 96 }}>
+      <View style={{ paddingBottom: spacing.l, minHeight: 96 }}>
         {attention.length === 0 ? (
           <View
             style={{

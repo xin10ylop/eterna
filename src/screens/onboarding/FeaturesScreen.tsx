@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Dimensions, Image, ScrollView, Text, View, type ImageSourcePropType } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { PrimaryButton, Screen } from '../../components/ui';
-import { PACKS } from '../../components/avatar/config';
+import { EDITIONS } from '../../components/avatar/config';
 import { spacing, type } from '../../theme';
 import { useTheme } from '../../store';
 import type { RootStackParamList } from '../../navigation/types';
@@ -25,22 +25,23 @@ const SLIDES: {
     eyebrow: 'The avatar',
     title: 'Your beauty, mapped',
     body: 'Every treatment lives on her: hair, face, lips, hands, body. A soft glow shows what needs attention.',
-    image: PACKS[0][0].frames[0],
-    aspect: PACKS[0][0].aspect,
+    image: EDITIONS[0].pack.frames[0],
+    aspect: EDITIONS[0].pack.aspect,
   },
   {
     eyebrow: 'The memory',
     title: 'Never lose track again',
     body: 'Roots, filler, lashes, laser: each on its own rhythm, remembered with every product and practitioner note.',
-    image: PACKS[3][2].frames[0],
-    aspect: PACKS[3][2].aspect,
+    image: EDITIONS[1].pack.frames[0],
+    aspect: EDITIONS[1].pack.aspect,
   },
   {
     eyebrow: 'The plan',
     title: 'Plan it. Budget it.',
     body: 'See what is coming in a calendar, and know what this month and next will cost before it happens.',
-    image: PACKS[5][0].frames[0],
-    aspect: PACKS[5][0].aspect,
+    // a 3/4 turn of the same character, so the slide reads as "3D"
+    image: EDITIONS[0].pack.frames[5],
+    aspect: EDITIONS[0].pack.aspect,
   },
 ];
 
@@ -70,17 +71,6 @@ export function FeaturesScreen({ navigation }: Props) {
                   justifyContent: 'flex-end',
                 }}
               >
-                {/* soft blush ellipse behind the figure */}
-                <View
-                  style={{
-                    position: 'absolute',
-                    bottom: 6,
-                    width: 170,
-                    height: 170,
-                    borderRadius: 85,
-                    backgroundColor: t.accentSoft,
-                  }}
-                />
                 <Image
                   source={s.image}
                   style={{ height: 220, width: 220 * s.aspect, resizeMode: 'contain' }}

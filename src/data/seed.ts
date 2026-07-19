@@ -189,12 +189,4 @@ export const APPOINTMENTS: Appointment[] = [
   { id: 'a5', treatmentId: 't-roots', dateISO: addDays(T, 24), timeLabel: '14:30', clinicId: 'c1', priceEUR: 95 },
 ];
 
-/** Six skin tones, porcelain to deep. Every tone has its own render pack. */
-export const SKIN_TONES = ['#F6E3D5', '#EFCFB6', '#DDAE8B', '#B97F5C', '#8D5A3B', '#5C3A26'];
-
-/** Hair looks. Each (skin tone × look) pairing is a distinct render pack. */
-export const HAIR_LOOKS: { key: 'long' | 'bob' | 'blonde'; label: string; swatch: string }[] = [
-  { key: 'long', label: 'Long', swatch: '#4A342A' },
-  { key: 'bob', label: 'Bob', swatch: '#4A342A' },
-  { key: 'blonde', label: 'Blonde', swatch: '#C99D62' },
-];
+// Avatar editions (skin swatches, models, packs) live in components/avatar/config.ts.

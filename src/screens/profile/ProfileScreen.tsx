@@ -1,10 +1,9 @@
 import React from 'react';
-import { Image, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Card, Chip, GhostButton, IOSSwitch, IconButton, Row, Screen, SectionLabel } from '../../components/ui';
 import { spacing, type, type AccentName } from '../../theme';
 import { useEterna, useTheme } from '../../store';
-import { packFor } from '../../components/avatar/config';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
@@ -41,14 +40,13 @@ export function ProfileScreen({ navigation }: Props) {
                 height: 60,
                 borderRadius: 30,
                 backgroundColor: t.accentSoft,
-                overflow: 'hidden',
                 alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              <Image
-                source={packFor(profile?.avatar).frames[0]}
-                style={{ height: 140, width: 140 * packFor(profile?.avatar).aspect, marginTop: 4 }}
-              />
+              <Text style={{ fontSize: 22, fontWeight: '700', color: t.accent }}>
+                {((profile?.firstName?.[0] ?? 'Y') + (profile?.lastName?.[0] ?? '')).toUpperCase()}
+              </Text>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 17, fontWeight: '600', color: t.text }}>
@@ -69,7 +67,7 @@ export function ProfileScreen({ navigation }: Props) {
         <Card style={{ paddingVertical: 4 }}>
           <Row
             title="Avatar"
-            subtitle="Skin tone and hair"
+            subtitle="Fully 3D · three editions"
             onPress={() => navigation.navigate('AvatarStudio', { fromProfile: true })}
           />
           <Row
