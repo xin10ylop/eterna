@@ -12,7 +12,7 @@ import type { AvatarConfig } from '../../types';
  *
  * skinTone: 0..4 (light→deep)  ·  hairColor: 0=Brown 1=Black 2=Blonde
  */
-export const FRONT_ASPECT = 0.4603;
+export const FRONT_ASPECT = 0.4304;
 
 // prettier-ignore
 export const VARIANTS: ImageSourcePropType[][] = [
