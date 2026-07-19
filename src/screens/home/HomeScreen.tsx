@@ -5,8 +5,7 @@ import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { Screen, TimeChip } from '../../components/ui';
 import { Entrance } from '../../components/anim/Entrance';
-import { AvatarViewer } from '../../components/avatar/AvatarViewer';
-import { packFor } from '../../components/avatar/config';
+import { AvatarFigure } from '../../components/avatar/AvatarFigure';
 import { ZoneMarkers } from '../../components/avatar/ZoneMarkers';
 import { ZONES } from '../../data/seed';
 import { needsAttention, nextDueISO, treatmentStatus, zoneAttentionCount } from '../../services/logic';
@@ -103,17 +102,18 @@ export function HomeScreen({ navigation }: Props) {
       {/* avatar */}
       <View style={{ flex: 1, justifyContent: 'center' }}>
         <Entrance spring distance={24}>
-          <AvatarViewer
-            height={Math.min(430, Dimensions.get('window').height * 0.44)}
-            pack={packFor(profile?.avatar)}
+          <AvatarFigure
+            height={Math.min(440, Dimensions.get('window').height * 0.46)}
+            skinTone={profile?.avatar?.skinTone ?? 0}
+            hairLook={profile?.avatar?.hairLook ?? 0}
           >
             <ZoneMarkers
               data={zoneData}
               onOpenZone={(zone) => navigation.navigate('ZoneDetail', { zone })}
             />
-          </AvatarViewer>
+          </AvatarFigure>
           <Text style={{ textAlign: 'center', fontSize: 12, color: t.muted, marginTop: spacing.s }}>
-            Drag to spin her · tap a dot to open
+            Tap a dot to see what needs attention
           </Text>
         </Entrance>
       </View>

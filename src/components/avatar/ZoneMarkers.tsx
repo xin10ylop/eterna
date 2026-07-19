@@ -1,20 +1,17 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
+import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { ZONES } from '../../data/seed';
 import type { ZoneId } from '../../types';
 import { useTheme } from '../../store';
 
 /**
- * Fixed zone markers, minimal treatment.
+ * Fixed zone markers on the avatar.
  *
- * Every zone has ONE fixed marker (hair, face, lips, body, hands, hips,
- * legs); the zone aggregates all of its treatments, so the map never gets
- * crowded no matter how much the user tracks.
- *
- * Visual language (calm, no glowing domes over the figure):
- * - Calm zone: invisible. Nothing sits on the body when nothing is due.
- * - Attention zone: a small crisp dot with a thin expanding ring that
- *   pulses once every few seconds, plus a tiny count when 2+ items are due.
+ * Every zone shows a small, refined "glass bead" at its fixed body position
+ * so the map is always legible. A zone that needs attention lifts into a soft
+ * accent dome (radial glow) with a solid core and a gentle breath, plus a
+ * count when several items are due. Calm and clean — no hard-edged blobs.
  */
 
 export interface ZoneMarkerDatum {
@@ -22,7 +19,23 @@ export interface ZoneMarkerDatum {
   attentionCount: number;
 }
 
-const HIT = 44; // minimum touch target
+const HIT = 44;
+const DOME = 46;
+
+function Dome({ color }: { color: string }) {
+  return (
+    <Svg width={DOME} height={DOME}>
+      <Defs>
+        <RadialGradient id="d" cx="50%" cy="50%" r="50%">
+          <Stop offset="0%" stopColor={color} stopOpacity={0.5} />
+          <Stop offset="40%" stopColor={color} stopOpacity={0.22} />
+          <Stop offset="100%" stopColor={color} stopOpacity={0} />
+        </RadialGradient>
+      </Defs>
+      <Circle cx={DOME / 2} cy={DOME / 2} r={DOME / 2} fill="url(#d)" />
+    </Svg>
+  );
+}
 
 function Marker({
   attention,
@@ -36,71 +49,80 @@ function Marker({
   label: string;
 }) {
   const t = useTheme();
-  const ring = useRef(new Animated.Value(0)).current;
+  const breath = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (!attention) return;
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(ring, { toValue: 1, duration: 1600, useNativeDriver: true }),
-        Animated.delay(1200),
-        Animated.timing(ring, { toValue: 0, duration: 0, useNativeDriver: true }),
+        Animated.timing(breath, { toValue: 1, duration: 1500, useNativeDriver: true }),
+        Animated.timing(breath, { toValue: 0, duration: 1500, useNativeDriver: true }),
       ]),
     );
     loop.start();
     return () => loop.stop();
-  }, [attention, ring]);
-
-  if (!attention) return null;
+  }, [attention, breath]);
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${label}, ${count} due`}
+      accessibilityLabel={`${label}${attention ? `, ${count} due` : ', on track'}`}
       onPress={onPress}
       style={{ width: HIT, height: HIT, alignItems: 'center', justifyContent: 'center' }}
     >
-      {/* one thin ring, expanding and fading */}
-      <Animated.View
-        style={{
-          position: 'absolute',
-          width: 18,
-          height: 18,
-          borderRadius: 9,
-          borderWidth: 1.5,
-          borderColor: t.accent,
-          opacity: ring.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 0.55, 0] }),
-          transform: [{ scale: ring.interpolate({ inputRange: [0, 1], outputRange: [0.7, 2.1] }) }],
-        }}
-      />
-      <View
-        style={{
-          width: 11,
-          height: 11,
-          borderRadius: 6,
-          backgroundColor: t.accent,
-          borderWidth: 1.5,
-          borderColor: '#FFFFFF',
-        }}
-      />
-      {count > 1 ? (
+      {attention ? (
+        <>
+          <Animated.View
+            style={{
+              position: 'absolute',
+              opacity: breath.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] }),
+              transform: [{ scale: breath.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.1] }) }],
+            }}
+          >
+            <Dome color={t.accent} />
+          </Animated.View>
+          <View
+            style={{
+              width: 12,
+              height: 12,
+              borderRadius: 6,
+              backgroundColor: t.accent,
+              borderWidth: 1.5,
+              borderColor: 'rgba(255,255,255,0.95)',
+            }}
+          />
+          {count > 1 ? (
+            <View
+              style={{
+                position: 'absolute',
+                top: 3,
+                right: 2,
+                minWidth: 15,
+                height: 15,
+                borderRadius: 8,
+                paddingHorizontal: 3,
+                backgroundColor: t.text,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ color: t.bg, fontSize: 9, fontWeight: '700' }}>{count}</Text>
+            </View>
+          ) : null}
+        </>
+      ) : (
+        // calm zone: a quiet glass bead
         <View
           style={{
-            position: 'absolute',
-            top: 6,
-            right: 4,
-            minWidth: 14,
-            height: 14,
-            borderRadius: 7,
-            paddingHorizontal: 3,
-            backgroundColor: t.text,
-            alignItems: 'center',
-            justifyContent: 'center',
+            width: 12,
+            height: 12,
+            borderRadius: 6,
+            backgroundColor: 'rgba(255,255,255,0.55)',
+            borderWidth: 1,
+            borderColor: 'rgba(70,55,45,0.28)',
           }}
-        >
-          <Text style={{ color: t.bg, fontSize: 9, fontWeight: '700' }}>{count}</Text>
-        </View>
-      ) : null}
+        />
+      )}
     </Pressable>
   );
 }
@@ -119,7 +141,6 @@ export function ZoneMarkers({
         return (
           <View
             key={z.id}
-            pointerEvents="box-none"
             style={{
               position: 'absolute',
               left: `${z.marker.xPct}%`,

@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react';
-import { Dimensions, Image, ScrollView, Text, View, type ImageSourcePropType } from 'react-native';
+import { Dimensions, ScrollView, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import { PrimaryButton, Screen } from '../../components/ui';
-import { EDITIONS } from '../../components/avatar/config';
-import { spacing, type } from '../../theme';
+import { radii, spacing, type } from '../../theme';
 import { useTheme } from '../../store';
 import type { RootStackParamList } from '../../navigation/types';
 
@@ -11,37 +11,32 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Features'>;
 
 /**
  * Value slides, editorial register (Airbnb values-interstitial anatomy):
- * small-caps eyebrow, serif statement, one quiet body line, with the
- * Higgsfield avatar renders as the imagery.
+ * a single soft icon tile, small-caps eyebrow, serif statement, one quiet
+ * body line. No avatar figurine.
  */
 const SLIDES: {
   eyebrow: string;
   title: string;
   body: string;
-  image: ImageSourcePropType;
-  aspect: number;
+  icon: keyof typeof Ionicons.glyphMap;
 }[] = [
   {
     eyebrow: 'The avatar',
     title: 'Your beauty, mapped',
     body: 'Every treatment lives on her: hair, face, lips, hands, body. A soft glow shows what needs attention.',
-    image: EDITIONS[0].pack.frames[0],
-    aspect: EDITIONS[0].pack.aspect,
+    icon: 'body-outline',
   },
   {
     eyebrow: 'The memory',
     title: 'Never lose track again',
     body: 'Roots, filler, lashes, laser: each on its own rhythm, remembered with every product and practitioner note.',
-    image: EDITIONS[1].pack.frames[0],
-    aspect: EDITIONS[1].pack.aspect,
+    icon: 'time-outline',
   },
   {
     eyebrow: 'The plan',
     title: 'Plan it. Budget it.',
     body: 'See what is coming in a calendar, and know what this month and next will cost before it happens.',
-    // a 3/4 turn of the same character, so the slide reads as "3D"
-    image: EDITIONS[0].pack.frames[5],
-    aspect: EDITIONS[0].pack.aspect,
+    icon: 'wallet-outline',
   },
 ];
 
@@ -62,20 +57,18 @@ export function FeaturesScreen({ navigation }: Props) {
           onMomentumScrollEnd={(e) => setPage(Math.round(e.nativeEvent.contentOffset.x / W))}
         >
           {SLIDES.map((s) => (
-            <View key={s.title} style={{ width: W, alignItems: 'center', gap: spacing.l, paddingHorizontal: spacing.s }}>
+            <View key={s.title} style={{ width: W, alignItems: 'center', gap: spacing.xl, paddingHorizontal: spacing.s }}>
               <View
                 style={{
-                  width: 190,
-                  height: 230,
+                  width: 104,
+                  height: 104,
+                  borderRadius: radii.xl,
+                  backgroundColor: t.accentSoft,
                   alignItems: 'center',
-                  justifyContent: 'flex-end',
+                  justifyContent: 'center',
                 }}
               >
-                <Image
-                  source={s.image}
-                  style={{ height: 220, width: 220 * s.aspect, resizeMode: 'contain' }}
-                  accessibilityLabel={s.eyebrow}
-                />
+                <Ionicons name={s.icon} size={46} color={t.accent} />
               </View>
               <View style={{ alignItems: 'center', gap: spacing.s }}>
                 <Text style={[type.label, { color: t.accent }]}>{s.eyebrow}</Text>
@@ -87,7 +80,7 @@ export function FeaturesScreen({ navigation }: Props) {
             </View>
           ))}
         </ScrollView>
-        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: spacing.xl }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: spacing.xxl }}>
           {SLIDES.map((_, i) => (
             <View
               key={i}

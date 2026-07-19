@@ -2,16 +2,16 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { IconButton, PrimaryButton, Screen } from '../../components/ui';
-import { AvatarViewer } from '../../components/avatar/AvatarViewer';
-import { EDITIONS, editionFor } from '../../components/avatar/config';
+import { AvatarFigure } from '../../components/avatar/AvatarFigure';
+import { HAIR_LOOKS, SKIN_TONES } from '../../data/seed';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import type { RootStackParamList } from '../../navigation/types';
 
 /**
- * Avatar studio. One choice, done well: pick an edition of the same fully-3D
- * character (Higgsfield image-to-3D mesh, rendered to a 360° turntable) and
- * spin her with a drag. No cosmetic toggles that don't actually render.
+ * Avatar studio. A static, high-res figure with two clean pickers — skin tone
+ * and hair. Every choice crossfades smoothly (no jump, no lag) because all
+ * variants are preloaded and share one uniform frame. No drag.
  */
 
 export function AvatarStudioScreen({
@@ -23,9 +23,6 @@ export function AvatarStudioScreen({
   const setAvatar = useEterna((s) => s.setAvatar);
   const showToast = useEterna((s) => s.showToast);
   const avatar = profile ? profile.avatar : draft.avatar;
-  // Signed-in => opened from Profile (a full-screen modal): Save and go back.
-  // Not signed in => onboarding step: Continue. Deciding on `profile` with a
-  // canGoBack guard keeps the exit safe from every entry point.
   const signedIn = !!profile;
 
   return (
@@ -45,61 +42,86 @@ export function AvatarStudioScreen({
         <View style={{ gap: 4 }}>
           <Text style={[type.display, { color: t.text }]}>Make her yours</Text>
           <Text style={[type.body, { color: t.sub, lineHeight: 21 }]}>
-            She is fully 3D. Drag to spin her.
+            Choose a skin tone and hair. She updates instantly.
           </Text>
         </View>
       </View>
 
-      {/* 3D turntable */}
+      {/* static preview */}
       <View style={{ flex: 1, justifyContent: 'center' }}>
-        <AvatarViewer height={340} pack={editionFor(avatar).pack} />
-        <Text style={{ textAlign: 'center', fontSize: 12, color: t.muted, marginTop: spacing.s }}>
-          Drag left or right to turn her
-        </Text>
+        <AvatarFigure height={330} skinTone={avatar.skinTone} hairLook={avatar.hairLook} />
       </View>
 
-      {/* edition picker */}
-      <View style={{ paddingHorizontal: spacing.xl, gap: spacing.s }}>
-        <Text style={[type.label, { color: t.muted }]}>Edition</Text>
-        <View style={{ flexDirection: 'row', gap: spacing.m }}>
-          {EDITIONS.map((e, i) => {
-            const sel = (avatar.edition ?? 0) === i;
-            return (
-              <Pressable
-                key={e.key}
-                accessibilityRole="button"
-                accessibilityLabel={`${e.label} edition`}
-                accessibilityState={{ selected: sel }}
-                onPress={() => setAvatar({ edition: i })}
-                style={{
-                  flex: 1,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: spacing.s,
-                  paddingVertical: 13,
-                  borderRadius: radii.l,
-                  backgroundColor: sel ? t.accentSoft : t.surfaceAlt,
-                  borderWidth: sel ? 1.5 : 1,
-                  borderColor: sel ? t.accent : t.border,
-                }}
-              >
-                <View
+      {/* pickers */}
+      <View style={{ paddingHorizontal: spacing.xl, gap: spacing.l }}>
+        <View style={{ gap: spacing.s }}>
+          <Text style={[type.label, { color: t.muted }]}>Skin tone</Text>
+          <View style={{ flexDirection: 'row', gap: spacing.m }}>
+            {SKIN_TONES.map((c, i) => {
+              const sel = avatar.skinTone === i;
+              return (
+                <Pressable
+                  key={c}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Skin tone ${i + 1}`}
+                  accessibilityState={{ selected: sel }}
+                  onPress={() => setAvatar({ skinTone: i })}
                   style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: 10,
-                    backgroundColor: e.swatch,
-                    borderWidth: 1,
-                    borderColor: t.border,
+                    flex: 1,
+                    aspectRatio: 1,
+                    borderRadius: 999,
+                    backgroundColor: c,
+                    borderWidth: sel ? 3 : 1,
+                    borderColor: sel ? t.accent : t.border,
                   }}
                 />
-                <Text style={{ fontSize: 14, fontWeight: '600', color: sel ? t.accent : t.text }}>
-                  {e.label}
-                </Text>
-              </Pressable>
-            );
-          })}
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={{ gap: spacing.s }}>
+          <Text style={[type.label, { color: t.muted }]}>Hair</Text>
+          <View style={{ flexDirection: 'row', gap: spacing.m }}>
+            {HAIR_LOOKS.map((look, i) => {
+              const sel = avatar.hairLook === i;
+              return (
+                <Pressable
+                  key={look.key}
+                  accessibilityRole="button"
+                  accessibilityLabel={look.label}
+                  accessibilityState={{ selected: sel }}
+                  onPress={() => setAvatar({ hairLook: i })}
+                  style={{
+                    flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: spacing.s,
+                    paddingVertical: 12,
+                    borderRadius: radii.l,
+                    backgroundColor: sel ? t.accentSoft : t.surfaceAlt,
+                    borderWidth: sel ? 1.5 : 1,
+                    borderColor: sel ? t.accent : t.border,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: 8,
+                      backgroundColor: look.swatch,
+                      borderWidth: 1,
+                      borderColor: t.border,
+                    }}
+                  />
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: sel ? t.accent : t.text }}>
+                    {look.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
       </View>
 

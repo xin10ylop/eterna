@@ -67,7 +67,7 @@ export function ProfileScreen({ navigation }: Props) {
         <Card style={{ paddingVertical: 4 }}>
           <Row
             title="Avatar"
-            subtitle="Fully 3D · three editions"
+            subtitle="Skin tone and hair"
             onPress={() => navigation.navigate('AvatarStudio', { fromProfile: true })}
           />
           <Row

@@ -6,7 +6,7 @@ import { GhostButton, IOSSwitch, PrimaryButton, Screen } from '../../components/
 import { AnimatedCheck } from '../../components/anim/AnimatedCheck';
 import { Confetti } from '../../components/anim/Lottie';
 import { Entrance } from '../../components/anim/Entrance';
-import { packFor } from '../../components/avatar/config';
+import { AvatarFigure } from '../../components/avatar/AvatarFigure';
 import { OnboardingShell } from './OnboardingShell';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
@@ -116,7 +116,7 @@ export function ReadyScreen({ navigation: _n }: NativeStackScreenProps<RootStack
   const complete = useEterna((s) => s.completeOnboarding);
   const firstName = useEterna((s) => s.draft.firstName);
   const routine = useEterna((s) => s.draft.routine);
-  const avatarPack = packFor(useEterna((s) => s.draft.avatar));
+  const avatar = useEterna((s) => s.draft.avatar);
   const fade = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -130,10 +130,11 @@ export function ReadyScreen({ navigation: _n }: NativeStackScreenProps<RootStack
           <Confetti size={280} style={{ position: 'absolute', top: -60 }} />
           <AnimatedCheck size={56} />
           <Entrance spring delay={400} distance={26}>
-            <Image
-              source={avatarPack.frames[0]}
-              style={{ height: 260, width: 260 * avatarPack.aspect, resizeMode: 'contain', marginTop: spacing.m }}
-              accessibilityLabel="Your avatar"
+            <AvatarFigure
+              height={260}
+              skinTone={avatar.skinTone}
+              hairLook={avatar.hairLook}
+              style={{ marginTop: spacing.m }}
             />
           </Entrance>
         </View>

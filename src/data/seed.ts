@@ -15,14 +15,16 @@ import { addDays, addWeeks, todayISO } from '../lib/dates';
  * shapes are the contract, not the values.
  */
 
+// Marker positions are % of the avatar display box (calibrated to the
+// uniform front-figure framing in assets/avatar/fronts, aspect ~0.472).
 export const ZONES: Zone[] = [
-  { id: 'hair', label: 'Hair', marker: { xPct: 50, yPct: 4 } },
-  { id: 'face', label: 'Face', marker: { xPct: 44, yPct: 9.5 } },
-  { id: 'lips', label: 'Lips', marker: { xPct: 50, yPct: 13 } },
-  { id: 'torso', label: 'Body', marker: { xPct: 50, yPct: 36 } },
-  { id: 'hands', label: 'Hands', marker: { xPct: 9, yPct: 50 } },
-  { id: 'hips', label: 'Hips', marker: { xPct: 66, yPct: 44 } },
-  { id: 'legs', label: 'Legs', marker: { xPct: 44, yPct: 72 } },
+  { id: 'hair', label: 'Hair', marker: { xPct: 50, yPct: 3 } },
+  { id: 'face', label: 'Face', marker: { xPct: 50, yPct: 7 } },
+  { id: 'lips', label: 'Lips', marker: { xPct: 50, yPct: 9.5 } },
+  { id: 'torso', label: 'Body', marker: { xPct: 50, yPct: 28 } },
+  { id: 'hands', label: 'Hands', marker: { xPct: 18, yPct: 52 } },
+  { id: 'hips', label: 'Hips', marker: { xPct: 50, yPct: 45 } },
+  { id: 'legs', label: 'Legs', marker: { xPct: 50, yPct: 73 } },
 ];
 
 export const PRACTITIONERS: Practitioner[] = [
@@ -189,4 +191,12 @@ export const APPOINTMENTS: Appointment[] = [
   { id: 'a5', treatmentId: 't-roots', dateISO: addDays(T, 24), timeLabel: '14:30', clinicId: 'c1', priceEUR: 95 },
 ];
 
-// Avatar editions (skin swatches, models, packs) live in components/avatar/config.ts.
+/** Six skin tones, porcelain to deep, for the avatar studio swatches. */
+export const SKIN_TONES = ['#F0D9C4', '#E4BE9E', '#CDA07C', '#B07A54', '#8A5A3B', '#5C3A26'];
+
+/** Hair looks. Each (skin tone × look) is a distinct front render. */
+export const HAIR_LOOKS: { key: 'long' | 'bob' | 'blonde'; label: string; swatch: string }[] = [
+  { key: 'long', label: 'Long', swatch: '#4A342A' },
+  { key: 'bob', label: 'Bob', swatch: '#4A342A' },
+  { key: 'blonde', label: 'Blonde', swatch: '#C99D62' },
+];
