@@ -30,7 +30,8 @@ interface OnboardingDraft {
 
 const defaultAvatar: AvatarConfig = {
   skinTone: 0,
-  hairLook: 0,
+  hairLength: 0,
+  hairColor: 0,
 };
 
 const emptyDraft: OnboardingDraft = {

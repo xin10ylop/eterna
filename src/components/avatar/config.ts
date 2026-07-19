@@ -4,57 +4,50 @@ import type { AvatarConfig } from '../../types';
 /**
  * Avatar fronts.
  *
- * A single clean, high-res front render per (skin tone × hair look). All 18
- * are composited onto one uniform canvas — identical figure scale and
- * position — so switching is a smooth crossfade (no jump) and the fixed zone
- * markers line up on every variant. Static: no rotation, no drag.
+ * VARIANTS[skinTone][hairLength][hairColor] — a single clean, high-res front
+ * render per combination. Skin tone comes from a real render (so the cream
+ * outfit stays correct); hair color is a reliable hair-only recolor; length
+ * is Long or Short. All variants share ONE uniform canvas (identical figure
+ * scale and position), so switching is a smooth crossfade — never a jump —
+ * and the fixed zone markers line up on every variant. Static: no rotation.
  *
- * FRONTS[skinTone][hairLook] — hairLook 0=Long, 1=Bob, 2=Blonde.
+ * skinTone: 0..4  ·  hairLength: 0=Long 1=Short  ·  hairColor: 0=Brown 1=Black 2=Blonde
  */
-export const FRONT_ASPECT = 0.4718;
+export const FRONT_ASPECT = 0.4766;
 
-export const FRONTS: ImageSourcePropType[][] = [
-  [
-    require('../../../assets/avatar/fronts/s0_long.png'),
-    require('../../../assets/avatar/fronts/s0_bob.png'),
-    require('../../../assets/avatar/fronts/s0_blonde.png'),
+// prettier-ignore
+export const VARIANTS: ImageSourcePropType[][][] = [
+  [ // s0
+    [require('../../../assets/avatar/fronts/s0_long_brown.webp'), require('../../../assets/avatar/fronts/s0_long_black.webp'), require('../../../assets/avatar/fronts/s0_long_blonde.webp')],
+    [require('../../../assets/avatar/fronts/s0_bob_brown.webp'), require('../../../assets/avatar/fronts/s0_bob_black.webp'), require('../../../assets/avatar/fronts/s0_bob_blonde.webp')],
   ],
-  [
-    require('../../../assets/avatar/fronts/s1_long.png'),
-    require('../../../assets/avatar/fronts/s1_bob.png'),
-    require('../../../assets/avatar/fronts/s1_blonde.png'),
+  [ // s2
+    [require('../../../assets/avatar/fronts/s2_long_brown.webp'), require('../../../assets/avatar/fronts/s2_long_black.webp'), require('../../../assets/avatar/fronts/s2_long_blonde.webp')],
+    [require('../../../assets/avatar/fronts/s2_bob_brown.webp'), require('../../../assets/avatar/fronts/s2_bob_black.webp'), require('../../../assets/avatar/fronts/s2_bob_blonde.webp')],
   ],
-  [
-    require('../../../assets/avatar/fronts/s2_long.png'),
-    require('../../../assets/avatar/fronts/s2_bob.png'),
-    require('../../../assets/avatar/fronts/s2_blonde.png'),
+  [ // s3
+    [require('../../../assets/avatar/fronts/s3_long_brown.webp'), require('../../../assets/avatar/fronts/s3_long_black.webp'), require('../../../assets/avatar/fronts/s3_long_blonde.webp')],
+    [require('../../../assets/avatar/fronts/s3_bob_brown.webp'), require('../../../assets/avatar/fronts/s3_bob_black.webp'), require('../../../assets/avatar/fronts/s3_bob_blonde.webp')],
   ],
-  [
-    require('../../../assets/avatar/fronts/s3_long.png'),
-    require('../../../assets/avatar/fronts/s3_bob.png'),
-    require('../../../assets/avatar/fronts/s3_blonde.png'),
+  [ // s4
+    [require('../../../assets/avatar/fronts/s4_long_brown.webp'), require('../../../assets/avatar/fronts/s4_long_black.webp'), require('../../../assets/avatar/fronts/s4_long_blonde.webp')],
+    [require('../../../assets/avatar/fronts/s4_bob_brown.webp'), require('../../../assets/avatar/fronts/s4_bob_black.webp'), require('../../../assets/avatar/fronts/s4_bob_blonde.webp')],
   ],
-  [
-    require('../../../assets/avatar/fronts/s4_long.png'),
-    require('../../../assets/avatar/fronts/s4_bob.png'),
-    require('../../../assets/avatar/fronts/s4_blonde.png'),
-  ],
-  [
-    require('../../../assets/avatar/fronts/s5_long.png'),
-    require('../../../assets/avatar/fronts/s5_bob.png'),
-    require('../../../assets/avatar/fronts/s5_blonde.png'),
+  [ // s5
+    [require('../../../assets/avatar/fronts/s5_long_brown.webp'), require('../../../assets/avatar/fronts/s5_long_black.webp'), require('../../../assets/avatar/fronts/s5_long_blonde.webp')],
+    [require('../../../assets/avatar/fronts/s5_bob_brown.webp'), require('../../../assets/avatar/fronts/s5_bob_black.webp'), require('../../../assets/avatar/fronts/s5_bob_blonde.webp')],
   ],
 ];
 
-/** Flat list, in FRONTS order, for preloading every variant up front. */
-export const ALL_FRONTS: ImageSourcePropType[] = FRONTS.flat();
+/** Flat list for preloading every variant up front. */
+export const ALL_FRONTS: ImageSourcePropType[] = VARIANTS.flat(2);
 
 const clamp = (v: number | undefined, hi: number) => (v && v > 0 ? (v > hi ? hi : v | 0) : 0);
 
 export function frontFor(avatar?: AvatarConfig | null): ImageSourcePropType {
-  return FRONTS[clamp(avatar?.skinTone, 5)][clamp(avatar?.hairLook, 2)];
+  return VARIANTS[clamp(avatar?.skinTone, 4)][clamp(avatar?.hairLength, 1)][clamp(avatar?.hairColor, 2)];
 }
 
-export function frontAt(skinTone: number, hairLook: number): ImageSourcePropType {
-  return FRONTS[clamp(skinTone, 5)][clamp(hairLook, 2)];
+export function frontAt(skinTone: number, hairLength: number, hairColor: number): ImageSourcePropType {
+  return VARIANTS[clamp(skinTone, 4)][clamp(hairLength, 1)][clamp(hairColor, 2)];
 }

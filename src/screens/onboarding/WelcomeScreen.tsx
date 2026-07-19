@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Easing, Image, Text, View } from 'react-native';
+import { Animated, Easing, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { GhostButton, PrimaryButton, Screen } from '../../components/ui';
 import { Entrance } from '../../components/anim/Entrance';
@@ -27,27 +27,22 @@ export function WelcomeScreen({ navigation }: Props) {
   return (
     <Screen>
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.l }}>
-        <Entrance spring distance={28}>
-          <View>
-            <Sparkles size={130} style={{ position: 'absolute', top: -14, right: -56, opacity: 0.7 }} />
-            <Image
-              source={require('../../../assets/avatar/front.png')}
-              style={{ height: 320, width: 320 * 0.442, resizeMode: 'contain' }}
-              accessibilityLabel="Eterna avatar"
-            />
+        <Entrance spring distance={20}>
+          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <Sparkles size={150} style={{ position: 'absolute', top: -70 }} />
+            <Animated.Text
+              style={{
+                fontFamily: type.serif,
+                fontSize: 46,
+                color: t.text,
+                opacity: brand,
+                letterSpacing: brand.interpolate({ inputRange: [0, 1], outputRange: [2, 10] }),
+              }}
+            >
+              ETERNA
+            </Animated.Text>
           </View>
         </Entrance>
-        <Animated.Text
-          style={{
-            fontFamily: type.serif,
-            fontSize: 40,
-            color: t.text,
-            opacity: brand,
-            letterSpacing: brand.interpolate({ inputRange: [0, 1], outputRange: [2, 8] }),
-          }}
-        >
-          ETERNA
-        </Animated.Text>
         <Entrance delay={650}>
           <Text style={{ fontSize: 16, color: t.sub, textAlign: 'center', lineHeight: 23, maxWidth: 280 }}>
             Everything you do to feel beautiful, remembered in one place.

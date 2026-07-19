@@ -191,12 +191,15 @@ export const APPOINTMENTS: Appointment[] = [
   { id: 'a5', treatmentId: 't-roots', dateISO: addDays(T, 24), timeLabel: '14:30', clinicId: 'c1', priceEUR: 95 },
 ];
 
-/** Six skin tones, porcelain to deep, for the avatar studio swatches. */
-export const SKIN_TONES = ['#F0D9C4', '#E4BE9E', '#CDA07C', '#B07A54', '#8A5A3B', '#5C3A26'];
+/** Five skin tones (match the real render tones), light to deep. */
+export const SKIN_TONES = ['#F0D5BE', '#D9AC82', '#B9835C', '#8A5A3B', '#5C3A26'];
 
-/** Hair looks. Each (skin tone × look) is a distinct front render. */
-export const HAIR_LOOKS: { key: 'long' | 'bob' | 'blonde'; label: string; swatch: string }[] = [
-  { key: 'long', label: 'Long', swatch: '#4A342A' },
-  { key: 'bob', label: 'Bob', swatch: '#4A342A' },
-  { key: 'blonde', label: 'Blonde', swatch: '#C99D62' },
+/** Hair length options. */
+export const HAIR_LENGTHS = ['Long', 'Short'];
+
+/** Hair colors (applied as a hair-only recolor on the render). */
+export const HAIR_COLORS: { label: string; swatch: string }[] = [
+  { label: 'Brown', swatch: '#4A342A' },
+  { label: 'Black', swatch: '#211C1A' },
+  { label: 'Blonde', swatch: '#C99D62' },
 ];

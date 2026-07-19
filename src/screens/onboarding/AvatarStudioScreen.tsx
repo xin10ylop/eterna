@@ -3,16 +3,73 @@ import { Pressable, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { IconButton, PrimaryButton, Screen } from '../../components/ui';
 import { AvatarFigure } from '../../components/avatar/AvatarFigure';
-import { HAIR_LOOKS, SKIN_TONES } from '../../data/seed';
+import { HAIR_COLORS, HAIR_LENGTHS, SKIN_TONES } from '../../data/seed';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import type { RootStackParamList } from '../../navigation/types';
 
 /**
- * Avatar studio. A static, high-res figure with two clean pickers — skin tone
- * and hair. Every choice crossfades smoothly (no jump, no lag) because all
- * variants are preloaded and share one uniform frame. No drag.
+ * Avatar studio. A static, high-res figure with three clean pickers — skin
+ * tone, hair length, hair color. Every choice crossfades smoothly (no jump,
+ * no lag) because all variants are preloaded and share one uniform frame.
+ * No drag.
  */
+
+function PillPicker({
+  options,
+  value,
+  onChange,
+}: {
+  options: { label: string; swatch?: string }[];
+  value: number;
+  onChange: (i: number) => void;
+}) {
+  const t = useTheme();
+  return (
+    <View style={{ flexDirection: 'row', gap: spacing.m }}>
+      {options.map((o, i) => {
+        const sel = value === i;
+        return (
+          <Pressable
+            key={o.label}
+            accessibilityRole="button"
+            accessibilityLabel={o.label}
+            accessibilityState={{ selected: sel }}
+            onPress={() => onChange(i)}
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: spacing.s,
+              paddingVertical: 12,
+              borderRadius: radii.l,
+              backgroundColor: sel ? t.accentSoft : t.surfaceAlt,
+              borderWidth: sel ? 1.5 : 1,
+              borderColor: sel ? t.accent : t.border,
+            }}
+          >
+            {o.swatch ? (
+              <View
+                style={{
+                  width: 16,
+                  height: 16,
+                  borderRadius: 8,
+                  backgroundColor: o.swatch,
+                  borderWidth: 1,
+                  borderColor: t.border,
+                }}
+              />
+            ) : null}
+            <Text style={{ fontSize: 14, fontWeight: '600', color: sel ? t.accent : t.text }}>
+              {o.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
 
 export function AvatarStudioScreen({
   navigation,
@@ -39,17 +96,17 @@ export function AvatarStudioScreen({
           ) : null}
           {!signedIn ? <Text style={[type.label, { color: t.muted }]}>Step 6 of 7</Text> : null}
         </View>
-        <View style={{ gap: 4 }}>
-          <Text style={[type.display, { color: t.text }]}>Make her yours</Text>
-          <Text style={[type.body, { color: t.sub, lineHeight: 21 }]}>
-            Choose a skin tone and hair. She updates instantly.
-          </Text>
-        </View>
+        <Text style={[type.display, { color: t.text }]}>Make her yours</Text>
       </View>
 
       {/* static preview */}
       <View style={{ flex: 1, justifyContent: 'center' }}>
-        <AvatarFigure height={330} skinTone={avatar.skinTone} hairLook={avatar.hairLook} />
+        <AvatarFigure
+          height={300}
+          skinTone={avatar.skinTone}
+          hairLength={avatar.hairLength}
+          hairColor={avatar.hairColor}
+        />
       </View>
 
       {/* pickers */}
@@ -81,47 +138,21 @@ export function AvatarStudioScreen({
         </View>
 
         <View style={{ gap: spacing.s }}>
-          <Text style={[type.label, { color: t.muted }]}>Hair</Text>
-          <View style={{ flexDirection: 'row', gap: spacing.m }}>
-            {HAIR_LOOKS.map((look, i) => {
-              const sel = avatar.hairLook === i;
-              return (
-                <Pressable
-                  key={look.key}
-                  accessibilityRole="button"
-                  accessibilityLabel={look.label}
-                  accessibilityState={{ selected: sel }}
-                  onPress={() => setAvatar({ hairLook: i })}
-                  style={{
-                    flex: 1,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: spacing.s,
-                    paddingVertical: 12,
-                    borderRadius: radii.l,
-                    backgroundColor: sel ? t.accentSoft : t.surfaceAlt,
-                    borderWidth: sel ? 1.5 : 1,
-                    borderColor: sel ? t.accent : t.border,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 16,
-                      height: 16,
-                      borderRadius: 8,
-                      backgroundColor: look.swatch,
-                      borderWidth: 1,
-                      borderColor: t.border,
-                    }}
-                  />
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: sel ? t.accent : t.text }}>
-                    {look.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+          <Text style={[type.label, { color: t.muted }]}>Hair length</Text>
+          <PillPicker
+            options={HAIR_LENGTHS.map((l) => ({ label: l }))}
+            value={avatar.hairLength}
+            onChange={(i) => setAvatar({ hairLength: i })}
+          />
+        </View>
+
+        <View style={{ gap: spacing.s }}>
+          <Text style={[type.label, { color: t.muted }]}>Hair color</Text>
+          <PillPicker
+            options={HAIR_COLORS}
+            value={avatar.hairColor}
+            onChange={(i) => setAvatar({ hairColor: i })}
+          />
         </View>
       </View>
 

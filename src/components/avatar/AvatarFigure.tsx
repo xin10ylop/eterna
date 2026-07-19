@@ -1,61 +1,71 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Animated, View, type StyleProp, type ViewStyle } from 'react-native';
-import { ALL_FRONTS, FRONTS, FRONT_ASPECT } from './config';
+import { FRONT_ASPECT, frontAt } from './config';
 import { useTheme } from '../../store';
 
 /**
- * Static avatar figure.
+ * Static avatar figure with a true cross-dissolve.
  *
- * Every variant is mounted once and preloaded; changing skin tone or hair
- * crossfades opacity (220ms) between them. Because all fronts share one
- * uniform canvas, the figure never jumps — only the skin and hair change.
- * No drag, no rotation. Zone markers are passed as children and overlaid.
+ * When skin/length/color changes, the new render is layered ON TOP of the
+ * current one at opacity 0 and fades to 1; the old layer stays fully visible
+ * underneath until the fade completes, so there is never a blank flash or a
+ * "disappear then appear". All variants share one uniform canvas, so the
+ * figure never jumps. Images are preloaded at app start (see App bootstrap),
+ * so a layer never waits on the network. No drag, no rotation.
  */
 export function AvatarFigure({
   height,
   skinTone,
-  hairLook,
+  hairLength,
+  hairColor,
   children,
   style,
 }: {
   height: number;
   skinTone: number;
-  hairLook: number;
+  hairLength: number;
+  hairColor: number;
   children?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
   const t = useTheme();
   const width = height * FRONT_ASPECT;
-  const activeIndex = clamp(skinTone, 5) * 3 + clamp(hairLook, 2);
 
-  const fades = useRef(ALL_FRONTS.map((_, i) => new Animated.Value(i === activeIndex ? 1 : 0))).current;
+  // a small stack of layers; the newest fades in over the rest
+  const [layers, setLayers] = useState(() => [
+    { key: 0, src: frontAt(skinTone, hairLength, hairColor), anim: new Animated.Value(1) },
+  ]);
+  const nextKey = useRef(1);
+  const lastSig = useRef(`${skinTone}-${hairLength}-${hairColor}`);
+
   useEffect(() => {
-    Animated.parallel(
-      fades.map((v, i) =>
-        Animated.timing(v, {
-          toValue: i === activeIndex ? 1 : 0,
-          duration: 220,
-          useNativeDriver: true,
-        }),
-      ),
-    ).start();
-  }, [activeIndex, fades]);
+    const sig = `${skinTone}-${hairLength}-${hairColor}`;
+    if (sig === lastSig.current) return;
+    lastSig.current = sig;
+    const anim = new Animated.Value(0);
+    const layer = { key: nextKey.current++, src: frontAt(skinTone, hairLength, hairColor), anim };
+    setLayers((prev) => [...prev, layer]);
+    Animated.timing(anim, { toValue: 1, duration: 240, useNativeDriver: true }).start(() => {
+      // once fully faded in, drop the layers beneath it
+      setLayers((prev) => prev.slice(prev.indexOf(layer)));
+    });
+  }, [skinTone, hairLength, hairColor]);
 
   return (
     <View style={[{ alignItems: 'center' }, style]}>
       <View style={{ width, height }}>
-        {FRONTS.flat().map((src, i) => (
+        {layers.map((l) => (
           <Animated.Image
-            key={i}
-            source={src}
+            key={l.key}
+            source={l.src}
             fadeDuration={0}
-            accessibilityLabel={i === activeIndex ? 'Your avatar' : undefined}
+            accessibilityLabel="Your avatar"
             style={{
               position: 'absolute',
               width: '100%',
               height: '100%',
               resizeMode: 'contain',
-              opacity: fades[i],
+              opacity: l.anim,
             }}
           />
         ))}
@@ -75,8 +85,4 @@ export function AvatarFigure({
       />
     </View>
   );
-}
-
-function clamp(v: number, hi: number) {
-  return v > 0 ? (v > hi ? hi : v | 0) : 0;
 }

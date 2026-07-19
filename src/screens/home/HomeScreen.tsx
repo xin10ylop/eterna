@@ -105,7 +105,8 @@ export function HomeScreen({ navigation }: Props) {
           <AvatarFigure
             height={Math.min(440, Dimensions.get('window').height * 0.46)}
             skinTone={profile?.avatar?.skinTone ?? 0}
-            hairLook={profile?.avatar?.hairLook ?? 0}
+            hairLength={profile?.avatar?.hairLength ?? 0}
+            hairColor={profile?.avatar?.hairColor ?? 0}
           >
             <ZoneMarkers
               data={zoneData}

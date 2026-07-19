@@ -133,7 +133,8 @@ export function ReadyScreen({ navigation: _n }: NativeStackScreenProps<RootStack
             <AvatarFigure
               height={260}
               skinTone={avatar.skinTone}
-              hairLook={avatar.hairLook}
+              hairLength={avatar.hairLength}
+              hairColor={avatar.hairColor}
               style={{ marginTop: spacing.m }}
             />
           </Entrance>
