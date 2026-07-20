@@ -6,12 +6,12 @@ import type { ZoneId } from '../../types';
 import { useTheme } from '../../store';
 
 /**
- * Four fixed markers on the avatar — hair, face, body, hands.
+ * Attention glows on the avatar — hair, face, body, hands.
  *
- * Each shows a small, refined "glass bead" at its fixed position so the map is
- * always legible. A marker that needs attention lifts into a soft accent dome
- * (radial glow) with a solid core and a gentle breath, plus a count when
- * several items are due. Calm and clean — no hard-edged blobs.
+ * A body part that needs attention softly glows from within: a large, soft
+ * radial light in the accent color that breathes (no hard dot, no dome). Calm
+ * parts show nothing. Each glow is tappable and shows a small count when
+ * several items are due.
  */
 
 export interface ZoneMarkerDatum {
@@ -19,110 +19,85 @@ export interface ZoneMarkerDatum {
   attentionCount: number;
 }
 
-const HIT = 44;
-const DOME = 46;
+const GLOW = 130; // glow canvas size (px)
+const HIT = 64; // touch target
 
-function Dome({ color }: { color: string }) {
-  return (
-    <Svg width={DOME} height={DOME}>
-      <Defs>
-        <RadialGradient id="d" cx="50%" cy="50%" r="50%">
-          <Stop offset="0%" stopColor={color} stopOpacity={0.5} />
-          <Stop offset="40%" stopColor={color} stopOpacity={0.22} />
-          <Stop offset="100%" stopColor={color} stopOpacity={0} />
-        </RadialGradient>
-      </Defs>
-      <Circle cx={DOME / 2} cy={DOME / 2} r={DOME / 2} fill="url(#d)" />
-    </Svg>
-  );
-}
+const AnimatedSvg = Animated.createAnimatedComponent(Svg);
 
 function Marker({
   attention,
   count,
   onPress,
   label,
+  id,
 }: {
   attention: boolean;
   count: number;
   onPress: () => void;
   label: string;
+  id: string;
 }) {
   const t = useTheme();
-  const breath = useRef(new Animated.Value(0)).current;
+  const pulse = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (!attention) return;
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(breath, { toValue: 1, duration: 1500, useNativeDriver: true }),
-        Animated.timing(breath, { toValue: 0, duration: 1500, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: 1500, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 1500, useNativeDriver: true }),
       ]),
     );
     loop.start();
     return () => loop.stop();
-  }, [attention, breath]);
+  }, [attention, pulse]);
+
+  if (!attention) return null;
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${label}${attention ? `, ${count} due` : ', on track'}`}
+      accessibilityLabel={`${label}, ${count} due`}
       onPress={onPress}
       style={{ width: HIT, height: HIT, alignItems: 'center', justifyContent: 'center' }}
     >
-      {attention ? (
-        <>
-          <Animated.View
-            style={{
-              position: 'absolute',
-              opacity: breath.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] }),
-              transform: [{ scale: breath.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.1] }) }],
-            }}
-          >
-            <Dome color={t.accent} />
-          </Animated.View>
-          <View
-            style={{
-              width: 12,
-              height: 12,
-              borderRadius: 6,
-              backgroundColor: t.accent,
-              borderWidth: 1.5,
-              borderColor: 'rgba(255,255,255,0.95)',
-            }}
-          />
-          {count > 1 ? (
-            <View
-              style={{
-                position: 'absolute',
-                top: 3,
-                right: 2,
-                minWidth: 15,
-                height: 15,
-                borderRadius: 8,
-                paddingHorizontal: 3,
-                backgroundColor: t.text,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text style={{ color: t.bg, fontSize: 9, fontWeight: '700' }}>{count}</Text>
-            </View>
-          ) : null}
-        </>
-      ) : (
-        // calm zone: a quiet glass bead
+      {/* soft light from within — two overlaid glows for depth */}
+      <AnimatedSvg
+        width={GLOW}
+        height={GLOW}
+        style={{
+          position: 'absolute',
+          opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.55, 1] }),
+          transform: [
+            { scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.82, 1.12] }) },
+          ],
+        }}
+      >
+        <Defs>
+          <RadialGradient id={`g-${id}`} cx="50%" cy="50%" r="50%">
+            <Stop offset="0%" stopColor={t.accent} stopOpacity={0.5} />
+            <Stop offset="32%" stopColor={t.accent} stopOpacity={0.28} />
+            <Stop offset="64%" stopColor={t.accent} stopOpacity={0.1} />
+            <Stop offset="100%" stopColor={t.accent} stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Circle cx={GLOW / 2} cy={GLOW / 2} r={GLOW / 2} fill={`url(#g-${id})`} />
+      </AnimatedSvg>
+      {count > 1 ? (
         <View
           style={{
-            width: 12,
-            height: 12,
-            borderRadius: 6,
-            backgroundColor: 'rgba(255,255,255,0.55)',
-            borderWidth: 1,
-            borderColor: 'rgba(70,55,45,0.28)',
+            minWidth: 18,
+            height: 18,
+            borderRadius: 9,
+            paddingHorizontal: 4,
+            backgroundColor: t.accent,
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
-        />
-      )}
+        >
+          <Text style={{ color: t.onAccent, fontSize: 10, fontWeight: '800' }}>{count}</Text>
+        </View>
+      ) : null}
     </Pressable>
   );
 }
@@ -153,6 +128,7 @@ export function ZoneMarkers({
             }}
           >
             <Marker
+              id={m.id}
               attention={count > 0}
               count={count}
               label={m.label}
