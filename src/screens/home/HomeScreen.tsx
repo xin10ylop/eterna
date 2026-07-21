@@ -9,12 +9,12 @@ import { Entrance } from '../../components/anim/Entrance';
 import { AvatarFigure } from '../../components/avatar/AvatarFigure';
 import { ZoneMarkers } from '../../components/avatar/ZoneMarkers';
 import { ZONES } from '../../data/seed';
-import { nextDueISO, treatmentStatus, zoneGlow, type GlowStatus } from '../../services/logic';
-import { diffDays, humanizeDue, todayISO } from '../../lib/dates';
-import { cardShadow, radii, spacing, type } from '../../theme';
+import { needsAttention, treatmentStatus, zoneGlow, type GlowStatus } from '../../services/logic';
+import { diffDays, todayISO } from '../../lib/dates';
+import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import { useT } from '../../i18n';
-import type { Treatment, ZoneId } from '../../types';
+import type { ZoneId } from '../../types';
 import type { RootStackParamList, TabParamList } from '../../navigation/types';
 
 type Props = CompositeScreenProps<
@@ -22,36 +22,24 @@ type Props = CompositeScreenProps<
   NativeStackScreenProps<RootStackParamList>
 >;
 
-const ZONE_ICON: Record<ZoneId, keyof typeof Ionicons.glyphMap> = {
-  hair: 'sparkles-outline',
-  face: 'happy-outline',
-  lips: 'heart-outline',
-  torso: 'body-outline',
-  hands: 'hand-left-outline',
-  hips: 'body-outline',
-  legs: 'footsteps-outline',
-};
-
+/**
+ * Home is the avatar. The glowing body parts ARE the interface — tap one to see
+ * and book what's due there. No list, no booking box: those would undercut the
+ * whole point of the glow. Just a greeting, a slim event countdown, the figure,
+ * and a quiet link to the full plan.
+ */
 export function HomeScreen({ navigation }: Props) {
   const t = useTheme();
   const tx = useT();
   const profile = useEterna((s) => s.profile);
   const treatments = useEterna((s) => s.treatments);
   const appointments = useEterna((s) => s.appointments);
-  const clinics = useEterna((s) => s.clinics);
   const event = useEterna((s) => s.event);
 
-  const clinicName = (id: string) => clinics.find((c) => c.id === id)?.name ?? '';
-
-  const ranked = useMemo(
-    () => treatments.map((tr) => ({ tr, status: treatmentStatus(tr, appointments) })),
+  const toBook = useMemo(
+    () => treatments.filter((tr) => needsAttention(treatmentStatus(tr, appointments))).length,
     [treatments, appointments],
   );
-  const bookNow = ranked.filter((r) => r.status === 'bookNow');
-  const comingUp = ranked.filter((r) => r.status === 'comingUp');
-  const topItem = bookNow[0] ?? comingUp[0];
-  const toBook = bookNow.length + comingUp.length;
-
   const zoneGlows = useMemo(() => {
     const m: Partial<Record<ZoneId, GlowStatus>> = {};
     for (const z of ZONES) m[z.id] = zoneGlow(z.id, treatments, appointments);
@@ -59,6 +47,7 @@ export function HomeScreen({ navigation }: Props) {
   }, [treatments, appointments]);
 
   const eventDays = event ? diffDays(todayISO(), event.dateISO) : 0;
+  const hasEvent = !!event && eventDays > 0;
   const hour = new Date().getHours();
   const dayPart = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
   const line =
@@ -68,9 +57,6 @@ export function HomeScreen({ navigation }: Props) {
         ? tx('home.toBook.one')
         : tx('home.toBook.many', { n: toBook });
   const initials = ((profile?.firstName?.[0] ?? 'Y') + (profile?.lastName?.[0] ?? '')).toUpperCase();
-
-  const subFor = (item: Treatment, urgent: boolean) =>
-    `${urgent ? tx('status.timeToBook') : humanizeDue(nextDueISO(item))} · ${clinicName(item.clinicId)}`;
 
   return (
     <Screen padded={false}>
@@ -119,30 +105,28 @@ export function HomeScreen({ navigation }: Props) {
             paddingVertical: 10,
             paddingHorizontal: spacing.m,
             borderRadius: radii.pill,
-            backgroundColor: event && eventDays > 0 ? t.accentSoft : t.surfaceAlt,
+            backgroundColor: hasEvent ? t.accentSoft : t.surfaceAlt,
             borderWidth: 1,
-            borderColor: event && eventDays > 0 ? 'transparent' : t.border,
+            borderColor: hasEvent ? 'transparent' : t.border,
             transform: [{ scale: pressed ? 0.99 : 1 }],
           })}
         >
-          <Ionicons
-            name={event && eventDays > 0 ? 'calendar' : 'add-circle-outline'}
-            size={17}
-            color={t.accent}
-          />
-          <Text style={{ flex: 1, fontSize: 13.5, fontWeight: '600', color: event && eventDays > 0 ? t.accent : t.sub }}>
-            {event && eventDays > 0
-              ? `${event.name} · ${eventDays < 14 ? tx('event.inDays', { n: eventDays }) : tx('event.inWeeks', { n: Math.round(eventDays / 7) })}`
+          <Ionicons name={hasEvent ? 'calendar' : 'add-circle-outline'} size={17} color={t.accent} />
+          <Text
+            style={{ flex: 1, fontSize: 13.5, fontWeight: '600', color: hasEvent ? t.accent : t.sub }}
+          >
+            {hasEvent
+              ? `${event!.name} · ${eventDays < 14 ? tx('event.inDays', { n: eventDays }) : tx('event.inWeeks', { n: Math.round(eventDays / 7) })}`
               : tx('event.add')}
           </Text>
-          <Ionicons name="chevron-forward" size={15} color={event && eventDays > 0 ? t.accent : t.muted} />
+          <Ionicons name="chevron-forward" size={15} color={hasEvent ? t.accent : t.muted} />
         </Pressable>
 
-        {/* avatar hero */}
+        {/* avatar hero — the glows are the interface */}
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <Entrance spring distance={22}>
             <AvatarFigure
-              height={Math.min(400, Dimensions.get('window').height * 0.44)}
+              height={Math.min(420, Dimensions.get('window').height * 0.48)}
               skinTone={profile?.avatar?.skinTone ?? 0}
               hairColor={profile?.avatar?.hairColor ?? 0}
             >
@@ -152,94 +136,25 @@ export function HomeScreen({ navigation }: Props) {
               />
             </AvatarFigure>
           </Entrance>
-          <Text style={{ fontSize: 12, color: t.muted, marginTop: 2 }}>{tx('home.tapHint')}</Text>
+          <Text style={{ fontSize: 12.5, color: t.muted, marginTop: spacing.s }}>
+            {tx('home.tapHint')}
+          </Text>
         </View>
 
-        {/* one "next up" card + quiet see-all */}
-        <View style={{ paddingHorizontal: spacing.xl, paddingBottom: spacing.l, gap: spacing.s }}>
-          {topItem ? (
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => navigation.navigate('TreatmentDetail', { treatmentId: topItem.tr.id })}
-              style={({ pressed }) => ({
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: spacing.m,
-                backgroundColor: t.bg,
-                borderRadius: radii.card,
-                borderWidth: 1,
-                borderColor: t.border,
-                padding: spacing.m,
-                ...cardShadow,
-                transform: [{ scale: pressed ? 0.99 : 1 }],
-              })}
-            >
-              <View
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 12,
-                  backgroundColor: t.surface,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Ionicons name={ZONE_ICON[topItem.tr.zone]} size={20} color={t.accent} />
-              </View>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: '600', color: t.text }}>
-                  {topItem.tr.name}
-                </Text>
-                <Text numberOfLines={1} style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>
-                  {subFor(topItem.tr, topItem.status === 'bookNow')}
-                </Text>
-              </View>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={tx('common.book')}
-                onPress={() => navigation.navigate('Book', { treatmentId: topItem.tr.id })}
-                style={({ pressed }) => ({
-                  paddingVertical: 9,
-                  paddingHorizontal: 18,
-                  borderRadius: radii.pill,
-                  backgroundColor: t.accent,
-                  transform: [{ scale: pressed ? 0.94 : 1 }],
-                })}
-              >
-                <Text style={{ color: t.onAccent, fontSize: 14, fontWeight: '700' }}>{tx('common.book')}</Text>
-              </Pressable>
-            </Pressable>
-          ) : (
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: spacing.m,
-                backgroundColor: t.bg,
-                borderRadius: radii.card,
-                borderWidth: 1,
-                borderColor: t.border,
-                padding: spacing.l,
-                ...cardShadow,
-              }}
-            >
-              <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: t.positive }} />
-              <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>{tx('home.caughtUp')}</Text>
-            </View>
-          )}
-
-          {toBook > 0 ? (
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => navigation.navigate('Planning')}
-              style={{ alignItems: 'center', paddingVertical: 4 }}
-            >
-              <Text style={{ fontSize: 13.5, fontWeight: '600', color: t.accent }}>
-                {tx('home.seeAll', { n: toBook })}
-              </Text>
-            </Pressable>
-          ) : null}
-        </View>
+        {/* quiet link to the full plan — text only, not a box */}
+        {toBook > 0 ? (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => navigation.navigate('Planning')}
+            style={{ alignItems: 'center', paddingBottom: spacing.l, paddingTop: spacing.xs }}
+          >
+            <Text style={{ fontSize: 13.5, fontWeight: '600', color: t.accent }}>
+              {tx('home.seeAll', { n: toBook })}
+            </Text>
+          </Pressable>
+        ) : (
+          <View style={{ paddingBottom: spacing.l }} />
+        )}
       </View>
     </Screen>
   );
