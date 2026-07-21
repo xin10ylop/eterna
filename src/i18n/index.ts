@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useEterna } from '../store';
 
 /**
@@ -324,7 +325,12 @@ export function translate(lang: Lang, key: string, vars?: Record<string, string 
 /** Hook: returns a `t(key, vars)` bound to the current language. */
 export function useT() {
   const lang = useEterna((s) => s.lang);
-  return (key: string, vars?: Record<string, string | number>) => translate(lang, key, vars);
+  // Stable function per language, so components that put `t` in effect/memo deps
+  // don't re-run every render.
+  return useMemo(
+    () => (key: string, vars?: Record<string, string | number>) => translate(lang, key, vars),
+    [lang],
+  );
 }
 
 export function useLang(): Lang {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Card, GhostButton, IOSSwitch, IconButton, PrimaryButton, Row, Screen, SectionLabel } from '../../components/ui';
@@ -20,8 +20,13 @@ type Props = NativeStackScreenProps<RootStackParamList, 'TreatmentDetail'>;
 export function TreatmentDetailScreen({ navigation, route }: Props) {
   const t = useTheme();
   const tr = useEterna((s) => s.treatments.find((x) => x.id === route.params.treatmentId));
-  const sessions = useEterna((s) =>
-    s.sessions.filter((x) => x.treatmentId === route.params.treatmentId),
+  // Select the stable array, then derive — filtering inside the selector returns
+  // a brand-new array every render, which makes zustand's snapshot look changed
+  // and loops forever ("getSnapshot should be cached").
+  const allSessions = useEterna((s) => s.sessions);
+  const sessions = useMemo(
+    () => allSessions.filter((x) => x.treatmentId === route.params.treatmentId),
+    [allSessions, route.params.treatmentId],
   );
   const appointments = useEterna((s) => s.appointments);
   const clinics = useEterna((s) => s.clinics);

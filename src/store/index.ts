@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import { I18nManager } from 'react-native';
 import type {
@@ -237,5 +238,7 @@ export const useEterna = create<EternaState>((set, get) => ({
 import { getTheme } from '../theme';
 export function useTheme() {
   const accent = useEterna((s) => s.accent);
-  return getTheme(accent);
+  // Stable object per accent — returning a fresh getTheme() every render would
+  // re-run any effect/memo that depends on `t`.
+  return useMemo(() => getTheme(accent), [accent]);
 }
