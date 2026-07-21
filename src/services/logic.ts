@@ -186,20 +186,30 @@ function prepForTreatment(
   let i = 0;
   while (i < targets.length) {
     const doByISO = targets[i].doBy;
-    const covered: EventRef[] = [];
-    let j = i;
+    // Always cover at least event i, then fold in any later event this one visit
+    // stays fresh for. Seeding with event i keeps `covered` non-empty (no crash
+    // when lead > freshness) and guarantees `i` advances.
+    const first = targets[i].ev;
+    const covered: EventRef[] = [{ id: first.id, name: first.name, dateISO: first.dateISO }];
+    let j = i + 1;
     while (j < targets.length && diffDays(doByISO, targets[j].ev.dateISO) <= fresh) {
       const { ev } = targets[j];
       covered.push({ id: ev.id, name: ev.name, dateISO: ev.dateISO });
       j++;
     }
-    // drop a window that has clearly passed for the last event it would serve
-    if (diffDays(today, covered[covered.length - 1].dateISO) >= 0) {
-      const windowStart = addDays(doByISO, -3);
-      const windowEnd = covered[covered.length - 1].dateISO;
-      const appt = appointments.find(
-        (a) => a.treatmentId === tr.id && a.dateISO >= windowStart && a.dateISO <= windowEnd,
-      );
+    const windowEnd = covered[covered.length - 1].dateISO;
+
+    // Already fresh from a recent completion through the last event it serves?
+    // Then it needs no prep — don't nag her to re-book it.
+    const freshFromDone = diffDays(tr.lastDoneISO, windowEnd) <= fresh;
+    if (!freshFromDone) {
+      // A real appointment covers it when it lands on/before the last event and
+      // is still fresh there (within `fresh` days of it) — so a booking made
+      // even before the event was added still counts.
+      const windowStart = addDays(windowEnd, -fresh);
+      const appt = appointments
+        .filter((a) => a.treatmentId === tr.id && a.dateISO >= windowStart && a.dateISO <= windowEnd)
+        .sort((a, b) => a.dateISO.localeCompare(b.dateISO))[0];
       out.push({
         treatment: tr,
         doByISO,

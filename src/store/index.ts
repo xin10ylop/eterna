@@ -159,20 +159,33 @@ export const useEterna = create<EternaState>((set, get) => ({
     set((s) => {
       const t = s.treatments.find((x) => x.id === treatmentId);
       if (!t) return s;
+      const today = todayISO();
       const session: Session = {
         id: `s-log-${Date.now()}`,
         treatmentId,
-        dateISO: todayISO(),
+        dateISO: today,
         clinicId: t.clinicId,
         practitioner: { id: 'self', name: 'Logged by you', role: 'Esthetician' },
-        price: 0,
+        // a prepaid package session is already paid; otherwise record real spend
+        price: t.pkg ? 0 : t.price,
         detail: 'Marked as done',
       };
       return {
         treatments: s.treatments.map((x) =>
-          x.id === treatmentId ? { ...x, lastDoneISO: todayISO() } : x,
+          x.id === treatmentId
+            ? {
+                ...x,
+                lastDoneISO: today,
+                pkg: x.pkg && x.pkg.done < x.pkg.total ? { ...x.pkg, done: x.pkg.done + 1 } : x.pkg,
+              }
+            : x,
         ),
         sessions: [session, ...s.sessions],
+        // the visit is done — clear its pending booking so it stops reading as
+        // booked, off the calendar, and out of the budget forecast
+        appointments: s.appointments.filter(
+          (a) => !(a.treatmentId === treatmentId && a.dateISO >= today),
+        ),
       };
     }),
 
@@ -180,15 +193,22 @@ export const useEterna = create<EternaState>((set, get) => ({
     set((s) => {
       const t = s.treatments.find((x) => x.id === treatmentId);
       if (!t) return s;
+      const today = todayISO();
       const appt: Appointment = {
         id: `a-${Date.now()}`,
         treatmentId,
         dateISO,
         timeLabel,
         clinicId: t.clinicId,
-        price: t.price,
+        price: t.pkg ? 0 : t.price,
       };
-      return { appointments: [...s.appointments, appt] };
+      // one pending booking per treatment — replace any existing future one so a
+      // re-book or a double-tapped Confirm can't create a duplicate that
+      // double-counts in the budget
+      const rest = s.appointments.filter(
+        (a) => !(a.treatmentId === treatmentId && a.dateISO >= today),
+      );
+      return { appointments: [...rest, appt] };
     }),
 
   cancelAppointment: (appointmentId) =>
