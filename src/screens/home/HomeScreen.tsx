@@ -85,11 +85,21 @@ export function HomeScreen({ navigation }: Props) {
           }}
         >
           <View style={{ flex: 1 }}>
-            <Text style={[type.display, { color: t.text }]} numberOfLines={1}>
-              {tx('greeting.' + dayPart)}
-              {profile?.firstName ? `, ${profile.firstName}` : ''}
-            </Text>
-            <Text style={{ fontSize: 14, color: t.sub, marginTop: 2 }}>{line}</Text>
+            {profile?.firstName ? (
+              <>
+                <Text style={{ fontSize: 13.5, color: t.sub, fontWeight: '600' }}>
+                  {tx('greeting.' + dayPart)}
+                </Text>
+                <Text style={[type.display, { color: t.text, marginTop: 1 }]} numberOfLines={1}>
+                  {profile.firstName}
+                </Text>
+              </>
+            ) : (
+              <Text style={[type.display, { color: t.text }]} numberOfLines={1}>
+                {tx('greeting.' + dayPart)}
+              </Text>
+            )}
+            <Text style={{ fontSize: 14, color: t.sub, marginTop: 3 }}>{line}</Text>
           </View>
           <Pressable
             accessibilityRole="button"
@@ -108,56 +118,39 @@ export function HomeScreen({ navigation }: Props) {
           </Pressable>
         </View>
 
-        {/* events — one quiet line: the next one up, and a way to add. Tap the
-            line for the full list, tap + to add. No boxes, keeps Home clean. */}
-        <View
-          style={{
+        {/* events — the earlier clean pill: the next one up, or "add an event".
+            Tapping opens the full Events screen (list + add). One event, no cram. */}
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => navigation.navigate('EventPrep', nextEvent ? undefined : { add: true })}
+          style={({ pressed }) => ({
             marginHorizontal: spacing.xl,
             marginTop: spacing.m,
             flexDirection: 'row',
             alignItems: 'center',
             gap: spacing.s,
-          }}
+            paddingVertical: 11,
+            paddingHorizontal: spacing.m,
+            borderRadius: radii.pill,
+            backgroundColor: nextEvent ? t.accentSoft : t.surfaceAlt,
+            borderWidth: 1,
+            borderColor: nextEvent ? 'transparent' : t.border,
+            transform: [{ scale: pressed ? 0.99 : 1 }],
+          })}
         >
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => navigation.navigate('EventPrep')}
-            style={({ pressed }) => ({
-              flex: 1,
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: spacing.s,
-              opacity: pressed ? 0.6 : 1,
-            })}
+          <Ionicons
+            name={nextEvent ? 'calendar-clear-outline' : 'add-circle-outline'}
+            size={16}
+            color={t.accent}
+          />
+          <Text
+            numberOfLines={1}
+            style={{ flex: 1, fontSize: 13.5, fontWeight: '600', color: nextEvent ? t.accent : t.sub }}
           >
-            <Ionicons name="calendar-clear-outline" size={15} color={t.muted} />
-            {nextEvent ? (
-              <Text numberOfLines={1} style={{ flex: 1, fontSize: 13.5, color: t.sub }}>
-                <Text style={{ color: t.text, fontWeight: '600' }}>{nextEvent.name}</Text>
-                {`   ${nextCountdown}`}
-              </Text>
-            ) : (
-              <Text style={{ flex: 1, fontSize: 13.5, color: t.muted }}>{tx('event.add')}</Text>
-            )}
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={tx('event.add')}
-            onPress={() => navigation.navigate('EventPrep', { add: true })}
-            hitSlop={8}
-            style={({ pressed }) => ({
-              width: 28,
-              height: 28,
-              borderRadius: 14,
-              backgroundColor: t.accentSoft,
-              alignItems: 'center',
-              justifyContent: 'center',
-              transform: [{ scale: pressed ? 0.9 : 1 }],
-            })}
-          >
-            <Ionicons name="add" size={17} color={t.accent} />
-          </Pressable>
-        </View>
+            {nextEvent ? `${nextEvent.name}    ${nextCountdown}` : tx('event.add')}
+          </Text>
+          <Ionicons name="chevron-forward" size={15} color={nextEvent ? t.accent : t.muted} />
+        </Pressable>
 
         {/* avatar hero — the glows are the interface */}
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
