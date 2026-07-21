@@ -14,19 +14,20 @@ import type { GlowStatus } from '../../services/logic';
  * more urgent. A marker's status is the most urgent among the zones it covers.
  */
 
-const CANVAS = 66;
+const CANVAS = 74;
 const C = CANVAS / 2;
 
-// Colour + rhythm carry the status; darker + faster = more urgent. `core` is the
-// white centre's opacity — lower on soon/due so the deeper colour reads instead
-// of washing out to white.
+// Denser than a soft wisp: colour holds out to ~42% before it fades, opacity
+// floors sit high so the glow reads even at the dim end of the breath. `core`
+// is the white centre — full white for all-good, half for the warmer states so
+// the colour stays saturated.
 const STYLE: Record<
   GlowStatus,
   { rgb: string; core: number; period: number; oMin: number; oMax: number; sMin: number; sMax: number; r: number }
 > = {
-  calm: { rgb: '255,255,255', core: 0.92, period: 4200, oMin: 0.34, oMax: 0.62, sMin: 0.9, sMax: 1.04, r: 16 },
-  soon: { rgb: '150,58,36', core: 0.42, period: 3200, oMin: 0.56, oMax: 0.88, sMin: 0.86, sMax: 1.12, r: 18 },
-  due: { rgb: '178,38,28', core: 0.42, period: 1500, oMin: 0.62, oMax: 1.0, sMin: 0.86, sMax: 1.18, r: 19 },
+  calm: { rgb: '255,255,255', core: 1.0, period: 4200, oMin: 0.55, oMax: 0.9, sMin: 0.92, sMax: 1.05, r: 21 },
+  soon: { rgb: '150,52,30', core: 0.45, period: 3200, oMin: 0.76, oMax: 1.0, sMin: 0.9, sMax: 1.14, r: 22 },
+  due: { rgb: '182,34,24', core: 0.45, period: 1500, oMin: 0.82, oMax: 1.0, sMin: 0.9, sMax: 1.2, r: 23 },
 };
 
 const AnimatedSvg = Animated.createAnimatedComponent(Svg);
@@ -82,7 +83,7 @@ function Glow({
         <Defs>
           <RadialGradient id={`glow-${label}`} cx="50%" cy="50%" r="50%">
             <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={s.core} />
-            <Stop offset="34%" stopColor={`rgb(${s.rgb})`} stopOpacity={0.62} />
+            <Stop offset="42%" stopColor={`rgb(${s.rgb})`} stopOpacity={0.74} />
             <Stop offset="100%" stopColor={`rgb(${s.rgb})`} stopOpacity={0} />
           </RadialGradient>
         </Defs>

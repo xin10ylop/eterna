@@ -162,7 +162,7 @@ export function HomeScreen({ navigation }: Props) {
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <Entrance spring distance={22}>
             <AvatarFigure
-              height={Math.min(520, Dimensions.get('window').height * 0.58)}
+              height={Math.min(580, Dimensions.get('window').height * 0.64)}
               skinTone={profile?.avatar?.skinTone ?? 0}
               hairColor={profile?.avatar?.hairColor ?? 0}
             >
@@ -172,7 +172,7 @@ export function HomeScreen({ navigation }: Props) {
               />
             </AvatarFigure>
           </Entrance>
-          <Text style={{ fontSize: 12.5, color: t.muted, marginTop: spacing.s }}>
+          <Text style={{ fontSize: 12, color: t.muted, marginTop: 2 }}>
             {tx('home.tapHint')}
           </Text>
         </View>
