@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Dimensions, Pressable, Text, View } from 'react-native';
+import { Dimensions, Pressable, ScrollView, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -25,8 +25,8 @@ type Props = CompositeScreenProps<
 /**
  * Home is the avatar. The glowing body parts ARE the interface — tap one to see
  * and book what's due there. No list, no booking box: those would undercut the
- * whole point of the glow. Just a greeting, a slim event countdown, the figure,
- * and a quiet link to the full plan.
+ * whole point of the glow. Just a greeting, an events rail, the figure, and a
+ * quiet link to the full plan.
  */
 export function HomeScreen({ navigation }: Props) {
   const t = useTheme();
@@ -54,10 +54,6 @@ export function HomeScreen({ navigation }: Props) {
     return m;
   }, [treatments, appointments]);
 
-  const nextEvent = upcomingEvents[0] ?? null;
-  const moreEvents = Math.max(0, upcomingEvents.length - 1);
-  const eventDays = nextEvent ? diffDays(todayISO(), nextEvent.dateISO) : 0;
-  const hasEvent = !!nextEvent;
   const hour = new Date().getHours();
   const dayPart = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
   const line =
@@ -102,41 +98,71 @@ export function HomeScreen({ navigation }: Props) {
           </Pressable>
         </View>
 
-        {/* slim event chip — add or countdown */}
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => navigation.navigate('EventPrep')}
-          style={({ pressed }) => ({
-            marginHorizontal: spacing.xl,
-            marginTop: spacing.m,
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: spacing.s,
-            paddingVertical: 10,
-            paddingHorizontal: spacing.m,
-            borderRadius: radii.pill,
-            backgroundColor: hasEvent ? t.accentSoft : t.surfaceAlt,
-            borderWidth: 1,
-            borderColor: hasEvent ? 'transparent' : t.border,
-            transform: [{ scale: pressed ? 0.99 : 1 }],
-          })}
+        {/* events rail — one clean chip per event, add on the end */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ flexGrow: 0, marginTop: spacing.m }}
+          contentContainerStyle={{ paddingHorizontal: spacing.xl, gap: spacing.s, alignItems: 'center' }}
         >
-          <Ionicons name={hasEvent ? 'calendar' : 'add-circle-outline'} size={17} color={t.accent} />
-          <Text
-            style={{ flex: 1, fontSize: 13.5, fontWeight: '600', color: hasEvent ? t.accent : t.sub }}
+          {upcomingEvents.map((ev) => {
+            const d = diffDays(todayISO(), ev.dateISO);
+            const countdown =
+              d < 14 ? tx('event.inDays', { n: d }) : tx('event.inWeeks', { n: Math.round(d / 7) });
+            return (
+              <Pressable
+                key={ev.id}
+                accessibilityRole="button"
+                accessibilityLabel={`${ev.name}, ${countdown}`}
+                onPress={() => navigation.navigate('EventPrep')}
+                style={({ pressed }) => ({
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 7,
+                  paddingVertical: 9,
+                  paddingHorizontal: 14,
+                  borderRadius: radii.pill,
+                  backgroundColor: t.accentSoft,
+                  transform: [{ scale: pressed ? 0.97 : 1 }],
+                })}
+              >
+                <Ionicons name="calendar-clear-outline" size={13} color={t.accent} />
+                <Text style={{ fontSize: 13, fontWeight: '700', color: t.accent }}>{countdown}</Text>
+                <Text numberOfLines={1} style={{ fontSize: 13, color: t.accent, opacity: 0.75, maxWidth: 132 }}>
+                  {ev.name}
+                </Text>
+              </Pressable>
+            );
+          })}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={tx('event.add')}
+            onPress={() => navigation.navigate('EventPrep', { add: true })}
+            style={({ pressed }) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              paddingVertical: 9,
+              paddingHorizontal: upcomingEvents.length === 0 ? 14 : 12,
+              borderRadius: radii.pill,
+              borderWidth: 1,
+              borderColor: t.border,
+              backgroundColor: t.surfaceAlt,
+              transform: [{ scale: pressed ? 0.97 : 1 }],
+            })}
           >
-            {hasEvent
-              ? `${nextEvent!.name} · ${eventDays < 14 ? tx('event.inDays', { n: eventDays }) : tx('event.inWeeks', { n: Math.round(eventDays / 7) })}${moreEvents > 0 ? ` · ${tx('event.more', { n: moreEvents })}` : ''}`
-              : tx('event.add')}
-          </Text>
-          <Ionicons name="chevron-forward" size={15} color={hasEvent ? t.accent : t.muted} />
-        </Pressable>
+            <Ionicons name="add" size={16} color={t.accent} />
+            {upcomingEvents.length === 0 ? (
+              <Text style={{ fontSize: 13, fontWeight: '600', color: t.sub }}>{tx('event.add')}</Text>
+            ) : null}
+          </Pressable>
+        </ScrollView>
 
         {/* avatar hero — the glows are the interface */}
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <Entrance spring distance={22}>
             <AvatarFigure
-              height={Math.min(420, Dimensions.get('window').height * 0.48)}
+              height={Math.min(520, Dimensions.get('window').height * 0.58)}
               skinTone={profile?.avatar?.skinTone ?? 0}
               hairColor={profile?.avatar?.hairColor ?? 0}
             >

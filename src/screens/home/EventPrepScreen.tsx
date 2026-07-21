@@ -20,7 +20,7 @@ const RED = '#C83A2C';
  * first is still fresh for the next, it shows as a single row tagged with both,
  * not two appointments.
  */
-export function EventPrepScreen({ navigation }: Props) {
+export function EventPrepScreen({ navigation, route }: Props) {
   const t = useTheme();
   const tx = useT();
   const events = useEterna((s) => s.events);
@@ -53,7 +53,7 @@ export function EventPrepScreen({ navigation }: Props) {
     [events, treatments, appointments],
   );
 
-  const [adding, setAdding] = useState(events.length === 0);
+  const [adding, setAdding] = useState(events.length === 0 || !!route.params?.add);
   const [name, setName] = useState('');
   const [weeks, setWeeks] = useState(4);
   const save = () => {

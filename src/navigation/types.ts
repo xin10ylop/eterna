@@ -21,7 +21,7 @@ export type RootStackParamList = {
   Tabs: NavigatorScreenParams<TabParamList> | undefined;
   ZoneDetail: { zone: ZoneId };
   TreatmentDetail: { treatmentId: string };
-  EventPrep: undefined;
+  EventPrep: { add?: boolean } | undefined;
   MyClinics: undefined;
   Book: { treatmentId: string };
   AddRitual: undefined;

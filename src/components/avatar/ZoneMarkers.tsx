@@ -9,9 +9,9 @@ import type { GlowStatus } from '../../services/logic';
  * Status glow on the avatar — hair, face, body, hands, feet.
  *
  * No dot, no object: the body part itself glows, and colour + rhythm carry the
- * status. Calm = a soft warm light, slow. Coming up = a deeper clay, medium.
- * Book now = a warm red, quicker and stronger. Warmer + faster = more urgent.
- * A marker's status is the most urgent among the zones it covers.
+ * status. All good = a clean white light, slow and calm. Coming up = a deep
+ * clay, medium. Book now = a warm red, quicker and stronger. Warmer + faster =
+ * more urgent. A marker's status is the most urgent among the zones it covers.
  */
 
 const CANVAS = 66;
@@ -24,9 +24,9 @@ const STYLE: Record<
   GlowStatus,
   { rgb: string; core: number; period: number; oMin: number; oMax: number; sMin: number; sMax: number; r: number }
 > = {
-  calm: { rgb: '202,182,150', core: 0.78, period: 4200, oMin: 0.2, oMax: 0.42, sMin: 0.9, sMax: 1.02, r: 15 },
-  soon: { rgb: '150,72,46', core: 0.5, period: 3200, oMin: 0.48, oMax: 0.8, sMin: 0.86, sMax: 1.1, r: 18 },
-  due: { rgb: '170,40,30', core: 0.44, period: 1500, oMin: 0.6, oMax: 0.98, sMin: 0.86, sMax: 1.18, r: 19 },
+  calm: { rgb: '255,255,255', core: 0.92, period: 4200, oMin: 0.34, oMax: 0.62, sMin: 0.9, sMax: 1.04, r: 16 },
+  soon: { rgb: '150,58,36', core: 0.42, period: 3200, oMin: 0.56, oMax: 0.88, sMin: 0.86, sMax: 1.12, r: 18 },
+  due: { rgb: '178,38,28', core: 0.42, period: 1500, oMin: 0.62, oMax: 1.0, sMin: 0.86, sMax: 1.18, r: 19 },
 };
 
 const AnimatedSvg = Animated.createAnimatedComponent(Svg);
