@@ -61,7 +61,9 @@ function ScheduleView({ nav }: { nav: Props['navigation'] }) {
   const treatments = useEterna((s) => s.treatments);
   const clinics = useEterna((s) => s.clinics);
 
+  const salonEvents = useEterna((s) => s.events);
   const eventsOn = (iso: string) => appointments.filter((a) => a.dateISO === iso);
+  const eventOn = (iso: string) => salonEvents.filter((e) => e.dateISO === iso);
   // predicted (not yet booked) due dates, rendered as outlined markers,
   // solid = booked (Apple Health's solid-vs-hatched cycle language)
   const predicted = useMemo(() => {
@@ -71,52 +73,80 @@ function ScheduleView({ nav }: { nav: Props['navigation'] }) {
     );
   }, [appointments, treatments]);
 
+  const dayAppts = eventsOn(selected).sort((a, b) => (a.timeLabel < b.timeLabel ? -1 : 1));
+  const dayEvents = eventOn(selected);
   const dayAgenda = (
     <View style={{ gap: spacing.s }}>
       <SectionLabel>{formatLong(selected)}</SectionLabel>
-      {eventsOn(selected).length === 0 ? (
+      {dayEvents.map((ev) => (
+        <Pressable
+          key={ev.id}
+          accessibilityRole="button"
+          onPress={() => nav.navigate('EventPrep')}
+          style={({ pressed }) => ({
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.m,
+            backgroundColor: t.accentSoft,
+            borderRadius: radii.card,
+            padding: spacing.m,
+            transform: [{ scale: pressed ? 0.99 : 1 }],
+          })}
+        >
+          <View
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 12,
+              backgroundColor: t.bg,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Ionicons name="sparkles" size={17} color={t.accent} />
+          </View>
+          <Text style={{ flex: 1, fontSize: 15, fontWeight: '700', color: t.text }}>{ev.name}</Text>
+          <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 0.5, color: t.accent }}>EVENT</Text>
+        </Pressable>
+      ))}
+      {dayAppts.map((a) => {
+        const tr = treatments.find((x) => x.id === a.treatmentId);
+        const clinic = clinics.find((c) => c.id === a.clinicId);
+        return (
+          <Card
+            key={a.id}
+            onPress={() => tr && nav.navigate('TreatmentDetail', { treatmentId: tr.id })}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
+              <View
+                style={{
+                  backgroundColor: t.accentSoft,
+                  borderRadius: radii.m,
+                  paddingVertical: 6,
+                  paddingHorizontal: 10,
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ fontSize: 14, fontWeight: '700', color: t.accent }}>{a.timeLabel}</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
+                  {tr?.name ?? 'Appointment'}
+                </Text>
+                <Text style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>
+                  {clinic?.name} · {formatAED(a.price)}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={t.muted} />
+            </View>
+          </Card>
+        );
+      })}
+      {dayEvents.length === 0 && dayAppts.length === 0 ? (
         <Card>
           <Text style={{ fontSize: 14, color: t.sub }}>Nothing booked this day.</Text>
         </Card>
-      ) : (
-        eventsOn(selected)
-          .sort((a, b) => (a.timeLabel < b.timeLabel ? -1 : 1))
-          .map((a) => {
-            const tr = treatments.find((x) => x.id === a.treatmentId);
-            const clinic = clinics.find((c) => c.id === a.clinicId);
-            return (
-              <Card
-                key={a.id}
-                onPress={() => tr && nav.navigate('TreatmentDetail', { treatmentId: tr.id })}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
-                  <View
-                    style={{
-                      backgroundColor: t.accentSoft,
-                      borderRadius: radii.m,
-                      paddingVertical: 6,
-                      paddingHorizontal: 10,
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Text style={{ fontSize: 14, fontWeight: '700', color: t.accent }}>
-                      {a.timeLabel}
-                    </Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
-                      {tr?.name ?? 'Appointment'}
-                    </Text>
-                    <Text style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>
-                      {clinic?.name} · {formatAED(a.price)}
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={16} color={t.muted} />
-                </View>
-              </Card>
-            );
-          })
-      )}
+      ) : null}
     </View>
   );
 
@@ -164,9 +194,10 @@ function ScheduleView({ nav }: { nav: Props['navigation'] }) {
             onSelect={setSelected}
             hasEvents={(iso) => eventsOn(iso).length > 0}
             isPredicted={(iso) => predicted.has(iso)}
+            isEvent={(iso) => eventOn(iso).length > 0}
           />
           {/* marker legend */}
-          <View style={{ flexDirection: 'row', gap: spacing.l, justifyContent: 'center' }}>
+          <View style={{ flexDirection: 'row', gap: spacing.l, justifyContent: 'center', flexWrap: 'wrap' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.accent }} />
               <Text style={{ fontSize: 11, color: t.muted }}>Booked</Text>
@@ -174,6 +205,10 @@ function ScheduleView({ nav }: { nav: Props['navigation'] }) {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <View style={{ width: 6, height: 6, borderRadius: 3, borderWidth: 1, borderColor: t.accent }} />
               <Text style={{ fontSize: 11, color: t.muted }}>Predicted due</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={{ width: 11, height: 11, borderRadius: 6, borderWidth: 1.5, borderColor: t.accent }} />
+              <Text style={{ fontSize: 11, color: t.muted }}>Event</Text>
             </View>
           </View>
           {dayAgenda}
@@ -266,12 +301,14 @@ function MonthGrid({
   onSelect,
   hasEvents,
   isPredicted,
+  isEvent,
 }: {
   anchor: string;
   selected: string;
   onSelect: (iso: string) => void;
   hasEvents: (iso: string) => boolean;
   isPredicted?: (iso: string) => boolean;
+  isEvent?: (iso: string) => boolean;
 }) {
   const t = useTheme();
   const cells = useMemo(() => {
@@ -291,6 +328,7 @@ function MonthGrid({
             if (!iso) return <View key={col} style={{ flex: 1, height: 44 }} />;
             const sel = iso === selected;
             const today = iso === todayISO();
+            const evt = isEvent?.(iso) ?? false;
             return (
               <Pressable
                 key={col}
@@ -307,6 +345,8 @@ function MonthGrid({
                     alignItems: 'center',
                     justifyContent: 'center',
                     backgroundColor: sel ? t.accent : today ? t.accentSoft : 'transparent',
+                    borderWidth: evt && !sel ? 1.5 : 0,
+                    borderColor: t.accent,
                   }}
                 >
                   <Text

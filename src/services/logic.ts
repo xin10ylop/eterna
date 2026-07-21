@@ -137,67 +137,119 @@ export interface EventRef {
   dateISO: string;
 }
 
-export interface EventPlanItem {
+/** One thing to do (or already done) for one or more events. A single visit —
+ *  because a ritual done once stays fresh across nearby events. */
+export interface PrepRitual {
   treatment: Treatment;
-  /** Recommended "have it done by" date, backed off from the earliest event
-   *  this appointment serves. */
+  /** Recommended "have it done by" date, backed off the earliest event it serves. */
   doByISO: string;
-  /** Every event this single appointment covers — one row, shared. */
+  /** Every event this one visit covers — a real, derived list, never assumed. */
   events: EventRef[];
-  /** An appointment already sits in this appointment's window. */
+  /** True when a real appointment already sits in this visit's window. */
   booked: boolean;
+  /** The appointment that covers it, if booked (so the UI can show its date). */
+  bookedApptId?: string;
+  bookedDateISO?: string;
+  /** One visit serving more than one event. */
+  shared: boolean;
+  /** The event is so close the ideal date has already passed — book ASAP. */
+  urgent: boolean;
+}
+
+export interface EventReadiness {
+  /** Per event: how much of its prep is already booked (drives a progress line). */
+  perEvent: { id: string; name: string; dateISO: string; total: number; booked: number }[];
+  /** Rituals a real appointment already covers. */
+  booked: PrepRitual[];
+  /** Rituals still to schedule, soonest first. */
+  toBook: PrepRitual[];
 }
 
 /**
- * Back-plan rituals across *all* upcoming events at once.
- *
- * The important part: two events close together shouldn't double-book. A ritual
- * done for the first stays fresh for its cadence length, so if the next event
- * falls inside that window one appointment carries both — the plan shows a single
- * row tagged with both events. Only when the gap exceeds the ritual's freshness
- * does it schedule a second appointment. Items are ordered by when they're due.
+ * Break one ritual into the visits its upcoming events need. A visit stays fresh
+ * for the ritual's cadence length, so nearby events fold into one visit; events
+ * beyond that window get their own. Coverage (booked or not) is *derived* from
+ * real appointment dates — so a booking made before an event was even added
+ * still counts, and nothing is silently assumed.
  */
-export function mergedEventPlan(
+function prepForTreatment(
+  tr: Treatment,
+  upcoming: { ev: SalonEvent }[] | SalonEvent[],
+  appointments: Appointment[],
+  today: string,
+): PrepRitual[] {
+  const events = (upcoming as SalonEvent[]);
+  const lead = EVENT_LEAD[tr.zone] ?? 5;
+  const fresh = cadenceDays(tr.cadence);
+  const targets = events.map((ev) => ({ ev, doBy: addDays(ev.dateISO, -lead) }));
+  const out: PrepRitual[] = [];
+  let i = 0;
+  while (i < targets.length) {
+    const doByISO = targets[i].doBy;
+    const covered: EventRef[] = [];
+    let j = i;
+    while (j < targets.length && diffDays(doByISO, targets[j].ev.dateISO) <= fresh) {
+      const { ev } = targets[j];
+      covered.push({ id: ev.id, name: ev.name, dateISO: ev.dateISO });
+      j++;
+    }
+    // drop a window that has clearly passed for the last event it would serve
+    if (diffDays(today, covered[covered.length - 1].dateISO) >= 0) {
+      const windowStart = addDays(doByISO, -3);
+      const windowEnd = covered[covered.length - 1].dateISO;
+      const appt = appointments.find(
+        (a) => a.treatmentId === tr.id && a.dateISO >= windowStart && a.dateISO <= windowEnd,
+      );
+      out.push({
+        treatment: tr,
+        doByISO,
+        events: covered,
+        booked: !!appt,
+        bookedApptId: appt?.id,
+        bookedDateISO: appt?.dateISO,
+        shared: covered.length > 1,
+        urgent: !appt && diffDays(today, doByISO) < 0,
+      });
+    }
+    i = j;
+  }
+  return out;
+}
+
+/**
+ * The connected picture across every upcoming event: what's already booked (and
+ * which events each booking covers), what's still to schedule, what one visit
+ * covers for several events, and how ready each event is. Nothing is merged
+ * behind the user's back — the sharing is shown, and it's all reversible.
+ */
+export function eventReadiness(
   events: SalonEvent[],
   treatments: Treatment[],
   appointments: Appointment[],
-): EventPlanItem[] {
+): EventReadiness {
   const today = todayISO();
   const upcoming = events
     .filter((e) => diffDays(today, e.dateISO) >= 0)
     .sort((a, b) => a.dateISO.localeCompare(b.dateISO));
-  if (upcoming.length === 0) return [];
+  if (upcoming.length === 0) return { perEvent: [], booked: [], toBook: [] };
 
-  const items: EventPlanItem[] = [];
-  for (const tr of treatments) {
-    const lead = EVENT_LEAD[tr.zone] ?? 5;
-    const fresh = cadenceDays(tr.cadence);
-    // ideal "have it done by" date for each event, earliest first
-    const targets = upcoming.map((ev) => ({ ev, doBy: addDays(ev.dateISO, -lead) }));
+  const all: PrepRitual[] = [];
+  for (const tr of treatments) all.push(...prepForTreatment(tr, upcoming, appointments, today));
 
-    // greedily cluster events one appointment can serve: an appointment on the
-    // first event's doBy stays fresh for `fresh` days, covering any later event
-    // whose date lands inside that window.
-    let i = 0;
-    while (i < targets.length) {
-      const doByISO = targets[i].doBy;
-      const covered: EventRef[] = [];
-      let j = i;
-      while (j < targets.length && diffDays(doByISO, targets[j].ev.dateISO) <= fresh) {
-        const { ev } = targets[j];
-        covered.push({ id: ev.id, name: ev.name, dateISO: ev.dateISO });
-        j++;
-      }
-      if (diffDays(today, doByISO) >= -3) {
-        const windowStart = addDays(doByISO, -3);
-        const windowEnd = covered[covered.length - 1].dateISO;
-        const booked = appointments.some(
-          (a) => a.treatmentId === tr.id && a.dateISO >= windowStart && a.dateISO <= windowEnd,
-        );
-        items.push({ treatment: tr, doByISO, events: covered, booked });
-      }
-      i = j;
-    }
-  }
-  return items.sort((a, b) => a.doByISO.localeCompare(b.doByISO));
+  const byDate = (a: PrepRitual, b: PrepRitual) => a.doByISO.localeCompare(b.doByISO);
+  const perEvent = upcoming.map((ev) => {
+    const rel = all.filter((p) => p.events.some((e) => e.id === ev.id));
+    return {
+      id: ev.id,
+      name: ev.name,
+      dateISO: ev.dateISO,
+      total: rel.length,
+      booked: rel.filter((p) => p.booked).length,
+    };
+  });
+  return {
+    perEvent,
+    booked: all.filter((p) => p.booked).sort(byDate),
+    toBook: all.filter((p) => !p.booked).sort(byDate),
+  };
 }
