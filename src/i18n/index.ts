@@ -116,6 +116,8 @@ const en: Dict = {
   'clinics.empty': 'No saved clinics yet. Find and save your favourites.',
   'common.add': 'Add',
   'common.remove': 'Remove',
+  'planning.nextVisit': 'Your next visit',
+  'planning.onSchedule': '{n} on schedule',
 };
 
 const ar: Dict = {
@@ -214,6 +216,8 @@ const ar: Dict = {
   'clinics.empty': 'لا عيادات محفوظة بعد. ابحثي واحفظي المفضّلة لديك.',
   'common.add': 'إضافة',
   'common.remove': 'إزالة',
+  'planning.nextVisit': 'زيارتك القادمة',
+  'planning.onSchedule': '{n} على الجدول',
 };
 
 const fr: Dict = {
@@ -312,6 +316,8 @@ const fr: Dict = {
   'clinics.empty': 'Aucune clinique enregistrée. Trouvez et enregistrez vos favorites.',
   'common.add': 'Ajouter',
   'common.remove': 'Retirer',
+  'planning.nextVisit': 'Votre prochain rendez-vous',
+  'planning.onSchedule': '{n} à jour',
 };
 
 const DICTS: Record<Lang, Dict> = { en, ar, fr };
