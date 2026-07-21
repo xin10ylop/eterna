@@ -24,18 +24,18 @@ export function NotificationsScreen({
 }: NativeStackScreenProps<RootStackParamList, 'Notifications'>) {
   const t = useTheme();
   const [slots, setSlots] = useState([
-    { key: 'morning', icon: 'sunny-outline' as const, label: 'Morning check-in', time: '8:00', on: true },
-    { key: 'evening', icon: 'moon-outline' as const, label: 'Evening wind-down', time: '21:00', on: false },
-    { key: 'due', icon: 'notifications-outline' as const, label: 'Before anything is due', time: '5 days ahead', on: true },
+    { key: 'due', icon: 'notifications-outline' as const, label: 'Before something’s due', time: '5 days ahead', on: true },
+    { key: 'appt', icon: 'calendar-outline' as const, label: 'Appointment reminders', time: 'Morning of', on: true },
+    { key: 'quiet', icon: 'moon-outline' as const, label: 'Quiet hours', time: '22:00 – 8:00', on: true },
   ]);
   const toggle = (key: string) =>
     setSlots((s) => s.map((x) => (x.key === key ? { ...x, on: !x.on } : x)));
 
   return (
     <OnboardingShell
-      step={6}
+      step={5}
       title="Your quiet reminders"
-      subtitle="Pick the moments Eterna may nudge you. Never spam."
+      subtitle="One gentle nudge per ritual — never a daily buzz."
       cta="Set reminders"
       onNext={() => navigation.navigate('Ready')}
       footer={<GhostButton title="Maybe later" onPress={() => navigation.navigate('Ready')} />}
@@ -74,7 +74,7 @@ export function NotificationsScreen({
         >
           <Text style={{ fontSize: 13, fontWeight: '700', color: t.text }}>Eterna</Text>
           <Text style={{ fontSize: 13, color: t.sub }}>
-            Lip filler is due Friday. Atelier Peau has 15:30 open.
+            Lip filler is due Friday. Jamila Skin Clinic has 15:30 open.
           </Text>
         </View>
         <Text style={{ fontSize: 12, color: t.muted, lineHeight: 17 }}>

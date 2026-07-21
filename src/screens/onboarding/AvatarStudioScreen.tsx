@@ -94,7 +94,7 @@ export function AvatarStudioScreen({
               accessibilityLabel="Back"
             />
           ) : null}
-          {!signedIn ? <Text style={[type.label, { color: t.muted }]}>Step 6 of 7</Text> : null}
+          {!signedIn ? <Text style={[type.label, { color: t.muted }]}>Step 5 of 6</Text> : null}
         </View>
         <Text style={[type.display, { color: t.text }]}>Make her yours</Text>
       </View>

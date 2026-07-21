@@ -60,13 +60,13 @@ export const PRACTITIONERS: Practitioner[] = [
 ];
 
 export const CLINICS: Clinic[] = [
-  { id: 'c1', name: 'Maison Cheveu', category: 'Hair', rating: 4.9, distanceKm: 0.8, slots: ['Tomorrow 14:30', 'Fri 10:00', 'Fri 16:15'], sponsored: true },
-  { id: 'c2', name: 'Atelier Peau', category: 'Skin', rating: 4.8, distanceKm: 1.4, slots: ['Thu 11:00', 'Fri 15:30', 'Sat 09:45'] },
-  { id: 'c3', name: 'Blink Beauty Bar', category: 'Lashes & Brows', rating: 4.7, distanceKm: 1.2, slots: ['Today 17:00', 'Tomorrow 12:15', 'Wed 18:30'] },
-  { id: 'c4', name: 'Velvet Nails Studio', category: 'Nails', rating: 4.9, distanceKm: 2.1, slots: ['Tomorrow 10:30', 'Thu 13:00', 'Sat 16:00'], homeService: true },
-  { id: 'c5', name: 'Lumière Aesthetics', category: 'Skin', rating: 4.8, distanceKm: 1.9, slots: ['Fri 09:30', 'Mon 14:00', 'Tue 17:15'], sponsored: true },
-  { id: 'c6', name: 'The Brow Room', category: 'Lashes & Brows', rating: 4.6, distanceKm: 0.6, slots: ['Today 16:15', 'Thu 11:30', 'Fri 10:45'] },
-  { id: 'c7', name: 'Onsen Spa & Body', category: 'Spa', rating: 4.7, distanceKm: 2.4, slots: ['Sat 11:00', 'Sun 15:00', 'Mon 10:30'], homeService: true },
+  { id: 'c1', name: 'Amwaj Hair Lounge', category: 'Hair', rating: 4.9, distanceKm: 0.8, slots: ['Tomorrow 14:30', 'Fri 10:00', 'Fri 16:15'], sponsored: true, womenOnly: true },
+  { id: 'c2', name: 'Jamila Skin Clinic', category: 'Skin', rating: 4.8, distanceKm: 1.4, slots: ['Thu 11:00', 'Fri 15:30', 'Sat 09:45'] },
+  { id: 'c3', name: 'Kohl Lash Bar', category: 'Lashes & Brows', rating: 4.7, distanceKm: 1.2, slots: ['Today 17:00', 'Tomorrow 12:15', 'Wed 18:30'], womenOnly: true },
+  { id: 'c4', name: 'Layali Nail Studio', category: 'Nails', rating: 4.9, distanceKm: 2.1, slots: ['Tomorrow 10:30', 'Thu 13:00', 'Sat 16:00'], homeService: true, womenOnly: true },
+  { id: 'c5', name: 'Noor Aesthetics', category: 'Skin', rating: 4.8, distanceKm: 1.9, slots: ['Fri 09:30', 'Mon 14:00', 'Tue 17:15'], sponsored: true },
+  { id: 'c6', name: 'The Brow Room', category: 'Lashes & Brows', rating: 4.6, distanceKm: 0.6, slots: ['Today 16:15', 'Thu 11:30', 'Fri 10:45'], womenOnly: true },
+  { id: 'c7', name: 'Rose Hammam & Spa', category: 'Spa', rating: 4.7, distanceKm: 2.4, slots: ['Sat 11:00', 'Sun 15:00', 'Mon 10:30'], homeService: true, womenOnly: true },
 ];
 
 const T = todayISO();

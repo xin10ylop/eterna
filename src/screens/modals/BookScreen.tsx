@@ -54,7 +54,7 @@ export function BookScreen({ navigation, route }: Props) {
             }}
           />
           <Entrance delay={500}>
-            <Text style={[type.title, { color: t.text, textAlign: 'center' }]}>Booked</Text>
+            <Text style={[type.title, { color: t.text, textAlign: 'center' }]}>You’re all set ✨</Text>
             <Text style={{ fontSize: 15, color: t.sub, textAlign: 'center', marginTop: 4 }}>
               {tr.name} · {formatLong(day)} at {time}
             </Text>
@@ -187,12 +187,19 @@ export function BookScreen({ navigation, route }: Props) {
             }}
           >
             <LedgerRow label={`${tr.name} × 1 session`} value={formatAED(tr.price)} />
-            <LedgerRow label="Booking fee" value="€0" muted />
+            <LedgerRow label="Booking fee" value="Free" muted />
             <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: t.separator, marginVertical: 4 }} />
             <LedgerRow label="Total" value={formatAED(tr.price)} bold />
             <Text style={{ fontSize: 12, color: t.muted, paddingBottom: 4 }}>
               Paid at the clinic · free reschedule up to 24h before
             </Text>
+            {tr.price >= 400 ? (
+              <View style={{ paddingTop: 6, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.separator }}>
+                <Text style={{ fontSize: 12, color: t.sub }}>
+                  Or split into 4× {formatAED(Math.round(tr.price / 4))} with Tabby or Tamara
+                </Text>
+              </View>
+            ) : null}
           </View>
         </View>
       </ScrollView>

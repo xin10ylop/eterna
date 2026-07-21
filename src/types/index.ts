@@ -45,6 +45,8 @@ export interface Clinic {
   slots: string[];
   /** Offers at-home service (home-visit beautician). */
   homeService?: boolean;
+  /** Ladies-only salon (a table-stakes filter in the Gulf). */
+  womenOnly?: boolean;
   /** Paid placement — surfaced as a clearly-labelled "Sponsored" suggestion. */
   sponsored?: boolean;
 }

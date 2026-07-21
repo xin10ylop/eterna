@@ -27,6 +27,8 @@ export function DiscoverScreen(_props: Props) {
   const showToast = useEterna((s) => s.showToast);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('All');
+  const [homeOnly, setHomeOnly] = useState(false);
+  const [womenOnly, setWomenOnly] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [slotChoice, setSlotChoice] = useState<string | null>(null);
   // Skeleton pass on first open, becomes the real fetch state with Supabase.
@@ -41,11 +43,13 @@ export function DiscoverScreen(_props: Props) {
     return clinics
       .filter((c) => {
         if (filter !== 'All' && c.category !== filter) return false;
+        if (homeOnly && !c.homeService) return false;
+        if (womenOnly && !c.womenOnly) return false;
         if (q && !c.name.toLowerCase().includes(q)) return false;
         return true;
       })
       .sort((a, b) => (b.sponsored ? 1 : 0) - (a.sponsored ? 1 : 0));
-  }, [clinics, filter, query]);
+  }, [clinics, filter, homeOnly, womenOnly, query]);
 
   return (
     <Screen>
@@ -84,6 +88,10 @@ export function DiscoverScreen(_props: Props) {
             <Chip key={f} label={f} selected={filter === f} onPress={() => setFilter(f)} />
           ))}
         </ScrollView>
+        <View style={{ flexDirection: 'row', gap: spacing.s }}>
+          <Chip label="At home" selected={homeOnly} onPress={() => setHomeOnly((v) => !v)} />
+          <Chip label="Women-only" selected={womenOnly} onPress={() => setWomenOnly((v) => !v)} />
+        </View>
       </View>
 
       <ScrollView

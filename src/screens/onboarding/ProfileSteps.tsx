@@ -99,7 +99,7 @@ export function BirthdayScreen({ navigation }: NativeStackScreenProps<RootStackP
       ctaDisabled={!agreed}
       onNext={() => {
         setDraft({ birthdayISO: `${years[yearIdx]}-01-01` });
-        navigation.navigate('Metrics');
+        navigation.navigate('Routine');
       }}
     >
       <View style={{ gap: spacing.xl, paddingTop: spacing.s, alignItems: 'center' }}>
@@ -267,7 +267,7 @@ export function RoutineScreen({ navigation }: NativeStackScreenProps<RootStackPa
 
   return (
     <OnboardingShell
-      step={3}
+      step={2}
       title="What do you keep up with?"
       subtitle="Select everything in your routine, you can always add more later."
       cta={picked.length ? `Continue with ${picked.length}` : 'Select at least one'}
