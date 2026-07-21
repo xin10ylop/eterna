@@ -3,7 +3,7 @@ import { Pressable, View } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator, type BottomTabBarButtonProps } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEterna, useTheme } from '../store';
 import { useT } from '../i18n';
 import type { RootStackParamList, TabParamList } from './types';
@@ -92,7 +92,13 @@ function MainTabs() {
           const size = 24;
           switch (route.name) {
             case 'Home':
-              return <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />;
+              return (
+                <MaterialCommunityIcons
+                  name={focused ? 'home-variant' : 'home-variant-outline'}
+                  size={size + 1}
+                  color={color}
+                />
+              );
             case 'Planning':
               return <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={size} color={color} />;
             case 'Discover':

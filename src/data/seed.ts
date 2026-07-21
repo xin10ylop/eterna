@@ -45,7 +45,7 @@ export const AVATAR_MARKERS: {
   { id: 'face', label: 'Face', icon: 'happy-outline', zones: ['face', 'lips'], marker: { xPct: 50, yPct: 13 } },
   { id: 'torso', label: 'Body', icon: 'body-outline', zones: ['torso', 'hips'], marker: { xPct: 50, yPct: 28 } },
   { id: 'hands', label: 'Hands', icon: 'hand-left-outline', zones: ['hands'], marker: { xPct: 13, yPct: 54 } },
-  { id: 'legs', label: 'Feet', icon: 'footsteps-outline', zones: ['legs'], marker: { xPct: 42, yPct: 95 } },
+  { id: 'legs', label: 'Feet', icon: 'footsteps-outline', zones: ['legs'], marker: { xPct: 57, yPct: 93 } },
 ];
 
 export const PRACTITIONERS: Practitioner[] = [

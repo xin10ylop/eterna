@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Dimensions, Pressable, ScrollView, Text, View } from 'react-native';
+import { Dimensions, Pressable, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -54,6 +54,13 @@ export function HomeScreen({ navigation }: Props) {
     return m;
   }, [treatments, appointments]);
 
+  const nextEvent = upcomingEvents[0] ?? null;
+  const nextCountdown = nextEvent
+    ? (() => {
+        const d = diffDays(todayISO(), nextEvent.dateISO);
+        return d < 14 ? tx('event.inDays', { n: d }) : tx('event.inWeeks', { n: Math.round(d / 7) });
+      })()
+    : '';
   const hour = new Date().getHours();
   const dayPart = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
   const line =
@@ -78,7 +85,10 @@ export function HomeScreen({ navigation }: Props) {
           }}
         >
           <View style={{ flex: 1 }}>
-            <Text style={[type.display, { color: t.text }]}>{tx('greeting.' + dayPart)}</Text>
+            <Text style={[type.display, { color: t.text }]} numberOfLines={1}>
+              {tx('greeting.' + dayPart)}
+              {profile?.firstName ? `, ${profile.firstName}` : ''}
+            </Text>
             <Text style={{ fontSize: 14, color: t.sub, marginTop: 2 }}>{line}</Text>
           </View>
           <Pressable
@@ -98,65 +108,56 @@ export function HomeScreen({ navigation }: Props) {
           </Pressable>
         </View>
 
-        {/* events rail — one clean chip per event, add on the end */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={{ flexGrow: 0, marginTop: spacing.m }}
-          contentContainerStyle={{ paddingHorizontal: spacing.xl, gap: spacing.s, alignItems: 'center' }}
+        {/* events — one quiet line: the next one up, and a way to add. Tap the
+            line for the full list, tap + to add. No boxes, keeps Home clean. */}
+        <View
+          style={{
+            marginHorizontal: spacing.xl,
+            marginTop: spacing.m,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.s,
+          }}
         >
-          {upcomingEvents.map((ev) => {
-            const d = diffDays(todayISO(), ev.dateISO);
-            const countdown =
-              d < 14 ? tx('event.inDays', { n: d }) : tx('event.inWeeks', { n: Math.round(d / 7) });
-            return (
-              <Pressable
-                key={ev.id}
-                accessibilityRole="button"
-                accessibilityLabel={`${ev.name}, ${countdown}`}
-                onPress={() => navigation.navigate('EventPrep')}
-                style={({ pressed }) => ({
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 7,
-                  paddingVertical: 9,
-                  paddingHorizontal: 14,
-                  borderRadius: radii.pill,
-                  backgroundColor: t.accentSoft,
-                  transform: [{ scale: pressed ? 0.97 : 1 }],
-                })}
-              >
-                <Ionicons name="calendar-clear-outline" size={13} color={t.accent} />
-                <Text style={{ fontSize: 13, fontWeight: '700', color: t.accent }}>{countdown}</Text>
-                <Text numberOfLines={1} style={{ fontSize: 13, color: t.accent, opacity: 0.75, maxWidth: 132 }}>
-                  {ev.name}
-                </Text>
-              </Pressable>
-            );
-          })}
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => navigation.navigate('EventPrep')}
+            style={({ pressed }) => ({
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.s,
+              opacity: pressed ? 0.6 : 1,
+            })}
+          >
+            <Ionicons name="calendar-clear-outline" size={15} color={t.muted} />
+            {nextEvent ? (
+              <Text numberOfLines={1} style={{ flex: 1, fontSize: 13.5, color: t.sub }}>
+                <Text style={{ color: t.text, fontWeight: '600' }}>{nextEvent.name}</Text>
+                {`   ${nextCountdown}`}
+              </Text>
+            ) : (
+              <Text style={{ flex: 1, fontSize: 13.5, color: t.muted }}>{tx('event.add')}</Text>
+            )}
+          </Pressable>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={tx('event.add')}
             onPress={() => navigation.navigate('EventPrep', { add: true })}
+            hitSlop={8}
             style={({ pressed }) => ({
-              flexDirection: 'row',
+              width: 28,
+              height: 28,
+              borderRadius: 14,
+              backgroundColor: t.accentSoft,
               alignItems: 'center',
-              gap: 6,
-              paddingVertical: 9,
-              paddingHorizontal: upcomingEvents.length === 0 ? 14 : 12,
-              borderRadius: radii.pill,
-              borderWidth: 1,
-              borderColor: t.border,
-              backgroundColor: t.surfaceAlt,
-              transform: [{ scale: pressed ? 0.97 : 1 }],
+              justifyContent: 'center',
+              transform: [{ scale: pressed ? 0.9 : 1 }],
             })}
           >
-            <Ionicons name="add" size={16} color={t.accent} />
-            {upcomingEvents.length === 0 ? (
-              <Text style={{ fontSize: 13, fontWeight: '600', color: t.sub }}>{tx('event.add')}</Text>
-            ) : null}
+            <Ionicons name="add" size={17} color={t.accent} />
           </Pressable>
-        </ScrollView>
+        </View>
 
         {/* avatar hero — the glows are the interface */}
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>

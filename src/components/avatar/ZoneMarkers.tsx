@@ -9,25 +9,26 @@ import type { GlowStatus } from '../../services/logic';
  * Status glow on the avatar — hair, face, body, hands, feet.
  *
  * No dot, no object: the body part itself glows, and colour + rhythm carry the
- * status. All good = a clean white light, slow and calm. Coming up = a deep
- * clay, medium. Book now = a warm red, quicker and stronger. Warmer + faster =
- * more urgent. A marker's status is the most urgent among the zones it covers.
+ * status by temperature: all good = a cool seafoam light, slow and calm (a warm
+ * white washed out against the cream outfit and skin — cool reads at a glance).
+ * Coming up = a warm amber, medium. Book now = a hot red, quick and strong.
+ * Cooler = fine, hotter + faster = act. A marker's status is the most urgent
+ * among the zones it covers.
  */
 
 const CANVAS = 74;
 const C = CANVAS / 2;
 
-// Denser than a soft wisp: colour holds out to ~42% before it fades, opacity
-// floors sit high so the glow reads even at the dim end of the breath. `core`
-// is the white centre — full white for all-good, half for the warmer states so
-// the colour stays saturated.
+// Colour holds out to ~42% before it fades and opacity floors sit high, so each
+// glow reads even at the dim end of the breath. A low `core` keeps the hue
+// saturated (a high white centre would wash it out against the warm figure).
 const STYLE: Record<
   GlowStatus,
   { rgb: string; core: number; period: number; oMin: number; oMax: number; sMin: number; sMax: number; r: number }
 > = {
-  calm: { rgb: '255,255,255', core: 1.0, period: 4200, oMin: 0.55, oMax: 0.9, sMin: 0.92, sMax: 1.05, r: 21 },
-  soon: { rgb: '150,52,30', core: 0.45, period: 3200, oMin: 0.76, oMax: 1.0, sMin: 0.9, sMax: 1.14, r: 22 },
-  due: { rgb: '182,34,24', core: 0.45, period: 1500, oMin: 0.82, oMax: 1.0, sMin: 0.9, sMax: 1.2, r: 23 },
+  calm: { rgb: '120,190,182', core: 0.34, period: 4200, oMin: 0.5, oMax: 0.82, sMin: 0.92, sMax: 1.05, r: 21 },
+  soon: { rgb: '190,120,44', core: 0.34, period: 3200, oMin: 0.76, oMax: 1.0, sMin: 0.9, sMax: 1.14, r: 22 },
+  due: { rgb: '184,34,24', core: 0.4, period: 1150, oMin: 0.82, oMax: 1.0, sMin: 0.9, sMax: 1.2, r: 23 },
 };
 
 const AnimatedSvg = Animated.createAnimatedComponent(Svg);
