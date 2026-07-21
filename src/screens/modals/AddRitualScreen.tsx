@@ -24,6 +24,8 @@ const CATALOG: { name: string; zone: ZoneId; price: number; cadence: number }[] 
 ];
 
 const LAST_OPTS = ['Today', '2 weeks ago', '1 month ago'];
+const UNITS = ['Days', 'Weeks', 'Months'];
+const UNIT_MAP: Record<string, 'day' | 'week' | 'month'> = { Days: 'day', Weeks: 'week', Months: 'month' };
 
 /** Add a ritual: what, cadence, where (your clinics or add your own). */
 export function AddRitualScreen({ navigation }: Props) {
@@ -37,6 +39,7 @@ export function AddRitualScreen({ navigation }: Props) {
   const [pick, setPick] = useState(CATALOG[0]!);
   const [last, setLast] = useState('2 weeks ago');
   const [cadence, setCadence] = useState(pick.cadence);
+  const [unit, setUnit] = useState('Weeks');
   const [clinicId, setClinicId] = useState<string>(savedIds[0] ?? '');
   const [ownName, setOwnName] = useState('');
 
@@ -52,7 +55,7 @@ export function AddRitualScreen({ navigation }: Props) {
       id: `t-add-${Date.now()}`,
       name: pick.name,
       zone: pick.zone,
-      cadenceWeeks: cadence,
+      cadence: { every: cadence, unit: UNIT_MAP[unit] ?? 'week' },
       clinicId,
       practitionerId: practitioner.id,
       price: pick.price,
@@ -119,11 +122,11 @@ export function AddRitualScreen({ navigation }: Props) {
                 <Ionicons name="remove" size={18} color={t.accent} />
               </Pressable>
               <Text style={{ fontSize: 17, fontWeight: '700', color: t.text, minWidth: 90, textAlign: 'center' }}>
-                {cadence} weeks
+                {cadence} {unit.toLowerCase()}
               </Text>
               <Pressable
                 accessibilityLabel="More often"
-                onPress={() => setCadence((c) => Math.min(52, c + 1))}
+                onPress={() => setCadence((c) => Math.min(365, c + 1))}
                 style={({ pressed }) => ({
                   width: 36,
                   height: 36,
@@ -138,6 +141,7 @@ export function AddRitualScreen({ navigation }: Props) {
               </Pressable>
             </View>
           </Card>
+          <Segmented options={UNITS} value={unit} onChange={setUnit} />
         </View>
 
         <View style={{ gap: spacing.s }}>

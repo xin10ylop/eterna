@@ -85,7 +85,7 @@ export function TreatmentDetailScreen({ navigation, route }: Props) {
           >
             <View style={{ flex: 1, alignItems: 'center' }}>
               <Text style={{ fontSize: 16, fontWeight: '700', color: t.text }}>
-                {tr.cadenceWeeks} wks
+                {tr.cadence.every} {tr.cadence.unit === 'day' ? 'd' : tr.cadence.unit === 'week' ? 'wk' : 'mo'}
               </Text>
               <Text style={{ fontSize: 11, color: t.muted, marginTop: 1 }}>cadence</Text>
             </View>

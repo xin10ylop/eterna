@@ -4,7 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Card, IconButton, Screen } from '../../components/ui';
 import { ZONES } from '../../data/seed';
 import { nextDueISO, treatmentStatus } from '../../services/logic';
-import { formatMedium, humanizeDue } from '../../lib/dates';
+import { cadenceEvery, formatMedium, humanizeDue } from '../../lib/dates';
 import { spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import type { RootStackParamList } from '../../navigation/types';
@@ -76,7 +76,7 @@ export function ZoneDetailScreen({ navigation, route }: Props) {
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 16, fontWeight: '600', color: t.text }}>{tr.name}</Text>
                     <Text style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>
-                      {statusLine} · every {tr.cadenceWeeks} weeks · {clinic?.name}
+                      {statusLine} · every {cadenceEvery(tr.cadence)} · {clinic?.name}
                       {tr.pkg ? ` · ${tr.pkg.done}/${tr.pkg.total} sessions` : ''}
                       {tr.atHome ? ' · At home' : ''}
                     </Text>

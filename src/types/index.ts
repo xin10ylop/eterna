@@ -58,12 +58,21 @@ export interface SalonEvent {
   dateISO: string;
 }
 
+export type CadenceUnit = 'day' | 'week' | 'month';
+
+/** A personal repeat interval — every N days, weeks, or months. There is no
+ *  fixed range: a brow tint might be every 10 days, a facial every month. */
+export interface Cadence {
+  every: number;
+  unit: CadenceUnit;
+}
+
 /** A treatment the user keeps up with (a "ritual"). */
 export interface Treatment {
   id: string;
   name: string;
   zone: ZoneId;
-  cadenceWeeks: number;
+  cadence: Cadence;
   clinicId: string;
   practitionerId: string;
   /** Typical price, used for budget forecasting. */

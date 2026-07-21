@@ -1,12 +1,12 @@
 import type { Appointment, Session, Treatment, TreatmentStatus, ZoneId } from '../types';
-import { addDays, addWeeks, diffDays, isSameMonth, addMonths, startOfMonth, todayISO } from '../lib/dates';
+import { addCadence, addDays, diffDays, isSameMonth, addMonths, startOfMonth, todayISO } from '../lib/dates';
 
 /** How many days before the due date we start nudging a booking. Salons fill
  *  up fast (especially around events), so we lead with a comfortable window. */
 export const LEAD_DAYS = 10;
 
 export function nextDueISO(t: Treatment): string {
-  return addWeeks(t.lastDoneISO, t.cadenceWeeks);
+  return addCadence(t.lastDoneISO, t.cadence);
 }
 
 /**

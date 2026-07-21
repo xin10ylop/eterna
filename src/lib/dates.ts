@@ -1,6 +1,8 @@
 /** Date helpers. Pure functions, no deps. All "today" logic goes through
  *  `todayISO()` so tests (and the demo seed) can stay deterministic. */
 
+import type { Cadence } from '../types';
+
 export function todayISO(): string {
   return toISO(new Date());
 }
@@ -31,6 +33,18 @@ export function addMonths(iso: string, months: number): string {
   const d = fromISO(iso);
   d.setMonth(d.getMonth() + months);
   return toISO(d);
+}
+
+/** Advance a date by one cadence interval (days / weeks / months). */
+export function addCadence(iso: string, c: Cadence): string {
+  if (c.unit === 'day') return addDays(iso, c.every);
+  if (c.unit === 'week') return addWeeks(iso, c.every);
+  return addMonths(iso, c.every);
+}
+
+/** The phrase after "every": "week" · "10 days" · "3 months". */
+export function cadenceEvery(c: Cadence): string {
+  return c.every === 1 ? c.unit : `${c.every} ${c.unit}s`;
 }
 
 export function diffDays(fromIso: string, toIso: string): number {

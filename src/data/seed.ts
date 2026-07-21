@@ -73,23 +73,23 @@ const T = todayISO();
 
 export const TREATMENTS: Treatment[] = [
   // hair
-  { id: 't-roots', name: 'Roots touch-up', zone: 'hair', cadenceWeeks: 6, clinicId: 'c1', practitionerId: 'pr3', price: 380, lastDoneISO: addWeeks(T, -7), reminderOn: true },
-  { id: 't-cut', name: 'Cut & style', zone: 'hair', cadenceWeeks: 8, clinicId: 'c1', practitionerId: 'pr4', price: 280, lastDoneISO: addWeeks(T, -5), reminderOn: true },
+  { id: 't-roots', name: 'Roots touch-up', zone: 'hair', cadence: { every: 6, unit: 'week' }, clinicId: 'c1', practitionerId: 'pr3', price: 380, lastDoneISO: addWeeks(T, -7), reminderOn: true },
+  { id: 't-cut', name: 'Cut & style', zone: 'hair', cadence: { every: 8, unit: 'week' }, clinicId: 'c1', practitionerId: 'pr4', price: 280, lastDoneISO: addWeeks(T, -5), reminderOn: true },
   // face
-  { id: 't-botox', name: 'Botox', zone: 'face', cadenceWeeks: 16, clinicId: 'c2', practitionerId: 'pr1', price: 960, lastDoneISO: addWeeks(T, -11), reminderOn: true },
-  { id: 't-facial', name: 'Hydrafacial', zone: 'face', cadenceWeeks: 4, clinicId: 'c5', practitionerId: 'pr6', price: 440, lastDoneISO: addWeeks(T, -3), reminderOn: true },
-  { id: 't-brows', name: 'Brow shaping', zone: 'face', cadenceWeeks: 3, clinicId: 'c6', practitionerId: 'pr6', price: 140, lastDoneISO: addWeeks(T, -2), reminderOn: false },
+  { id: 't-botox', name: 'Botox', zone: 'face', cadence: { every: 4, unit: 'month' }, clinicId: 'c2', practitionerId: 'pr1', price: 960, lastDoneISO: addWeeks(T, -11), reminderOn: true },
+  { id: 't-facial', name: 'Hydrafacial', zone: 'face', cadence: { every: 1, unit: 'month' }, clinicId: 'c5', practitionerId: 'pr6', price: 440, lastDoneISO: addWeeks(T, -3), reminderOn: true },
+  { id: 't-brows', name: 'Brow shaping', zone: 'face', cadence: { every: 3, unit: 'week' }, clinicId: 'c6', practitionerId: 'pr6', price: 140, lastDoneISO: addWeeks(T, -2), reminderOn: false },
   // lips
-  { id: 't-lipfiller', name: 'Lip filler', zone: 'lips', cadenceWeeks: 12, clinicId: 'c2', practitionerId: 'pr2', price: 1120, lastDoneISO: addWeeks(T, -12), reminderOn: true },
+  { id: 't-lipfiller', name: 'Lip filler', zone: 'lips', cadence: { every: 3, unit: 'month' }, clinicId: 'c2', practitionerId: 'pr2', price: 1120, lastDoneISO: addWeeks(T, -12), reminderOn: true },
   // torso
-  { id: 't-massage', name: 'Deep tissue massage', zone: 'torso', cadenceWeeks: 4, clinicId: 'c7', practitionerId: 'pr6', price: 340, lastDoneISO: addWeeks(T, -2), reminderOn: false, atHome: true },
+  { id: 't-massage', name: 'Deep tissue massage', zone: 'torso', cadence: { every: 4, unit: 'week' }, clinicId: 'c7', practitionerId: 'pr6', price: 340, lastDoneISO: addWeeks(T, -2), reminderOn: false, atHome: true },
   // hands
-  { id: 't-mani', name: 'Gel manicure', zone: 'hands', cadenceWeeks: 3, clinicId: 'c4', practitionerId: 'pr5', price: 180, lastDoneISO: addWeeks(T, -3), reminderOn: true, atHome: true },
+  { id: 't-mani', name: 'Gel manicure', zone: 'hands', cadence: { every: 3, unit: 'week' }, clinicId: 'c4', practitionerId: 'pr5', price: 180, lastDoneISO: addWeeks(T, -3), reminderOn: true, atHome: true },
   // hips
-  { id: 't-laserbody', name: 'Laser hair removal', zone: 'hips', cadenceWeeks: 6, clinicId: 'c5', practitionerId: 'pr7', price: 480, lastDoneISO: addWeeks(T, -4), reminderOn: true, pkg: { total: 8, done: 4 } },
+  { id: 't-laserbody', name: 'Laser hair removal', zone: 'hips', cadence: { every: 6, unit: 'week' }, clinicId: 'c5', practitionerId: 'pr7', price: 480, lastDoneISO: addWeeks(T, -4), reminderOn: true, pkg: { total: 8, done: 4 } },
   // legs
-  { id: 't-pedi', name: 'Pedicure', zone: 'legs', cadenceWeeks: 4, clinicId: 'c4', practitionerId: 'pr5', price: 220, lastDoneISO: addWeeks(T, -2), reminderOn: false, atHome: true },
-  { id: 't-waxlegs', name: 'Leg wax', zone: 'legs', cadenceWeeks: 4, clinicId: 'c2', practitionerId: 'pr6', price: 220, lastDoneISO: addWeeks(T, -5), reminderOn: true },
+  { id: 't-pedi', name: 'Pedicure', zone: 'legs', cadence: { every: 4, unit: 'week' }, clinicId: 'c4', practitionerId: 'pr5', price: 220, lastDoneISO: addWeeks(T, -2), reminderOn: false, atHome: true },
+  { id: 't-waxlegs', name: 'Leg wax', zone: 'legs', cadence: { every: 4, unit: 'week' }, clinicId: 'c2', practitionerId: 'pr6', price: 220, lastDoneISO: addWeeks(T, -5), reminderOn: true },
 ];
 
 const pr = (id: string): Practitioner => PRACTITIONERS.find((p) => p.id === id) as Practitioner;
