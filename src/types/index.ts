@@ -43,6 +43,17 @@ export interface Clinic {
   distanceKm: number;
   /** Next open slots, newest first. Mocked; will come from booking API later. */
   slots: string[];
+  /** Offers at-home service (home-visit beautician). */
+  homeService?: boolean;
+  /** Paid placement — surfaced as a clearly-labelled "Sponsored" suggestion. */
+  sponsored?: boolean;
+}
+
+/** A dated event she's prepping for (a wedding, Eid). Rituals are back-planned
+ *  from the date so everything peaks in time. */
+export interface SalonEvent {
+  name: string;
+  dateISO: string;
 }
 
 /** A treatment the user keeps up with (a "ritual"). */
@@ -54,10 +65,15 @@ export interface Treatment {
   clinicId: string;
   practitionerId: string;
   /** Typical price, used for budget forecasting. */
-  priceEUR: number;
+  price: number;
   /** ISO date of the most recent completed session. */
   lastDoneISO: string;
   reminderOn: boolean;
+  /** True when this is usually done at home (home-service beautician). */
+  atHome?: boolean;
+  /** Progress when sold as a multi-session package (laser, etc.). Each clinic
+   *  runs its own package logic; we only track her progress against it. */
+  pkg?: { total: number; done: number };
 }
 
 /** One completed visit. The clinical detail lives here: what exactly was
@@ -69,7 +85,7 @@ export interface Session {
   dateISO: string;
   clinicId: string;
   practitioner: Practitioner;
-  priceEUR: number;
+  price: number;
   /** Specifics, e.g. "0.5 ml Restylane Kysse, mid-lip + border". */
   detail: string;
   /** Products/brands used, when known. */
@@ -85,10 +101,17 @@ export interface Appointment {
   dateISO: string;
   timeLabel: string;
   clinicId: string;
-  priceEUR: number;
+  price: number;
 }
 
-export type TreatmentStatus = 'overdue' | 'dueSoon' | 'scheduled' | 'onTrack';
+/**
+ * Status is about *booking*, not lateness:
+ *  booked   — an appointment is on the books for this cycle → sorted
+ *  onTrack  — recently done, next cycle far off
+ *  comingUp — nearing the interval, not yet booked → plan it
+ *  bookNow  — interval elapsed and still no appointment → book it
+ */
+export type TreatmentStatus = 'bookNow' | 'comingUp' | 'booked' | 'onTrack';
 
 export interface AvatarConfig {
   skinTone: number; // 0..4, index into SKIN_TONES

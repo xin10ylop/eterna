@@ -6,7 +6,7 @@ import { AnimatedCheck } from '../../components/anim/AnimatedCheck';
 import { Confetti } from '../../components/anim/Lottie';
 import { Entrance } from '../../components/anim/Entrance';
 import { addDays, formatLong, monthShort, todayISO, weekdayShort } from '../../lib/dates';
-import { formatEUR } from '../../lib/money';
+import { formatAED } from '../../lib/money';
 import { cardShadow, radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import type { RootStackParamList } from '../../navigation/types';
@@ -72,7 +72,7 @@ export function BookScreen({ navigation, route }: Props) {
               }}
             >
               <Text style={{ fontSize: 13, color: t.sub, textAlign: 'center' }}>
-                {clinic?.name} · {formatEUR(tr.priceEUR)} · reminder 5 days before
+                {clinic?.name} · {formatAED(tr.price)} · reminder 5 days before
               </Text>
             </View>
           </Entrance>
@@ -186,10 +186,10 @@ export function BookScreen({ navigation, route }: Props) {
               paddingHorizontal: spacing.l,
             }}
           >
-            <LedgerRow label={`${tr.name} × 1 session`} value={formatEUR(tr.priceEUR)} />
+            <LedgerRow label={`${tr.name} × 1 session`} value={formatAED(tr.price)} />
             <LedgerRow label="Booking fee" value="€0" muted />
             <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: t.separator, marginVertical: 4 }} />
-            <LedgerRow label="Total" value={formatEUR(tr.priceEUR)} bold />
+            <LedgerRow label="Total" value={formatAED(tr.price)} bold />
             <Text style={{ fontSize: 12, color: t.muted, paddingBottom: 4 }}>
               Paid at the clinic · free reschedule up to 24h before
             </Text>
@@ -216,7 +216,7 @@ export function BookScreen({ navigation, route }: Props) {
         }}
       >
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 18, fontWeight: '700', color: t.text }}>{formatEUR(tr.priceEUR)}</Text>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: t.text }}>{formatAED(tr.price)}</Text>
           <Text style={{ fontSize: 12, color: t.sub }}>
             {day && time ? `${formatLong(day)} · ${time}` : 'usual price'}
           </Text>

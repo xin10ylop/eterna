@@ -13,14 +13,14 @@ import type { Treatment, ZoneId } from '../../types';
 type Props = NativeStackScreenProps<RootStackParamList, 'AddRitual'>;
 
 const CATALOG: { name: string; zone: ZoneId; price: number; cadence: number }[] = [
-  { name: 'Lash lift', zone: 'face', price: 60, cadence: 8 },
-  { name: 'Brow lamination', zone: 'face', price: 55, cadence: 6 },
-  { name: 'Teeth whitening', zone: 'face', price: 150, cadence: 26 },
-  { name: 'Skin booster', zone: 'face', price: 190, cadence: 12 },
-  { name: 'Massage', zone: 'torso', price: 85, cadence: 4 },
-  { name: 'Hand care', zone: 'hands', price: 35, cadence: 3 },
-  { name: 'Body scrub', zone: 'hips', price: 70, cadence: 6 },
-  { name: 'Something else', zone: 'torso', price: 50, cadence: 6 },
+  { name: 'Lash lift', zone: 'face', price: 240, cadence: 8 },
+  { name: 'Brow lamination', zone: 'face', price: 220, cadence: 6 },
+  { name: 'Teeth whitening', zone: 'face', price: 600, cadence: 26 },
+  { name: 'Skin booster', zone: 'face', price: 760, cadence: 12 },
+  { name: 'Massage', zone: 'torso', price: 340, cadence: 4 },
+  { name: 'Hand care', zone: 'hands', price: 140, cadence: 3 },
+  { name: 'Body scrub', zone: 'hips', price: 280, cadence: 6 },
+  { name: 'Something else', zone: 'torso', price: 200, cadence: 6 },
 ];
 
 const LAST_OPTS = ['Today', '2 weeks ago', '1 month ago'];
@@ -55,7 +55,7 @@ export function AddRitualScreen({ navigation }: Props) {
       cadenceWeeks: cadence,
       clinicId,
       practitionerId: practitioner.id,
-      priceEUR: pick.price,
+      price: pick.price,
       lastDoneISO: lastISO,
       reminderOn: true,
     };

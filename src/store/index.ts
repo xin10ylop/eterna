@@ -4,10 +4,11 @@ import type {
   AvatarConfig,
   Clinic,
   Profile,
+  SalonEvent,
   Session,
   Treatment,
 } from '../types';
-import { APPOINTMENTS, CLINICS, SESSIONS, TREATMENTS } from '../data/seed';
+import { APPOINTMENTS, CLINICS, SEED_EVENT, SESSIONS, TREATMENTS } from '../data/seed';
 import type { AccentName } from '../theme';
 import { todayISO } from '../lib/dates';
 
@@ -57,6 +58,7 @@ interface EternaState {
   appointments: Appointment[];
   clinics: Clinic[];
   savedClinicIds: string[];
+  event: SalonEvent | null;
 
   // ui
   toast: string | null;
@@ -76,6 +78,7 @@ interface EternaState {
   toggleSavedClinic(clinicId: string): void;
   addOwnClinic(name: string): Clinic;
   setAvatar(patch: Partial<AvatarConfig>): void;
+  setEvent(e: SalonEvent | null): void;
 
   showToast(msg: string): void;
   clearToast(): void;
@@ -94,6 +97,7 @@ export const useEterna = create<EternaState>((set, get) => ({
   appointments: APPOINTMENTS,
   clinics: CLINICS,
   savedClinicIds: ['c1', 'c2', 'c3', 'c4'],
+  event: SEED_EVENT,
 
   toast: null,
 
@@ -142,7 +146,7 @@ export const useEterna = create<EternaState>((set, get) => ({
         dateISO: todayISO(),
         clinicId: t.clinicId,
         practitioner: { id: 'self', name: 'Logged by you', role: 'Esthetician' },
-        priceEUR: 0,
+        price: 0,
         detail: 'Marked as done',
       };
       return {
@@ -163,7 +167,7 @@ export const useEterna = create<EternaState>((set, get) => ({
         dateISO,
         timeLabel,
         clinicId: t.clinicId,
-        priceEUR: t.priceEUR,
+        price: t.price,
       };
       return { appointments: [...s.appointments, appt] };
     }),
@@ -202,6 +206,8 @@ export const useEterna = create<EternaState>((set, get) => ({
         ? { profile: { ...s.profile, avatar: { ...s.profile.avatar, ...patch } } }
         : { draft: { ...s.draft, avatar: { ...s.draft.avatar, ...patch } } },
     ),
+
+  setEvent: (e) => set({ event: e }),
 
   showToast: (msg) => {
     if (toastTimer) clearTimeout(toastTimer);

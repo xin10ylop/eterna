@@ -1,8 +1,8 @@
-/** Money formatting. Amounts are stored as integer euros in the mock data;
- *  switch to cents when a real backend lands. */
+/** Money formatting. Amounts are whole AED (dirhams) in the mock data;
+ *  switch to fils when a real backend lands. */
 
-export function formatEUR(amount: number): string {
+export function formatAED(amount: number): string {
   const rounded = Math.round(amount);
-  const s = String(Math.abs(rounded)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-  return `${rounded < 0 ? '-' : ''}€${s}`;
+  const s = String(Math.abs(rounded)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `${rounded < 0 ? '-' : ''}AED ${s}`;
 }

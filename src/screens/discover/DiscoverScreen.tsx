@@ -38,11 +38,13 @@ export function DiscoverScreen(_props: Props) {
 
   const list = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return clinics.filter((c) => {
-      if (filter !== 'All' && c.category !== filter) return false;
-      if (q && !c.name.toLowerCase().includes(q)) return false;
-      return true;
-    });
+    return clinics
+      .filter((c) => {
+        if (filter !== 'All' && c.category !== filter) return false;
+        if (q && !c.name.toLowerCase().includes(q)) return false;
+        return true;
+      })
+      .sort((a, b) => (b.sponsored ? 1 : 0) - (a.sponsored ? 1 : 0));
   }, [clinics, filter, query]);
 
   return (
@@ -129,6 +131,11 @@ export function DiscoverScreen(_props: Props) {
                     </Text>
                   </View>
                   <View style={{ flex: 1 }}>
+                    {c.sponsored ? (
+                      <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 0.5, color: t.muted, marginBottom: 2 }}>
+                        SPONSORED
+                      </Text>
+                    ) : null}
                     {/* Airbnb result line: name left, star + rating right */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s }}>
                       <Text numberOfLines={1} style={{ flex: 1, fontSize: 16, fontWeight: '600', color: t.text }}>
@@ -146,6 +153,7 @@ export function DiscoverScreen(_props: Props) {
                     <Text style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>
                       {c.category}
                       {c.distanceKm > 0 ? ` · ${c.distanceKm} km` : ''}
+                      {c.homeService ? ' · Home service' : ''}
                       {c.slots.length > 0 ? ` · ${c.slots.length} slots open` : ''}
                     </Text>
                   </View>

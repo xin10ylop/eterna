@@ -3,7 +3,7 @@ import { ScrollView, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Card, IconButton, Screen } from '../../components/ui';
 import { ZONES } from '../../data/seed';
-import { needsAttention, nextDueISO, treatmentStatus } from '../../services/logic';
+import { nextDueISO, treatmentStatus } from '../../services/logic';
 import { formatMedium, humanizeDue } from '../../lib/dates';
 import { spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
@@ -23,7 +23,7 @@ export function ZoneDetailScreen({ navigation, route }: Props) {
     .filter((tr) => tr.zone === route.params.zone)
     .map((tr) => ({ tr, status: treatmentStatus(tr, appointments) }))
     .sort((a, b) => {
-      const rank = (s: string) => (s === 'overdue' ? 0 : s === 'dueSoon' ? 1 : s === 'scheduled' ? 2 : 3);
+      const rank = (s: string) => (s === 'bookNow' ? 0 : s === 'comingUp' ? 1 : s === 'booked' ? 2 : 3);
       return rank(a.status) - rank(b.status);
     });
 
@@ -50,9 +50,11 @@ export function ZoneDetailScreen({ navigation, route }: Props) {
             const clinic = clinics.find((c) => c.id === tr.clinicId);
             const appt = appointments.find((a) => a.treatmentId === tr.id);
             const statusLine =
-              status === 'scheduled' && appt
+              status === 'booked' && appt
                 ? `Booked ${formatMedium(appt.dateISO)} at ${appt.timeLabel}`
-                : humanizeDue(nextDueISO(tr));
+                : status === 'bookNow'
+                  ? 'Time to book'
+                  : humanizeDue(nextDueISO(tr));
             return (
               <Card key={tr.id} onPress={() => navigation.navigate('TreatmentDetail', { treatmentId: tr.id })}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
@@ -61,17 +63,22 @@ export function ZoneDetailScreen({ navigation, route }: Props) {
                       width: 10,
                       height: 10,
                       borderRadius: 5,
-                      backgroundColor: needsAttention(status)
-                        ? t.attention
-                        : status === 'scheduled'
-                          ? t.positive
-                          : t.muted,
+                      backgroundColor:
+                        status === 'bookNow'
+                          ? '#C83A2C'
+                          : status === 'comingUp'
+                            ? t.attention
+                            : status === 'booked'
+                              ? t.positive
+                              : t.muted,
                     }}
                   />
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 16, fontWeight: '600', color: t.text }}>{tr.name}</Text>
                     <Text style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>
                       {statusLine} · every {tr.cadenceWeeks} weeks · {clinic?.name}
+                      {tr.pkg ? ` · ${tr.pkg.done}/${tr.pkg.total} sessions` : ''}
+                      {tr.atHome ? ' · At home' : ''}
                     </Text>
                   </View>
                 </View>

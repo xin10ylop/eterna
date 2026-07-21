@@ -4,7 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Card, GhostButton, IOSSwitch, IconButton, PrimaryButton, Row, Screen, SectionLabel } from '../../components/ui';
 import { needsAttention, nextDueISO, treatmentStatus } from '../../services/logic';
 import { formatLong, formatMedium, humanizeDue } from '../../lib/dates';
-import { formatEUR } from '../../lib/money';
+import { formatAED } from '../../lib/money';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import type { RootStackParamList } from '../../navigation/types';
@@ -45,12 +45,12 @@ export function TreatmentDetailScreen({ navigation, route }: Props) {
   const ordered = [...sessions].sort((a, b) => (a.dateISO < b.dateISO ? 1 : -1));
 
   const statusLine =
-    status === 'scheduled' && appt
+    status === 'booked' && appt
       ? `Booked ${formatMedium(appt.dateISO)}, ${appt.timeLabel}`
       : humanizeDue(nextDueISO(tr));
   const statusColor = needsAttention(status)
     ? t.attention
-    : status === 'scheduled'
+    : status === 'booked'
       ? t.positive
       : t.sub;
 
@@ -92,7 +92,7 @@ export function TreatmentDetailScreen({ navigation, route }: Props) {
             <View style={{ width: StyleSheet.hairlineWidth, alignSelf: 'stretch', backgroundColor: t.separator }} />
             <View style={{ flex: 1, alignItems: 'center' }}>
               <Text style={{ fontSize: 16, fontWeight: '700', color: t.text }}>
-                {formatEUR(tr.priceEUR)}
+                {formatAED(tr.price)}
               </Text>
               <Text style={{ fontSize: 11, color: t.muted, marginTop: 1 }}>usual price</Text>
             </View>
@@ -158,9 +158,9 @@ export function TreatmentDetailScreen({ navigation, route }: Props) {
                   <Text style={{ fontSize: 13, fontWeight: '600', color: t.sub }}>
                     {formatLong(s.dateISO)}
                   </Text>
-                  {s.priceEUR > 0 ? (
+                  {s.price > 0 ? (
                     <Text style={{ fontSize: 13, fontWeight: '600', color: t.text }}>
-                      {formatEUR(s.priceEUR)}
+                      {formatAED(s.price)}
                     </Text>
                   ) : null}
                 </View>

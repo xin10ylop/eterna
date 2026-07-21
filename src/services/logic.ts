@@ -1,23 +1,53 @@
 import type { Appointment, Session, Treatment, TreatmentStatus, ZoneId } from '../types';
 import { addWeeks, diffDays, isSameMonth, addMonths, startOfMonth, todayISO } from '../lib/dates';
 
-/** Days before the due date at which a treatment becomes "due soon". */
-export const DUE_SOON_DAYS = 7;
+/** How many days before the due date we start nudging a booking. Salons fill
+ *  up fast (especially around events), so we lead with a comfortable window. */
+export const LEAD_DAYS = 10;
 
 export function nextDueISO(t: Treatment): string {
   return addWeeks(t.lastDoneISO, t.cadenceWeeks);
 }
 
+/**
+ * Status is about *booking*, not lateness. If an appointment is on the books
+ * for this cycle she's sorted; otherwise it escalates as the interval elapses.
+ */
 export function treatmentStatus(t: Treatment, appointments: Appointment[]): TreatmentStatus {
-  if (appointments.some((a) => a.treatmentId === t.id)) return 'scheduled';
+  if (appointments.some((a) => a.treatmentId === t.id)) return 'booked';
   const days = diffDays(todayISO(), nextDueISO(t));
-  if (days < 0) return 'overdue';
-  if (days <= DUE_SOON_DAYS) return 'dueSoon';
+  if (days < 0) return 'bookNow';
+  if (days <= LEAD_DAYS) return 'comingUp';
   return 'onTrack';
 }
 
 export function needsAttention(status: TreatmentStatus): boolean {
-  return status === 'overdue' || status === 'dueSoon';
+  return status === 'comingUp' || status === 'bookNow';
+}
+
+/** The three glow levels the avatar shows. onTrack + booked both read calm. */
+export type GlowStatus = 'calm' | 'soon' | 'due';
+
+export function glowForStatus(status: TreatmentStatus): GlowStatus {
+  if (status === 'bookNow') return 'due';
+  if (status === 'comingUp') return 'soon';
+  return 'calm';
+}
+
+/** Worst glow among a zone's treatments (due > soon > calm). */
+export function zoneGlow(
+  zone: ZoneId,
+  treatments: Treatment[],
+  appointments: Appointment[],
+): GlowStatus {
+  let g: GlowStatus = 'calm';
+  for (const tr of treatments) {
+    if (tr.zone !== zone) continue;
+    const s = glowForStatus(treatmentStatus(tr, appointments));
+    if (s === 'due') return 'due';
+    if (s === 'soon') g = 'soon';
+  }
+  return g;
 }
 
 /** A zone needs attention when any of its treatments does. */
@@ -45,10 +75,10 @@ export function budgetByMonth(sessions: Session[], appointments: Appointment[]):
     const monthISO = startOfMonth(addMonths(t, off));
     const spent = sessions
       .filter((s) => isSameMonth(s.dateISO, monthISO))
-      .reduce((sum, s) => sum + s.priceEUR, 0);
+      .reduce((sum, s) => sum + s.price, 0);
     const booked = appointments
       .filter((a) => isSameMonth(a.dateISO, monthISO))
-      .reduce((sum, a) => sum + a.priceEUR, 0);
+      .reduce((sum, a) => sum + a.price, 0);
     months.push({ monthISO, spent, booked });
   }
   return months;
@@ -56,23 +86,23 @@ export function budgetByMonth(sessions: Session[], appointments: Appointment[]):
 
 export function spentThisMonth(sessions: Session[]): number {
   const m = startOfMonth(todayISO());
-  return sessions.filter((s) => isSameMonth(s.dateISO, m)).reduce((x, s) => x + s.priceEUR, 0);
+  return sessions.filter((s) => isSameMonth(s.dateISO, m)).reduce((x, s) => x + s.price, 0);
 }
 
 export function bookedThisMonth(appointments: Appointment[]): number {
   const m = startOfMonth(todayISO());
-  return appointments.filter((a) => isSameMonth(a.dateISO, m)).reduce((x, a) => x + a.priceEUR, 0);
+  return appointments.filter((a) => isSameMonth(a.dateISO, m)).reduce((x, a) => x + a.price, 0);
 }
 
 export function expectedNextMonth(appointments: Appointment[], treatments: Treatment[]): number {
   const next = startOfMonth(addMonths(todayISO(), 1));
   const booked = appointments
     .filter((a) => isSameMonth(a.dateISO, next))
-    .reduce((x, a) => x + a.priceEUR, 0);
+    .reduce((x, a) => x + a.price, 0);
   // Treatments that will fall due next month but have no appointment yet.
   const projected = treatments
     .filter((t) => !appointments.some((a) => a.treatmentId === t.id))
     .filter((t) => isSameMonth(nextDueISO(t), next))
-    .reduce((x, t) => x + t.priceEUR, 0);
+    .reduce((x, t) => x + t.price, 0);
   return booked + projected;
 }

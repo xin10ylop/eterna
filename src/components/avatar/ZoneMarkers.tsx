@@ -1,148 +1,107 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Pressable, Text, View } from 'react-native';
-import Svg, { Circle, Defs, Ellipse, RadialGradient, Stop } from 'react-native-svg';
+import { Animated, Pressable, View } from 'react-native';
+import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { AVATAR_MARKERS } from '../../data/seed';
 import type { ZoneId } from '../../types';
-import { useTheme } from '../../store';
+import type { GlowStatus } from '../../services/logic';
 
 /**
- * Fixed glowing markers on the avatar — hair, face, body, hands, feet.
+ * Status glow on the avatar — hair, face, body, hands, feet.
  *
- * Each body part carries a small "pearl" of warm light: a luminous bead with a
- * white-hot core and a soft glow halo, so it reads as a clean modern glow — not
- * a bare dot, not a muddy blob. A part that needs attention brightens and
- * breathes (the glow gently pulses) and shows a count when several items are
- * due; calm parts stay a quiet dim pearl. Positions are fixed % of the display
- * box, measured against the figure so each pearl sits exactly on its part.
+ * No dot, no object: the body part itself glows, and colour + rhythm carry the
+ * status. Calm = a soft warm light, slow. Coming up = a deeper clay, medium.
+ * Book now = a warm red, quicker and stronger. Warmer + faster = more urgent.
+ * A marker's status is the most urgent among the zones it covers.
  */
 
-export interface ZoneMarkerDatum {
-  zone: ZoneId;
-  attentionCount: number;
-}
-
-const CANVAS = 54;
+const CANVAS = 66;
 const C = CANVAS / 2;
-const GLOW = '#F2A97E'; // luminous warm glow — reads as light on every skin tone
+
+const STYLE: Record<
+  GlowStatus,
+  { rgb: string; period: number; oMin: number; oMax: number; sMin: number; sMax: number; r: number }
+> = {
+  calm: { rgb: '236,223,205', period: 4200, oMin: 0.16, oMax: 0.36, sMin: 0.9, sMax: 1.02, r: 15 },
+  soon: { rgb: '176,92,62', period: 3200, oMin: 0.42, oMax: 0.74, sMin: 0.86, sMax: 1.1, r: 18 },
+  due: { rgb: '200,58,44', period: 1500, oMin: 0.55, oMax: 0.96, sMin: 0.86, sMax: 1.18, r: 19 },
+};
 
 const AnimatedSvg = Animated.createAnimatedComponent(Svg);
 
-function Marker({
-  id,
-  attention,
-  count,
-  onPress,
+function worst(a: GlowStatus, b: GlowStatus): GlowStatus {
+  if (a === 'due' || b === 'due') return 'due';
+  if (a === 'soon' || b === 'soon') return 'soon';
+  return 'calm';
+}
+
+function Glow({
+  status,
   label,
+  onPress,
 }: {
-  id: string;
-  attention: boolean;
-  count: number;
-  onPress: () => void;
+  status: GlowStatus;
   label: string;
+  onPress: () => void;
 }) {
-  const t = useTheme();
+  const s = STYLE[status];
   const pulse = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (!attention) return;
+    pulse.setValue(0);
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulse, { toValue: 1, duration: 1500, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0, duration: 1500, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: s.period / 2, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: s.period / 2, useNativeDriver: true }),
       ]),
     );
     loop.start();
     return () => loop.stop();
-  }, [attention, pulse]);
-
-  const haloR = attention ? 13 : 10;
-  const orbR = attention ? 7 : 5;
+  }, [pulse, s.period]);
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={attention ? `${label}, ${count} due` : label}
+      accessibilityLabel={label}
       onPress={onPress}
-      hitSlop={8}
+      hitSlop={10}
       style={{ width: CANVAS, height: CANVAS, alignItems: 'center', justifyContent: 'center' }}
     >
       <AnimatedSvg
         width={CANVAS}
         height={CANVAS}
-        style={
-          attention
-            ? {
-                opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.86, 1] }),
-                transform: [
-                  { scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.93, 1.07] }) },
-                ],
-              }
-            : undefined
-        }
+        style={{
+          opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [s.oMin, s.oMax] }),
+          transform: [
+            { scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [s.sMin, s.sMax] }) },
+          ],
+        }}
       >
         <Defs>
-          <RadialGradient id={`halo-${id}`} cx="50%" cy="50%" r="50%">
-            <Stop offset="0%" stopColor={GLOW} stopOpacity={0.7} />
-            <Stop offset="55%" stopColor={GLOW} stopOpacity={0.26} />
-            <Stop offset="100%" stopColor={GLOW} stopOpacity={0} />
-          </RadialGradient>
-          <RadialGradient id={`orb-${id}`} cx="42%" cy="38%" r="65%">
-            <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.98} />
-            <Stop offset="42%" stopColor={GLOW} stopOpacity={0.95} />
-            <Stop offset="100%" stopColor={t.accent} stopOpacity={0.95} />
+          <RadialGradient id={`glow-${label}`} cx="50%" cy="50%" r="50%">
+            <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.85} />
+            <Stop offset="34%" stopColor={`rgb(${s.rgb})`} stopOpacity={0.6} />
+            <Stop offset="100%" stopColor={`rgb(${s.rgb})`} stopOpacity={0} />
           </RadialGradient>
         </Defs>
-        {/* soft glow halo */}
-        <Circle cx={C} cy={C} r={haloR} fill={`url(#halo-${id})`} opacity={attention ? 1 : 0.4} />
-        {/* luminous bead */}
-        <Circle cx={C} cy={C} r={orbR} fill={`url(#orb-${id})`} opacity={attention ? 1 : 0.55} />
-        {/* specular highlight */}
-        <Ellipse
-          cx={C - 3}
-          cy={C - 3.5}
-          rx={2.4}
-          ry={1.7}
-          fill="#FFFFFF"
-          opacity={attention ? 0.85 : 0.4}
-        />
+        <Circle cx={C} cy={C} r={s.r} fill={`url(#glow-${label})`} />
       </AnimatedSvg>
-      {count > 1 ? (
-        <View
-          style={{
-            position: 'absolute',
-            top: 10,
-            right: 10,
-            minWidth: 17,
-            height: 17,
-            borderRadius: 9,
-            paddingHorizontal: 4,
-            backgroundColor: t.accent,
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderWidth: 1.5,
-            borderColor: '#fff',
-          }}
-        >
-          <Text style={{ color: t.onAccent, fontSize: 9.5, fontWeight: '800' }}>{count}</Text>
-        </View>
-      ) : null}
     </Pressable>
   );
 }
 
 export function ZoneMarkers({
-  data,
+  zoneGlows,
   onOpenZone,
 }: {
-  data: ZoneMarkerDatum[];
+  zoneGlows: Partial<Record<ZoneId, GlowStatus>>;
   onOpenZone: (zone: ZoneId) => void;
 }) {
   return (
     <View style={{ position: 'absolute', inset: 0 }} pointerEvents="box-none">
       {AVATAR_MARKERS.map((m) => {
-        const count = m.zones.reduce(
-          (s, z) => s + (data.find((x) => x.zone === z)?.attentionCount ?? 0),
-          0,
+        const status = m.zones.reduce<GlowStatus>(
+          (acc, z) => worst(acc, zoneGlows[z] ?? 'calm'),
+          'calm',
         );
         return (
           <View
@@ -155,13 +114,7 @@ export function ZoneMarkers({
               marginTop: -CANVAS / 2,
             }}
           >
-            <Marker
-              id={m.id}
-              attention={count > 0}
-              count={count}
-              label={m.label}
-              onPress={() => onOpenZone(m.id)}
-            />
+            <Glow status={status} label={m.label} onPress={() => onOpenZone(m.id)} />
           </View>
         );
       })}

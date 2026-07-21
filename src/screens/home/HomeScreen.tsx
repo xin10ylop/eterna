@@ -3,15 +3,25 @@ import { Dimensions, Pressable, ScrollView, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { Screen, TimeChip } from '../../components/ui';
+import { Ionicons } from '@expo/vector-icons';
+import { Screen } from '../../components/ui';
 import { Entrance } from '../../components/anim/Entrance';
 import { AvatarFigure } from '../../components/avatar/AvatarFigure';
 import { ZoneMarkers } from '../../components/avatar/ZoneMarkers';
 import { ZONES } from '../../data/seed';
-import { needsAttention, nextDueISO, treatmentStatus, zoneAttentionCount } from '../../services/logic';
-import { humanizeDue } from '../../lib/dates';
+import {
+  bookedThisMonth,
+  nextDueISO,
+  spentThisMonth,
+  treatmentStatus,
+  zoneGlow,
+  type GlowStatus,
+} from '../../services/logic';
+import { diffDays, formatMedium, humanizeDue, todayISO } from '../../lib/dates';
+import { formatAED } from '../../lib/money';
 import { cardShadow, radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
+import type { Treatment, ZoneId } from '../../types';
 import type { RootStackParamList, TabParamList } from '../../navigation/types';
 
 type Props = CompositeScreenProps<
@@ -19,199 +29,413 @@ type Props = CompositeScreenProps<
   NativeStackScreenProps<RootStackParamList>
 >;
 
+const ZONE_ICON: Record<ZoneId, keyof typeof Ionicons.glyphMap> = {
+  hair: 'sparkles-outline',
+  face: 'happy-outline',
+  lips: 'heart-outline',
+  torso: 'body-outline',
+  hands: 'hand-left-outline',
+  hips: 'body-outline',
+  legs: 'footsteps-outline',
+};
+
+const GLOW_DOT: Record<GlowStatus, string> = {
+  calm: '#C9BDB0',
+  soon: '#B05C3E',
+  due: '#C83A2C',
+};
+
+function AtHomeTag() {
+  const t = useTheme();
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 3,
+        paddingHorizontal: 7,
+        paddingVertical: 2,
+        borderRadius: radii.pill,
+        backgroundColor: t.surface,
+      }}
+    >
+      <Ionicons name="home" size={10} color={t.sub} />
+      <Text style={{ fontSize: 10.5, fontWeight: '600', color: t.sub }}>At home</Text>
+    </View>
+  );
+}
+
+function BookButton({ onPress, label = 'Book' }: { onPress: () => void; label?: string }) {
+  const t = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: radii.pill,
+        backgroundColor: t.accent,
+        transform: [{ scale: pressed ? 0.94 : 1 }],
+      })}
+    >
+      <Text style={{ color: t.onAccent, fontSize: 13.5, fontWeight: '700' }}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function Row({
+  icon,
+  title,
+  sub,
+  atHome,
+  right,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  sub: string;
+  atHome?: boolean;
+  right?: React.ReactNode;
+  onPress: () => void;
+}) {
+  const t = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.m,
+        backgroundColor: t.bg,
+        borderRadius: radii.card,
+        borderWidth: 1,
+        borderColor: t.border,
+        paddingVertical: spacing.m,
+        paddingHorizontal: spacing.m,
+        ...cardShadow,
+        transform: [{ scale: pressed ? 0.99 : 1 }],
+      })}
+    >
+      <View
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 12,
+          backgroundColor: t.surface,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Ionicons name={icon} size={19} color={t.accent} />
+      </View>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Text numberOfLines={1} style={{ fontSize: 15.5, fontWeight: '600', color: t.text, flexShrink: 1 }}>
+            {title}
+          </Text>
+          {atHome ? <AtHomeTag /> : null}
+        </View>
+        <Text numberOfLines={1} style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>
+          {sub}
+        </Text>
+      </View>
+      {right}
+    </Pressable>
+  );
+}
+
+function SectionLabel({ color, title }: { color: string; title: string }) {
+  const t = useTheme();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: spacing.s, marginTop: spacing.s }}>
+      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
+      <Text style={[type.label, { color: t.sub }]}>{title}</Text>
+    </View>
+  );
+}
+
 export function HomeScreen({ navigation }: Props) {
   const t = useTheme();
   const profile = useEterna((s) => s.profile);
   const treatments = useEterna((s) => s.treatments);
   const appointments = useEterna((s) => s.appointments);
+  const sessions = useEterna((s) => s.sessions);
   const clinics = useEterna((s) => s.clinics);
+  const event = useEterna((s) => s.event);
 
-  const attention = useMemo(
-    () =>
-      treatments
-        .map((tr) => ({ tr, status: treatmentStatus(tr, appointments) }))
-        .filter((x) => needsAttention(x.status))
-        .sort((a, b) => (a.status === 'overdue' ? -1 : 1) - (b.status === 'overdue' ? -1 : 1)),
+  const clinicName = (id: string) => clinics.find((c) => c.id === id)?.name ?? '';
+
+  const ranked = useMemo(
+    () => treatments.map((tr) => ({ tr, status: treatmentStatus(tr, appointments) })),
     [treatments, appointments],
   );
-
-  const zoneData = useMemo(
+  const bookNow = ranked.filter((r) => r.status === 'bookNow');
+  const comingUp = ranked.filter((r) => r.status === 'comingUp');
+  const upcoming = useMemo(
     () =>
-      ZONES.map((z) => ({
-        zone: z.id,
-        attentionCount: zoneAttentionCount(z.id, treatments, appointments),
-      })),
-    [treatments, appointments],
+      appointments
+        .map((a) => ({ a, tr: treatments.find((x) => x.id === a.treatmentId) }))
+        .filter((x): x is { a: typeof x.a; tr: Treatment } => !!x.tr)
+        .sort((x, y) => x.a.dateISO.localeCompare(y.a.dateISO)),
+    [appointments, treatments],
   );
+
+  const zoneGlows = useMemo(() => {
+    const m: Partial<Record<ZoneId, GlowStatus>> = {};
+    for (const z of ZONES) m[z.id] = zoneGlow(z.id, treatments, appointments);
+    return m;
+  }, [treatments, appointments]);
+
+  const eventDays = event ? diffDays(todayISO(), event.dateISO) : 0;
+  const prepCount = bookNow.length + comingUp.length;
+  const monthTotal = spentThisMonth(sessions) + bookedThisMonth(appointments);
 
   const hour = new Date().getHours();
   const dayPart = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
+  const toBook = bookNow.length + comingUp.length;
   const line =
-    attention.length === 0
-      ? 'You are all caught up'
-      : attention.length === 1
-        ? '1 thing needs attention'
-        : `${attention.length} things need attention`;
+    toBook === 0 ? 'You’re all caught up' : toBook === 1 ? '1 thing to book' : `${toBook} things to book`;
+  const initials = ((profile?.firstName?.[0] ?? 'Y') + (profile?.lastName?.[0] ?? '')).toUpperCase();
 
-  // full-width-minus-margins cards: with snapToInterval = cardW + gap the
-  // snapped card sits centered, equal margins both sides
-  const cardW = Dimensions.get('window').width - spacing.xl * 2;
-  const initials = (
-    (profile?.firstName?.[0] ?? 'Y') + (profile?.lastName?.[0] ?? '')
-  ).toUpperCase();
+  const sponsored = clinics.find((c) => c.sponsored);
+  const subFor = (tr: Treatment, kind: 'due' | 'soon') => {
+    const base = kind === 'due' ? 'Time to book' : humanizeDue(nextDueISO(tr));
+    const pkg = tr.pkg ? ` · ${tr.pkg.done}/${tr.pkg.total} sessions` : '';
+    return `${base} · ${clinicName(tr.clinicId)}${pkg}`;
+  };
 
   return (
     <Screen padded={false}>
-      {/* header */}
-      <View
-        style={{
-          paddingHorizontal: spacing.xl,
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: spacing.m,
-        }}
-      >
-        <View style={{ flex: 1 }}>
-          <Text style={[type.display, { color: t.text }]}>
-            Good {dayPart}, {profile?.firstName ?? 'you'}
-          </Text>
-          <Text style={{ fontSize: 15, color: t.sub, marginTop: 2 }}>{line}</Text>
-        </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Open profile"
-          onPress={() => navigation.navigate('Profile')}
-          style={({ pressed }) => ({
-            width: 42,
-            height: 42,
-            borderRadius: 21,
-            backgroundColor: t.accentSoft,
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: spacing.xxl }}>
+        {/* header */}
+        <View
+          style={{
+            paddingHorizontal: spacing.xl,
+            paddingTop: spacing.s,
+            flexDirection: 'row',
             alignItems: 'center',
-            justifyContent: 'center',
-            borderWidth: 1,
-            borderColor: t.border,
-            transform: [{ scale: pressed ? 0.92 : 1 }],
-          })}
+            gap: spacing.m,
+          }}
         >
-          <Text
+          <View style={{ flex: 1 }}>
+            <Text style={[type.display, { color: t.text }]}>Good {dayPart}</Text>
+            <Text style={{ fontSize: 14, color: t.sub, marginTop: 2 }}>{line}</Text>
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Profile"
+            onPress={() => navigation.navigate('Profile')}
             style={{
-              fontSize: 15,
-              fontWeight: '700',
-              color: t.accent,
-              includeFontPadding: false,
-              textAlignVertical: 'center',
-            }}
-          >
-            {initials}
-          </Text>
-        </Pressable>
-      </View>
-
-      {/* avatar */}
-      <View style={{ flex: 1, justifyContent: 'center' }}>
-        <Entrance spring distance={24}>
-          <AvatarFigure
-            height={Math.min(440, Dimensions.get('window').height * 0.46)}
-            skinTone={profile?.avatar?.skinTone ?? 0}
-            hairColor={profile?.avatar?.hairColor ?? 0}
-          >
-            <ZoneMarkers
-              data={zoneData}
-              onOpenZone={(zone) => navigation.navigate('ZoneDetail', { zone })}
-            />
-          </AvatarFigure>
-          <Text style={{ textAlign: 'center', fontSize: 12, color: t.muted, marginTop: spacing.s }}>
-            Tap a marker to see what needs attention
-          </Text>
-        </Entrance>
-      </View>
-
-      {/* attention rail */}
-      <View style={{ paddingBottom: spacing.l, minHeight: 96 }}>
-        {attention.length === 0 ? (
-          <View
-            style={{
-              marginHorizontal: spacing.xl,
-              backgroundColor: t.bg,
-              borderRadius: radii.card,
-              borderWidth: 1,
-              borderColor: t.border,
-              padding: spacing.l,
-              flexDirection: 'row',
+              width: 42,
+              height: 42,
+              borderRadius: 21,
+              backgroundColor: t.accentSoft,
               alignItems: 'center',
-              gap: spacing.m,
-              ...cardShadow,
+              justifyContent: 'center',
             }}
           >
-            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: t.positive }} />
-            <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
-              All caught up. Nothing due right now.
+            <Text style={{ fontSize: 15, fontWeight: '700', color: t.accent }}>{initials}</Text>
+          </Pressable>
+        </View>
+
+        {/* avatar hero */}
+        <Entrance spring distance={22}>
+          <View style={{ alignItems: 'center', marginTop: spacing.s }}>
+            <AvatarFigure
+              height={Math.min(330, Dimensions.get('window').height * 0.36)}
+              skinTone={profile?.avatar?.skinTone ?? 0}
+              hairColor={profile?.avatar?.hairColor ?? 0}
+            >
+              <ZoneMarkers
+                zoneGlows={zoneGlows}
+                onOpenZone={(zone) => navigation.navigate('ZoneDetail', { zone })}
+              />
+            </AvatarFigure>
+            <Text style={{ fontSize: 12, color: t.muted, marginTop: 2 }}>
+              Tap a glowing part to see what’s due
             </Text>
           </View>
-        ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            snapToInterval={cardW + spacing.m}
-            decelerationRate="fast"
-            contentContainerStyle={{ paddingHorizontal: spacing.xl, gap: spacing.m }}
-          >
-            {attention.map(({ tr }) => {
-              const clinic = clinics.find((c) => c.id === tr.clinicId);
-              const zone = ZONES.find((z) => z.id === tr.zone);
-              const due = nextDueISO(tr);
-              return (
-                <Pressable
+        </Entrance>
+
+        <View style={{ paddingHorizontal: spacing.xl, marginTop: spacing.m, gap: spacing.s }}>
+          {/* event countdown */}
+          {event && eventDays > 0 ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => navigation.navigate('Planning')}
+              style={({ pressed }) => ({
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: spacing.m,
+                backgroundColor: t.accentSoft,
+                borderRadius: radii.card,
+                padding: spacing.m,
+                transform: [{ scale: pressed ? 0.99 : 1 }],
+              })}
+            >
+              <Ionicons name="calendar" size={20} color={t.accent} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: t.accent }}>
+                  {event.name} · in {eventDays < 14 ? `${eventDays} days` : `${Math.round(eventDays / 7)} weeks`}
+                </Text>
+                <Text style={{ fontSize: 12.5, color: t.accent, opacity: 0.85, marginTop: 1 }}>
+                  {prepCount > 0 ? `${prepCount} rituals to prep before then` : 'Everything’s on track for it'}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={t.accent} />
+            </Pressable>
+          ) : null}
+
+          {/* Book now */}
+          {bookNow.length > 0 ? (
+            <>
+              <SectionLabel color={GLOW_DOT.due} title="Book now" />
+              {bookNow.map(({ tr }) => (
+                <Row
                   key={tr.id}
-                  accessibilityRole="button"
+                  icon={ZONE_ICON[tr.zone]}
+                  title={tr.name}
+                  sub={subFor(tr, 'due')}
+                  atHome={tr.atHome}
+                  right={<BookButton onPress={() => navigation.navigate('Book', { treatmentId: tr.id })} />}
                   onPress={() => navigation.navigate('TreatmentDetail', { treatmentId: tr.id })}
-                  style={({ pressed }) => ({
-                    width: cardW,
-                    backgroundColor: t.bg,
-                    borderRadius: radii.card,
-                    borderWidth: 1,
-                    borderColor: t.border,
-                    padding: spacing.l,
-                    gap: spacing.s,
-                    ...cardShadow,
-                    transform: [{ scale: pressed ? 0.98 : 1 }],
-                  })}
-                >
-                  {/* metric-card anatomy: zone eyebrow left, proximity chip right */}
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Text style={[type.label, { color: t.accent }]}>{zone?.label ?? 'Ritual'}</Text>
-                    <TimeChip dueISO={due} />
-                  </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
-                    <View style={{ flex: 1, minWidth: 0 }}>
-                      <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: '600', color: t.text }}>
-                        {tr.name}
-                      </Text>
-                      <Text numberOfLines={1} style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>
-                        {humanizeDue(due)} · {clinic?.name}
-                      </Text>
-                    </View>
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={`Book ${tr.name}`}
-                      onPress={() => navigation.navigate('Book', { treatmentId: tr.id })}
-                      style={({ pressed }) => ({
-                        paddingVertical: 9,
-                        paddingHorizontal: 15,
-                        borderRadius: radii.pill,
-                        backgroundColor: t.accent,
-                        transform: [{ scale: pressed ? 0.94 : 1 }],
-                      })}
-                    >
-                      <Text style={{ color: t.onAccent, fontSize: 14, fontWeight: '600' }}>Book</Text>
-                    </Pressable>
-                  </View>
-                </Pressable>
-              );
+                />
+              ))}
+            </>
+          ) : null}
+
+          {/* Coming up */}
+          {comingUp.length > 0 ? (
+            <>
+              <SectionLabel color={GLOW_DOT.soon} title="Coming up" />
+              {comingUp.map(({ tr }) => (
+                <Row
+                  key={tr.id}
+                  icon={ZONE_ICON[tr.zone]}
+                  title={tr.name}
+                  sub={subFor(tr, 'soon')}
+                  atHome={tr.atHome}
+                  right={<BookButton onPress={() => navigation.navigate('Book', { treatmentId: tr.id })} />}
+                  onPress={() => navigation.navigate('TreatmentDetail', { treatmentId: tr.id })}
+                />
+              ))}
+            </>
+          ) : null}
+
+          {/* Upcoming (booked) */}
+          {upcoming.length > 0 ? (
+            <>
+              <SectionLabel color={t.positive} title="Upcoming" />
+              {upcoming.map(({ a, tr }) => (
+                <Row
+                  key={a.id}
+                  icon={ZONE_ICON[tr.zone]}
+                  title={tr.name}
+                  sub={`${formatMedium(a.dateISO)} · ${a.timeLabel} · ${clinicName(a.clinicId)}`}
+                  right={
+                    <Ionicons name="checkmark-circle" size={22} color={t.positive} />
+                  }
+                  onPress={() => navigation.navigate('TreatmentDetail', { treatmentId: tr.id })}
+                />
+              ))}
+            </>
+          ) : null}
+
+          {toBook === 0 && upcoming.length === 0 ? (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: spacing.m,
+                backgroundColor: t.bg,
+                borderRadius: radii.card,
+                borderWidth: 1,
+                borderColor: t.border,
+                padding: spacing.l,
+                ...cardShadow,
+              }}
+            >
+              <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: t.positive }} />
+              <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
+                You’re all caught up. Nothing to book right now.
+              </Text>
+            </View>
+          ) : null}
+
+          {/* budget glance */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Budget"
+            onPress={() => navigation.navigate('Budget')}
+            style={({ pressed }) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              backgroundColor: t.surfaceAlt,
+              borderRadius: radii.card,
+              padding: spacing.m,
+              marginTop: spacing.s,
+              transform: [{ scale: pressed ? 0.99 : 1 }],
             })}
-          </ScrollView>
-        )}
-      </View>
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s }}>
+              <Ionicons name="wallet-outline" size={18} color={t.sub} />
+              <Text style={{ fontSize: 14, color: t.sub }}>Planned this month</Text>
+            </View>
+            <Text style={{ fontSize: 15, fontWeight: '700', color: t.text }}>{formatAED(monthTotal)}</Text>
+          </Pressable>
+
+          {/* one tasteful sponsored suggestion */}
+          {sponsored ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Sponsored: ${sponsored.name}`}
+              onPress={() => navigation.navigate('Discover')}
+              style={({ pressed }) => ({
+                borderRadius: radii.card,
+                borderWidth: 1,
+                borderColor: t.border,
+                backgroundColor: t.bg,
+                padding: spacing.m,
+                marginTop: spacing.s,
+                gap: 6,
+                transform: [{ scale: pressed ? 0.99 : 1 }],
+              })}
+            >
+              <Text style={{ fontSize: 10.5, fontWeight: '700', letterSpacing: 0.6, color: t.muted }}>
+                SPONSORED
+              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
+                <View
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 12,
+                    backgroundColor: t.accentSoft,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text style={{ fontSize: 17, fontWeight: '700', color: t.accent }}>{sponsored.name[0]}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
+                    {sponsored.name}
+                  </Text>
+                  <Text numberOfLines={1} style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
+                    {sponsored.category} · ★ {sponsored.rating.toFixed(1)}
+                    {sponsored.distanceKm > 0 ? ` · ${sponsored.distanceKm} km` : ''}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={t.muted} />
+              </View>
+            </Pressable>
+          ) : null}
+        </View>
+      </ScrollView>
     </Screen>
   );
 }

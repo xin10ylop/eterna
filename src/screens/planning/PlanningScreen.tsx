@@ -18,7 +18,7 @@ import {
   weekdayMon0,
   weekdayShort,
 } from '../../lib/dates';
-import { formatEUR } from '../../lib/money';
+import { formatAED } from '../../lib/money';
 import { needsAttention, nextDueISO, treatmentStatus } from '../../services/logic';
 import { humanizeDue } from '../../lib/dates';
 import { radii, spacing, type } from '../../theme';
@@ -108,7 +108,7 @@ function ScheduleView({ nav }: { nav: Props['navigation'] }) {
                       {tr?.name ?? 'Appointment'}
                     </Text>
                     <Text style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>
-                      {clinic?.name} · {formatEUR(a.priceEUR)}
+                      {clinic?.name} · {formatAED(a.price)}
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color={t.muted} />
@@ -367,14 +367,14 @@ function RitualsView({ nav }: { nav: Props['navigation'] }) {
     const onTrack: typeof treatments = [];
     for (const tr of treatments) {
       const s = treatmentStatus(tr, appointments);
-      if (s === 'overdue') overdue.push(tr);
-      else if (s === 'dueSoon') soon.push(tr);
-      else if (s === 'scheduled') scheduled.push(tr);
+      if (s === 'bookNow') overdue.push(tr);
+      else if (s === 'comingUp') soon.push(tr);
+      else if (s === 'booked') scheduled.push(tr);
       else onTrack.push(tr);
     }
     return [
-      { title: 'Overdue', items: overdue, color: t.attention },
-      { title: 'Due soon', items: soon, color: t.accent },
+      { title: 'Book now', items: overdue, color: '#C83A2C' },
+      { title: 'Coming up', items: soon, color: t.accent },
       { title: 'Booked', items: scheduled, color: t.positive },
       { title: 'On schedule', items: onTrack, color: t.muted },
     ].filter((g) => g.items.length > 0);

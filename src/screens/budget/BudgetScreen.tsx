@@ -13,7 +13,7 @@ import {
   spentThisMonth,
 } from '../../services/logic';
 import { formatLong, isSameMonth, monthShort, startOfMonth, todayISO } from '../../lib/dates';
-import { formatEUR } from '../../lib/money';
+import { formatAED } from '../../lib/money';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import type { RootStackParamList, TabParamList } from '../../navigation/types';
@@ -75,7 +75,7 @@ export function BudgetScreen({ navigation }: Props) {
       const zoneTreatmentIds = treatments.filter((tr) => tr.zone === z.id).map((tr) => tr.id);
       const total = sessions
         .filter((s) => zoneTreatmentIds.includes(s.treatmentId) && isSameMonth(s.dateISO, m))
-        .reduce((x, s) => x + s.priceEUR, 0);
+        .reduce((x, s) => x + s.price, 0);
       return { zone: z, total };
     })
       .filter((x) => x.total > 0)
@@ -101,10 +101,10 @@ export function BudgetScreen({ navigation }: Props) {
             <View style={{ flex: 1 }}>
               <Text style={[type.label, { color: t.muted }]}>Spent this month</Text>
               <Text style={{ fontSize: 38, fontWeight: '700', color: t.text, letterSpacing: -1, marginTop: 4 }}>
-                {formatEUR(spent)}
+                {formatAED(spent)}
               </Text>
               <Text style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>
-                of {formatEUR(spent + booked)} planned
+                of {formatAED(spent + booked)} planned
               </Text>
             </View>
             <SpendRing fraction={spent + booked > 0 ? spent / (spent + booked) : 0} />
@@ -113,14 +113,14 @@ export function BudgetScreen({ navigation }: Props) {
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 13, color: t.sub }}>Still booked this month</Text>
               <Text style={{ fontSize: 17, fontWeight: '700', color: t.accent, marginTop: 2 }}>
-                {formatEUR(booked)}
+                {formatAED(booked)}
               </Text>
             </View>
             <View style={{ width: 1, backgroundColor: t.separator }} />
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 13, color: t.sub }}>Expected next month</Text>
               <Text style={{ fontSize: 17, fontWeight: '700', color: t.text, marginTop: 2 }}>
-                {formatEUR(nextMonth)}
+                {formatAED(nextMonth)}
               </Text>
             </View>
           </View>
@@ -137,11 +137,11 @@ export function BudgetScreen({ navigation }: Props) {
           <View style={{ flexDirection: 'row', gap: spacing.l, marginTop: spacing.m }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: t.accent }} />
-              <Text style={{ fontSize: 13, color: t.sub }}>This month {formatEUR(spent + booked)}</Text>
+              <Text style={{ fontSize: 13, color: t.sub }}>This month {formatAED(spent + booked)}</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: t.faint }} />
-              <Text style={{ fontSize: 13, color: t.sub }}>Next {formatEUR(nextMonth)}</Text>
+              <Text style={{ fontSize: 13, color: t.sub }}>Next {formatAED(nextMonth)}</Text>
             </View>
           </View>
         </Card>
@@ -152,7 +152,7 @@ export function BudgetScreen({ navigation }: Props) {
           {/* stat header: value + range (Apple Health chart grammar) */}
           <View style={{ marginBottom: spacing.m }}>
             <Text style={{ fontSize: 26, fontWeight: '700', color: t.text, letterSpacing: -0.5 }}>
-              {formatEUR(Math.round(months.reduce((x, m) => x + m.spent + m.booked, 0) / Math.max(1, months.length)))}
+              {formatAED(Math.round(months.reduce((x, m) => x + m.spent + m.booked, 0) / Math.max(1, months.length)))}
               <Text style={{ fontSize: 14, fontWeight: '500', color: t.sub }}>  monthly average</Text>
             </Text>
             <Text style={{ fontSize: 12, color: t.muted, marginTop: 1 }}>
@@ -204,7 +204,7 @@ export function BudgetScreen({ navigation }: Props) {
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                     <Text style={{ fontSize: 14, fontWeight: '600', color: t.text }}>{zone.label}</Text>
                     <Text style={{ fontSize: 14, fontWeight: '600', color: t.sub }}>
-                      {formatEUR(total)}
+                      {formatAED(total)}
                     </Text>
                   </View>
                   <View
@@ -273,7 +273,7 @@ export function BudgetScreen({ navigation }: Props) {
                       </Text>
                     </View>
                     <Text style={{ fontSize: 15, fontWeight: '700', color: t.text }}>
-                      {formatEUR(a.priceEUR)}
+                      {formatAED(a.price)}
                     </Text>
                   </View>
                 </Card>
