@@ -29,12 +29,22 @@ export function EventPrepScreen({ navigation }: Props) {
   const clinics = useEterna((s) => s.clinics);
   const addEvent = useEterna((s) => s.addEvent);
   const removeEvent = useEterna((s) => s.removeEvent);
+  const showPast = useEterna((s) => s.showPastEvents);
+  const setShowPast = useEterna((s) => s.setShowPastEvents);
 
   const upcoming = useMemo(
     () =>
       events
         .filter((e) => diffDays(todayISO(), e.dateISO) >= 0)
         .sort((a, b) => a.dateISO.localeCompare(b.dateISO)),
+    [events],
+  );
+
+  const past = useMemo(
+    () =>
+      events
+        .filter((e) => diffDays(todayISO(), e.dateISO) < 0)
+        .sort((a, b) => b.dateISO.localeCompare(a.dateISO)),
     [events],
   );
 
@@ -294,6 +304,65 @@ export function EventPrepScreen({ navigation }: Props) {
             </View>
           );
         })}
+
+        {/* past events — the user chooses whether to see them; nothing is
+            auto-deleted. Collapsed by default, the choice sticks. */}
+        {past.length > 0 ? (
+          <View style={{ marginTop: spacing.l }}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ expanded: showPast }}
+              onPress={() => setShowPast(!showPast)}
+              style={({ pressed }) => ({
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingVertical: spacing.s,
+                opacity: pressed ? 0.6 : 1,
+              })}
+            >
+              <Text style={[type.label, { color: t.muted, flex: 1 }]}>
+                {tx('event.past')} · {past.length}
+              </Text>
+              <Ionicons name={showPast ? 'chevron-up' : 'chevron-down'} size={16} color={t.muted} />
+            </Pressable>
+            {showPast
+              ? past.map((ev) => (
+                  <View
+                    key={ev.id}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: spacing.m,
+                      backgroundColor: t.surfaceAlt,
+                      borderRadius: radii.card,
+                      borderWidth: 1,
+                      borderColor: t.border,
+                      padding: spacing.m,
+                      marginTop: spacing.s,
+                    }}
+                  >
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text numberOfLines={1} style={{ fontSize: 14.5, fontWeight: '600', color: t.sub }}>
+                        {ev.name}
+                      </Text>
+                      <Text style={{ fontSize: 12, color: t.muted, marginTop: 1 }}>
+                        {tx('event.passed')} · {formatMedium(ev.dateISO)}
+                      </Text>
+                    </View>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={tx('common.remove')}
+                      onPress={() => removeEvent(ev.id)}
+                      hitSlop={8}
+                      style={({ pressed }) => ({ padding: 6, opacity: pressed ? 0.5 : 1 })}
+                    >
+                      <Ionicons name="close" size={18} color={t.muted} />
+                    </Pressable>
+                  </View>
+                ))
+              : null}
+          </View>
+        ) : null}
       </ScrollView>
     </Screen>
   );

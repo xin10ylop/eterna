@@ -63,6 +63,7 @@ interface EternaState {
   clinics: Clinic[];
   savedClinicIds: string[];
   events: SalonEvent[];
+  showPastEvents: boolean;
 
   // ui
   toast: string | null;
@@ -86,6 +87,7 @@ interface EternaState {
   addEvent(name: string, dateISO: string): void;
   updateEvent(id: string, patch: Partial<Omit<SalonEvent, 'id'>>): void;
   removeEvent(id: string): void;
+  setShowPastEvents(v: boolean): void;
 
   showToast(msg: string): void;
   clearToast(): void;
@@ -106,6 +108,7 @@ export const useEterna = create<EternaState>((set, get) => ({
   clinics: CLINICS,
   savedClinicIds: ['c1', 'c2', 'c3', 'c4'],
   events: SEED_EVENTS,
+  showPastEvents: false,
 
   toast: null,
 
@@ -228,6 +231,7 @@ export const useEterna = create<EternaState>((set, get) => ({
   updateEvent: (id, patch) =>
     set((s) => ({ events: s.events.map((e) => (e.id === id ? { ...e, ...patch } : e)) })),
   removeEvent: (id) => set((s) => ({ events: s.events.filter((e) => e.id !== id) })),
+  setShowPastEvents: (v) => set({ showPastEvents: v }),
 
   showToast: (msg) => {
     if (toastTimer) clearTimeout(toastTimer);

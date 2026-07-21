@@ -65,6 +65,8 @@ const en: Dict = {
   'event.more': '+{n} more',
   'event.shared': 'One appointment for both',
   'event.empty': 'No events yet — add one and Eterna plans your rituals around it.',
+  'event.past': 'Past',
+  'event.passed': 'Passed',
 
   'book.title': 'Book {name}',
   'book.pickDay': 'Pick a day',
@@ -172,6 +174,8 @@ const ar: Dict = {
   'event.more': '+{n} أخرى',
   'event.shared': 'موعد واحد يكفي للمناسبتين',
   'event.empty': 'لا توجد مناسبات بعد — أضيفي واحدة لتنسّق إيترنا طقوسك حولها.',
+  'event.past': 'سابقة',
+  'event.passed': 'انتهت',
 
   'book.title': 'حجز {name}',
   'book.pickDay': 'اختاري اليوم',
@@ -279,6 +283,8 @@ const fr: Dict = {
   'event.more': '+{n} autre(s)',
   'event.shared': 'Un seul rendez-vous pour les deux',
   'event.empty': 'Aucun événement — ajoutez-en un et Eterna planifie vos soins en conséquence.',
+  'event.past': 'Passés',
+  'event.passed': 'Passé',
 
   'book.title': 'Réserver {name}',
   'book.pickDay': 'Choisissez un jour',
