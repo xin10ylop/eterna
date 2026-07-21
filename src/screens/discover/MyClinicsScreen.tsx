@@ -131,11 +131,13 @@ export function MyClinicsScreen({ navigation }: Props) {
                 <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
                   {c.name}
                 </Text>
-                <Text numberOfLines={1} style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
-                  {tr('filter.' + c.category)}
-                  {c.rating > 0 ? ` · ★ ${c.rating.toFixed(1)}` : ''}
-                  {c.homeService ? ` · ${tr('discover.homeService')}` : ''}
-                </Text>
+                {c.homeService || c.womenOnly ? (
+                  <Text numberOfLines={1} style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
+                    {[c.homeService ? tr('discover.homeService') : null, c.womenOnly ? tr('filter.womenOnly') : null]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </Text>
+                ) : null}
               </View>
               <Pressable
                 accessibilityRole="button"

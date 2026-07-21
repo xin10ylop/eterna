@@ -56,17 +56,16 @@ export function OnboardingShell({
             )}
           </View>
 
-          <View style={{ gap: 6 }}>
-            <Text style={[type.display, { color: t.text }]}>{title}</Text>
-            {subtitle ? <Text style={[type.body, { color: t.sub, lineHeight: 21 }]}>{subtitle}</Text> : null}
-          </View>
-
           <ScrollView
             style={{ flex: 1 }}
-            contentContainerStyle={{ paddingBottom: spacing.xl }}
+            contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', gap: spacing.l, paddingBottom: spacing.xl }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
+            <View style={{ gap: 6 }}>
+              <Text style={[type.display, { color: t.text }]}>{title}</Text>
+              {subtitle ? <Text style={[type.body, { color: t.sub, lineHeight: 21 }]}>{subtitle}</Text> : null}
+            </View>
             {children}
           </ScrollView>
 

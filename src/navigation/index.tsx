@@ -121,8 +121,8 @@ function MainTabs() {
           },
         })}
       />
-      <Tabs.Screen name="Discover" component={DiscoverScreen} />
       <Tabs.Screen name="Budget" component={BudgetScreen} />
+      <Tabs.Screen name="Discover" component={DiscoverScreen} />
     </Tabs.Navigator>
   );
 }
