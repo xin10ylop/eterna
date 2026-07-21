@@ -57,7 +57,17 @@ export function FeaturesScreen({ navigation }: Props) {
           onMomentumScrollEnd={(e) => setPage(Math.round(e.nativeEvent.contentOffset.x / W))}
         >
           {SLIDES.map((s) => (
-            <View key={s.title} style={{ width: W, alignItems: 'center', gap: spacing.xl, paddingHorizontal: spacing.s }}>
+            <View
+              key={s.title}
+              style={{
+                width: W,
+                minHeight: Dimensions.get('window').height * 0.46,
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: spacing.xl,
+                paddingHorizontal: spacing.s,
+              }}
+            >
               <View
                 style={{
                   width: 104,
