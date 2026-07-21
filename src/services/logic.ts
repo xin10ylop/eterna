@@ -1,5 +1,5 @@
 import type { Appointment, Session, Treatment, TreatmentStatus, ZoneId } from '../types';
-import { addWeeks, diffDays, isSameMonth, addMonths, startOfMonth, todayISO } from '../lib/dates';
+import { addDays, addWeeks, diffDays, isSameMonth, addMonths, startOfMonth, todayISO } from '../lib/dates';
 
 /** How many days before the due date we start nudging a booking. Salons fill
  *  up fast (especially around events), so we lead with a comfortable window. */
@@ -105,4 +105,35 @@ export function expectedNextMonth(appointments: Appointment[], treatments: Treat
     .filter((t) => isSameMonth(nextDueISO(t), next))
     .reduce((x, t) => x + t.price, 0);
   return booked + projected;
+}
+
+/* --------------------------------- Event prep -------------------------------- */
+
+/** How many days before an event each zone should ideally be freshened. Filler
+ *  needs time to settle; hair and nails are best done right before. */
+const EVENT_LEAD: Record<ZoneId, number> = {
+  lips: 14,
+  face: 7,
+  hips: 10,
+  torso: 5,
+  legs: 4,
+  hair: 3,
+  hands: 2,
+};
+
+export interface EventPlanItem {
+  treatment: Treatment;
+  /** Recommended "have it done by" date, backed off from the event. */
+  doByISO: string;
+}
+
+/**
+ * Back-plan every ritual from an event date so it peaks in time, ordered by
+ * when it needs to happen. Drops anything whose window has clearly passed.
+ */
+export function eventPlan(eventDateISO: string, treatments: Treatment[]): EventPlanItem[] {
+  return treatments
+    .map((tr) => ({ treatment: tr, doByISO: addDays(eventDateISO, -(EVENT_LEAD[tr.zone] ?? 5)) }))
+    .filter((x) => diffDays(todayISO(), x.doByISO) >= -3)
+    .sort((a, b) => a.doByISO.localeCompare(b.doByISO));
 }

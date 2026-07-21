@@ -20,6 +20,7 @@ export type RootStackParamList = {
   Tabs: undefined;
   ZoneDetail: { zone: ZoneId };
   TreatmentDetail: { treatmentId: string };
+  EventPrep: undefined;
   Book: { treatmentId: string };
   AddRitual: undefined;
   Profile: undefined;

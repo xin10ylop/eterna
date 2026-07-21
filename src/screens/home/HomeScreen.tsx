@@ -265,7 +265,7 @@ export function HomeScreen({ navigation }: Props) {
           {event && eventDays > 0 ? (
             <Pressable
               accessibilityRole="button"
-              onPress={() => navigation.navigate('Planning')}
+              onPress={() => navigation.navigate('EventPrep')}
               style={({ pressed }) => ({
                 flexDirection: 'row',
                 alignItems: 'center',

@@ -18,6 +18,7 @@ import { NotificationsScreen, ReadyScreen } from '../screens/onboarding/FinishSc
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { ZoneDetailScreen } from '../screens/home/ZoneDetailScreen';
 import { TreatmentDetailScreen } from '../screens/home/TreatmentDetailScreen';
+import { EventPrepScreen } from '../screens/home/EventPrepScreen';
 import { PlanningScreen } from '../screens/planning/PlanningScreen';
 import { DiscoverScreen } from '../screens/discover/DiscoverScreen';
 import { BudgetScreen } from '../screens/budget/BudgetScreen';
@@ -154,6 +155,7 @@ export function RootNavigator() {
             <Stack.Screen name="Tabs" component={MainTabs} />
             <Stack.Screen name="ZoneDetail" component={ZoneDetailScreen} />
             <Stack.Screen name="TreatmentDetail" component={TreatmentDetailScreen} />
+            <Stack.Screen name="EventPrep" component={EventPrepScreen} />
             <Stack.Screen name="Profile" component={ProfileScreen} />
             {/* Distinct route name from the onboarding AvatarStudio: a shared
                 name across the two conditional groups made the main app

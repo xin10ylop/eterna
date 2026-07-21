@@ -1,0 +1,125 @@
+import React, { useMemo } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
+import { IconButton, Screen } from '../../components/ui';
+import { eventPlan, treatmentStatus } from '../../services/logic';
+import { diffDays, formatMedium, todayISO } from '../../lib/dates';
+import { cardShadow, radii, spacing, type } from '../../theme';
+import { useEterna, useTheme } from '../../store';
+import type { RootStackParamList } from '../../navigation/types';
+
+type Props = NativeStackScreenProps<RootStackParamList, 'EventPrep'>;
+
+/**
+ * Back-planned prep list for an event (a wedding, Eid). Every ritual gets a
+ * "do by" date backed off the event so it peaks in time; booked ones show a
+ * check, the rest a one-tap Book.
+ */
+export function EventPrepScreen({ navigation }: Props) {
+  const t = useTheme();
+  const event = useEterna((s) => s.event);
+  const treatments = useEterna((s) => s.treatments);
+  const appointments = useEterna((s) => s.appointments);
+  const clinics = useEterna((s) => s.clinics);
+
+  const plan = useMemo(
+    () => (event ? eventPlan(event.dateISO, treatments) : []),
+    [event, treatments],
+  );
+  const days = event ? diffDays(todayISO(), event.dateISO) : 0;
+  const clinicName = (id: string) => clinics.find((c) => c.id === id)?.name ?? '';
+
+  return (
+    <Screen>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m, paddingTop: spacing.s }}>
+        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Back" />
+        <View style={{ flex: 1 }}>
+          <Text style={[type.title, { color: t.text }]}>{event ? event.name : 'Event prep'}</Text>
+          {event ? (
+            <Text style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>
+              in {days < 14 ? `${days} days` : `${Math.round(days / 7)} weeks`} · {plan.length} rituals to time
+            </Text>
+          ) : null}
+        </View>
+      </View>
+
+      <ScrollView
+        style={{ marginTop: spacing.l }}
+        contentContainerStyle={{ gap: spacing.s, paddingBottom: spacing.xxl }}
+        showsVerticalScrollIndicator={false}
+      >
+        {event ? (
+          <Text style={{ fontSize: 13, color: t.sub, lineHeight: 19, marginBottom: spacing.s }}>
+            Timed back from {formatMedium(event.dateISO)} so everything peaks together — filler settles
+            first, hair and nails land last. Salons fill up before big dates, so book ahead.
+          </Text>
+        ) : (
+          <Text style={{ fontSize: 14, color: t.sub }}>No event set yet.</Text>
+        )}
+
+        {plan.map(({ treatment: tr, doByISO }) => {
+          const booked = treatmentStatus(tr, appointments) === 'booked';
+          const late = diffDays(todayISO(), doByISO) < 0;
+          const [mon, day] = formatMedium(doByISO).split(' ');
+          return (
+            <View
+              key={tr.id}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: spacing.m,
+                backgroundColor: t.bg,
+                borderRadius: radii.card,
+                borderWidth: 1,
+                borderColor: t.border,
+                padding: spacing.m,
+                ...cardShadow,
+              }}
+            >
+              <View style={{ alignItems: 'center', width: 44 }}>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: '700',
+                    color: booked ? t.positive : late ? '#C83A2C' : t.accent,
+                  }}
+                >
+                  {mon.toUpperCase()}
+                </Text>
+                <Text style={{ fontSize: 18, fontWeight: '800', color: t.text }}>{day}</Text>
+              </View>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
+                  {tr.name}
+                </Text>
+                <Text numberOfLines={1} style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
+                  Do by {formatMedium(doByISO)} · {clinicName(tr.clinicId)}
+                  {tr.atHome ? ' · At home' : ''}
+                </Text>
+              </View>
+              {booked ? (
+                <Ionicons name="checkmark-circle" size={22} color={t.positive} />
+              ) : (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Book ${tr.name}`}
+                  onPress={() => navigation.navigate('Book', { treatmentId: tr.id })}
+                  style={({ pressed }) => ({
+                    paddingVertical: 8,
+                    paddingHorizontal: 16,
+                    borderRadius: radii.pill,
+                    backgroundColor: t.accent,
+                    transform: [{ scale: pressed ? 0.94 : 1 }],
+                  })}
+                >
+                  <Text style={{ color: t.onAccent, fontSize: 13.5, fontWeight: '700' }}>Book</Text>
+                </Pressable>
+              )}
+            </View>
+          );
+        })}
+      </ScrollView>
+    </Screen>
+  );
+}
