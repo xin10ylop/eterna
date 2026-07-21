@@ -212,9 +212,14 @@ export const APPOINTMENTS: Appointment[] = [
   { id: 'a5', treatmentId: 't-roots', dateISO: addDays(T, 24), timeLabel: '14:30', clinicId: 'c1', price: 380 },
 ];
 
-/** A dated event she's prepping for — drives the Home countdown + prep plan.
- *  In the real app she sets this; seeded here so the feature is visible. */
-export const SEED_EVENT: SalonEvent = { name: "Layla's wedding", dateISO: addDays(T, 26) };
+/** Dated events she's prepping for — drive the Home countdown + prep plan. Two
+ *  close together on purpose: the planner should notice one appointment can keep
+ *  a ritual fresh for both, instead of double-booking. She sets these in-app;
+ *  seeded here so the feature is visible. */
+export const SEED_EVENTS: SalonEvent[] = [
+  { id: 'ev-wedding', name: "Layla's wedding", dateISO: addDays(T, 26) },
+  { id: 'ev-eid', name: 'Eid gathering', dateISO: addDays(T, 32) },
+];
 
 /** Five skin tones (match the recolored render tones), light to deep. */
 export const SKIN_TONES = ['#EBC6A6', '#D0A074', '#B07A50', '#8A5A3B', '#5C3A26'];

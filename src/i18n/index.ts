@@ -59,6 +59,12 @@ const en: Dict = {
     'Timed back from {date} so everything peaks together — filler settles first, hair and nails land last. Salons fill up before big dates, so book ahead.',
   'event.doBy': 'Do by {date}',
   'event.noEvent': 'No event set yet.',
+  'event.title': 'Events',
+  'event.upcoming': '{n} upcoming',
+  'event.prep': 'Your prep',
+  'event.more': '+{n} more',
+  'event.shared': 'One appointment for both',
+  'event.empty': 'No events yet — add one and Eterna plans your rituals around it.',
 
   'book.title': 'Book {name}',
   'book.pickDay': 'Pick a day',
@@ -116,6 +122,7 @@ const en: Dict = {
   'clinics.empty': 'No saved clinics yet. Find and save your favourites.',
   'common.add': 'Add',
   'common.remove': 'Remove',
+  'common.cancel': 'Cancel',
   'planning.nextVisit': 'Your next visit',
   'planning.onSchedule': '{n} on schedule',
 };
@@ -159,6 +166,12 @@ const ar: Dict = {
     'مُنسّقة انطلاقًا من {date} كي يكتمل كل شيء في وقته — الفيلر يستقر أولًا، والشعر والأظافر في الأخير. الصالونات تمتلئ قبل المناسبات، فاحجزي مبكرًا.',
   'event.doBy': 'أنجزيه قبل {date}',
   'event.noEvent': 'لا توجد مناسبة بعد.',
+  'event.title': 'المناسبات',
+  'event.upcoming': '{n} قادمة',
+  'event.prep': 'تحضيرك',
+  'event.more': '+{n} أخرى',
+  'event.shared': 'موعد واحد يكفي للمناسبتين',
+  'event.empty': 'لا توجد مناسبات بعد — أضيفي واحدة لتنسّق إيترنا طقوسك حولها.',
 
   'book.title': 'حجز {name}',
   'book.pickDay': 'اختاري اليوم',
@@ -216,6 +229,7 @@ const ar: Dict = {
   'clinics.empty': 'لا عيادات محفوظة بعد. ابحثي واحفظي المفضّلة لديك.',
   'common.add': 'إضافة',
   'common.remove': 'إزالة',
+  'common.cancel': 'إلغاء',
   'planning.nextVisit': 'زيارتك القادمة',
   'planning.onSchedule': '{n} على الجدول',
 };
@@ -259,6 +273,12 @@ const fr: Dict = {
     'Planifié à partir du {date} pour que tout soit au top le jour J — le filler se pose en premier, cheveux et ongles en dernier. Les salons se remplissent avant les grandes dates, réservez à l’avance.',
   'event.doBy': 'À faire avant le {date}',
   'event.noEvent': 'Aucun événement défini.',
+  'event.title': 'Événements',
+  'event.upcoming': '{n} à venir',
+  'event.prep': 'Votre préparation',
+  'event.more': '+{n} autre(s)',
+  'event.shared': 'Un seul rendez-vous pour les deux',
+  'event.empty': 'Aucun événement — ajoutez-en un et Eterna planifie vos soins en conséquence.',
 
   'book.title': 'Réserver {name}',
   'book.pickDay': 'Choisissez un jour',
@@ -316,6 +336,7 @@ const fr: Dict = {
   'clinics.empty': 'Aucune clinique enregistrée. Trouvez et enregistrez vos favorites.',
   'common.add': 'Ajouter',
   'common.remove': 'Retirer',
+  'common.cancel': 'Annuler',
   'planning.nextVisit': 'Votre prochain rendez-vous',
   'planning.onSchedule': '{n} à jour',
 };

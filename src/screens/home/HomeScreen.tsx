@@ -34,7 +34,15 @@ export function HomeScreen({ navigation }: Props) {
   const profile = useEterna((s) => s.profile);
   const treatments = useEterna((s) => s.treatments);
   const appointments = useEterna((s) => s.appointments);
-  const event = useEterna((s) => s.event);
+  const events = useEterna((s) => s.events);
+
+  const upcomingEvents = useMemo(
+    () =>
+      events
+        .filter((e) => diffDays(todayISO(), e.dateISO) > 0)
+        .sort((a, b) => a.dateISO.localeCompare(b.dateISO)),
+    [events],
+  );
 
   const toBook = useMemo(
     () => treatments.filter((tr) => needsAttention(treatmentStatus(tr, appointments))).length,
@@ -46,8 +54,10 @@ export function HomeScreen({ navigation }: Props) {
     return m;
   }, [treatments, appointments]);
 
-  const eventDays = event ? diffDays(todayISO(), event.dateISO) : 0;
-  const hasEvent = !!event && eventDays > 0;
+  const nextEvent = upcomingEvents[0] ?? null;
+  const moreEvents = Math.max(0, upcomingEvents.length - 1);
+  const eventDays = nextEvent ? diffDays(todayISO(), nextEvent.dateISO) : 0;
+  const hasEvent = !!nextEvent;
   const hour = new Date().getHours();
   const dayPart = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
   const line =
@@ -116,7 +126,7 @@ export function HomeScreen({ navigation }: Props) {
             style={{ flex: 1, fontSize: 13.5, fontWeight: '600', color: hasEvent ? t.accent : t.sub }}
           >
             {hasEvent
-              ? `${event!.name} · ${eventDays < 14 ? tx('event.inDays', { n: eventDays }) : tx('event.inWeeks', { n: Math.round(eventDays / 7) })}`
+              ? `${nextEvent!.name} · ${eventDays < 14 ? tx('event.inDays', { n: eventDays }) : tx('event.inWeeks', { n: Math.round(eventDays / 7) })}${moreEvents > 0 ? ` · ${tx('event.more', { n: moreEvents })}` : ''}`
               : tx('event.add')}
           </Text>
           <Ionicons name="chevron-forward" size={15} color={hasEvent ? t.accent : t.muted} />

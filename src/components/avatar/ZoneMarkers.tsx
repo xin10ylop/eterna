@@ -17,13 +17,16 @@ import type { GlowStatus } from '../../services/logic';
 const CANVAS = 66;
 const C = CANVAS / 2;
 
+// Colour + rhythm carry the status; darker + faster = more urgent. `core` is the
+// white centre's opacity — lower on soon/due so the deeper colour reads instead
+// of washing out to white.
 const STYLE: Record<
   GlowStatus,
-  { rgb: string; period: number; oMin: number; oMax: number; sMin: number; sMax: number; r: number }
+  { rgb: string; core: number; period: number; oMin: number; oMax: number; sMin: number; sMax: number; r: number }
 > = {
-  calm: { rgb: '236,223,205', period: 4200, oMin: 0.16, oMax: 0.36, sMin: 0.9, sMax: 1.02, r: 15 },
-  soon: { rgb: '176,92,62', period: 3200, oMin: 0.42, oMax: 0.74, sMin: 0.86, sMax: 1.1, r: 18 },
-  due: { rgb: '200,58,44', period: 1500, oMin: 0.55, oMax: 0.96, sMin: 0.86, sMax: 1.18, r: 19 },
+  calm: { rgb: '202,182,150', core: 0.78, period: 4200, oMin: 0.2, oMax: 0.42, sMin: 0.9, sMax: 1.02, r: 15 },
+  soon: { rgb: '150,72,46', core: 0.5, period: 3200, oMin: 0.48, oMax: 0.8, sMin: 0.86, sMax: 1.1, r: 18 },
+  due: { rgb: '170,40,30', core: 0.44, period: 1500, oMin: 0.6, oMax: 0.98, sMin: 0.86, sMax: 1.18, r: 19 },
 };
 
 const AnimatedSvg = Animated.createAnimatedComponent(Svg);
@@ -78,8 +81,8 @@ function Glow({
       >
         <Defs>
           <RadialGradient id={`glow-${label}`} cx="50%" cy="50%" r="50%">
-            <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.85} />
-            <Stop offset="34%" stopColor={`rgb(${s.rgb})`} stopOpacity={0.6} />
+            <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={s.core} />
+            <Stop offset="34%" stopColor={`rgb(${s.rgb})`} stopOpacity={0.62} />
             <Stop offset="100%" stopColor={`rgb(${s.rgb})`} stopOpacity={0} />
           </RadialGradient>
         </Defs>

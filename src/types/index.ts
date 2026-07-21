@@ -54,6 +54,7 @@ export interface Clinic {
 /** A dated event she's prepping for (a wedding, Eid). Rituals are back-planned
  *  from the date so everything peaks in time. */
 export interface SalonEvent {
+  id: string;
   name: string;
   dateISO: string;
 }

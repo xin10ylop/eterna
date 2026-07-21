@@ -1,4 +1,4 @@
-import type { Appointment, Session, Treatment, TreatmentStatus, ZoneId } from '../types';
+import type { Appointment, Cadence, SalonEvent, Session, Treatment, TreatmentStatus, ZoneId } from '../types';
 import { addCadence, addDays, diffDays, isSameMonth, addMonths, startOfMonth, todayISO } from '../lib/dates';
 
 /** How many days before the due date we start nudging a booking. Salons fill
@@ -14,8 +14,11 @@ export function nextDueISO(t: Treatment): string {
  * for this cycle she's sorted; otherwise it escalates as the interval elapses.
  */
 export function treatmentStatus(t: Treatment, appointments: Appointment[]): TreatmentStatus {
-  if (appointments.some((a) => a.treatmentId === t.id)) return 'booked';
-  const days = diffDays(todayISO(), nextDueISO(t));
+  const today = todayISO();
+  // Only a *pending* booking counts. A date that has already passed without
+  // being logged shouldn't keep the ritual reading as sorted forever.
+  if (appointments.some((a) => a.treatmentId === t.id && a.dateISO >= today)) return 'booked';
+  const days = diffDays(today, nextDueISO(t));
   if (days < 0) return 'bookNow';
   if (days <= LEAD_DAYS) return 'comingUp';
   return 'onTrack';
@@ -121,19 +124,80 @@ const EVENT_LEAD: Record<ZoneId, number> = {
   hands: 2,
 };
 
+/** How long a ritual stays "fresh" after it's done — its own cadence length in
+ *  days. Used to decide whether one appointment can carry over to a later event. */
+function cadenceDays(c: Cadence): number {
+  const per = c.unit === 'day' ? 1 : c.unit === 'week' ? 7 : 30;
+  return Math.max(1, c.every) * per;
+}
+
+export interface EventRef {
+  id: string;
+  name: string;
+  dateISO: string;
+}
+
 export interface EventPlanItem {
   treatment: Treatment;
-  /** Recommended "have it done by" date, backed off from the event. */
+  /** Recommended "have it done by" date, backed off from the earliest event
+   *  this appointment serves. */
   doByISO: string;
+  /** Every event this single appointment covers — one row, shared. */
+  events: EventRef[];
+  /** An appointment already sits in this appointment's window. */
+  booked: boolean;
 }
 
 /**
- * Back-plan every ritual from an event date so it peaks in time, ordered by
- * when it needs to happen. Drops anything whose window has clearly passed.
+ * Back-plan rituals across *all* upcoming events at once.
+ *
+ * The important part: two events close together shouldn't double-book. A ritual
+ * done for the first stays fresh for its cadence length, so if the next event
+ * falls inside that window one appointment carries both — the plan shows a single
+ * row tagged with both events. Only when the gap exceeds the ritual's freshness
+ * does it schedule a second appointment. Items are ordered by when they're due.
  */
-export function eventPlan(eventDateISO: string, treatments: Treatment[]): EventPlanItem[] {
-  return treatments
-    .map((tr) => ({ treatment: tr, doByISO: addDays(eventDateISO, -(EVENT_LEAD[tr.zone] ?? 5)) }))
-    .filter((x) => diffDays(todayISO(), x.doByISO) >= -3)
-    .sort((a, b) => a.doByISO.localeCompare(b.doByISO));
+export function mergedEventPlan(
+  events: SalonEvent[],
+  treatments: Treatment[],
+  appointments: Appointment[],
+): EventPlanItem[] {
+  const today = todayISO();
+  const upcoming = events
+    .filter((e) => diffDays(today, e.dateISO) >= 0)
+    .sort((a, b) => a.dateISO.localeCompare(b.dateISO));
+  if (upcoming.length === 0) return [];
+
+  const items: EventPlanItem[] = [];
+  for (const tr of treatments) {
+    const lead = EVENT_LEAD[tr.zone] ?? 5;
+    const fresh = cadenceDays(tr.cadence);
+    // ideal "have it done by" date for each event, earliest first
+    const targets = upcoming.map((ev) => ({ ev, doBy: addDays(ev.dateISO, -lead) }));
+
+    // greedily cluster events one appointment can serve: an appointment on the
+    // first event's doBy stays fresh for `fresh` days, covering any later event
+    // whose date lands inside that window.
+    let i = 0;
+    while (i < targets.length) {
+      const doByISO = targets[i].doBy;
+      const covered: EventRef[] = [];
+      let j = i;
+      while (j < targets.length && diffDays(doByISO, targets[j].ev.dateISO) <= fresh) {
+        const { ev } = targets[j];
+        covered.push({ id: ev.id, name: ev.name, dateISO: ev.dateISO });
+        j++;
+      }
+      if (diffDays(today, doByISO) >= -3) {
+        const windowStart = addDays(doByISO, -3);
+        const windowEnd = covered[covered.length - 1].dateISO;
+        const booked = appointments.some(
+          (a) => a.treatmentId === tr.id && a.dateISO >= windowStart && a.dateISO <= windowEnd,
+        );
+        items.push({ treatment: tr, doByISO, events: covered, booked });
+      }
+      i = j;
+    }
+  }
+  return items.sort((a, b) => a.doByISO.localeCompare(b.doByISO));
 }
