@@ -21,6 +21,7 @@ import { diffDays, formatMedium, humanizeDue, todayISO } from '../../lib/dates';
 import { formatAED } from '../../lib/money';
 import { cardShadow, radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
+import { useT } from '../../i18n';
 import type { Treatment, ZoneId } from '../../types';
 import type { RootStackParamList, TabParamList } from '../../navigation/types';
 
@@ -47,6 +48,7 @@ const GLOW_DOT: Record<GlowStatus, string> = {
 
 function AtHomeTag() {
   const t = useTheme();
+  const tr = useT();
   return (
     <View
       style={{
@@ -60,7 +62,7 @@ function AtHomeTag() {
       }}
     >
       <Ionicons name="home" size={10} color={t.sub} />
-      <Text style={{ fontSize: 10.5, fontWeight: '600', color: t.sub }}>At home</Text>
+      <Text style={{ fontSize: 10.5, fontWeight: '600', color: t.sub }}>{tr('common.atHome')}</Text>
     </View>
   );
 }
@@ -159,6 +161,7 @@ function SectionLabel({ color, title }: { color: string; title: string }) {
 
 export function HomeScreen({ navigation }: Props) {
   const t = useTheme();
+  const tx = useT();
   const profile = useEterna((s) => s.profile);
   const treatments = useEterna((s) => s.treatments);
   const appointments = useEterna((s) => s.appointments);
@@ -197,14 +200,20 @@ export function HomeScreen({ navigation }: Props) {
   const dayPart = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
   const toBook = bookNow.length + comingUp.length;
   const line =
-    toBook === 0 ? 'You’re all caught up' : toBook === 1 ? '1 thing to book' : `${toBook} things to book`;
+    toBook === 0
+      ? tx('home.toBook.zero')
+      : toBook === 1
+        ? tx('home.toBook.one')
+        : tx('home.toBook.many', { n: toBook });
   const initials = ((profile?.firstName?.[0] ?? 'Y') + (profile?.lastName?.[0] ?? '')).toUpperCase();
 
   const sponsored = clinics.find((c) => c.sponsored);
-  const subFor = (tr: Treatment, kind: 'due' | 'soon') => {
-    const base = kind === 'due' ? 'Time to book' : humanizeDue(nextDueISO(tr));
-    const pkg = tr.pkg ? ` · ${tr.pkg.done}/${tr.pkg.total} sessions` : '';
-    return `${base} · ${clinicName(tr.clinicId)}${pkg}`;
+  const subFor = (item: Treatment, kind: 'due' | 'soon') => {
+    const base = kind === 'due' ? tx('status.timeToBook') : humanizeDue(nextDueISO(item));
+    const pkg = item.pkg
+      ? ` · ${tx('common.sessions', { done: item.pkg.done, total: item.pkg.total })}`
+      : '';
+    return `${base} · ${clinicName(item.clinicId)}${pkg}`;
   };
 
   return (
@@ -221,7 +230,7 @@ export function HomeScreen({ navigation }: Props) {
           }}
         >
           <View style={{ flex: 1 }}>
-            <Text style={[type.display, { color: t.text }]}>Good {dayPart}</Text>
+            <Text style={[type.display, { color: t.text }]}>{tx('greeting.' + dayPart)}</Text>
             <Text style={{ fontSize: 14, color: t.sub, marginTop: 2 }}>{line}</Text>
           </View>
           <Pressable
@@ -255,7 +264,7 @@ export function HomeScreen({ navigation }: Props) {
               />
             </AvatarFigure>
             <Text style={{ fontSize: 12, color: t.muted, marginTop: 2 }}>
-              Tap a glowing part to see what’s due
+              {tx('home.tapHint')}
             </Text>
           </View>
         </Entrance>
@@ -279,10 +288,13 @@ export function HomeScreen({ navigation }: Props) {
               <Ionicons name="calendar" size={20} color={t.accent} />
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 15, fontWeight: '700', color: t.accent }}>
-                  {event.name} · in {eventDays < 14 ? `${eventDays} days` : `${Math.round(eventDays / 7)} weeks`}
+                  {event.name} ·{' '}
+                  {eventDays < 14
+                    ? tx('event.inDays', { n: eventDays })
+                    : tx('event.inWeeks', { n: Math.round(eventDays / 7) })}
                 </Text>
                 <Text style={{ fontSize: 12.5, color: t.accent, opacity: 0.85, marginTop: 1 }}>
-                  {prepCount > 0 ? `${prepCount} rituals to prep before then` : 'Everything’s on track for it'}
+                  {prepCount > 0 ? tx('event.prepCount', { n: prepCount }) : tx('event.onTrack')}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={16} color={t.accent} />
@@ -292,7 +304,7 @@ export function HomeScreen({ navigation }: Props) {
           {/* Book now */}
           {bookNow.length > 0 ? (
             <>
-              <SectionLabel color={GLOW_DOT.due} title="Book now" />
+              <SectionLabel color={GLOW_DOT.due} title={tx('section.bookNow')} />
               {bookNow.map(({ tr }) => (
                 <Row
                   key={tr.id}
@@ -300,7 +312,7 @@ export function HomeScreen({ navigation }: Props) {
                   title={tr.name}
                   sub={subFor(tr, 'due')}
                   atHome={tr.atHome}
-                  right={<BookButton onPress={() => navigation.navigate('Book', { treatmentId: tr.id })} />}
+                  right={<BookButton label={tx('common.book')} onPress={() => navigation.navigate('Book', { treatmentId: tr.id })} />}
                   onPress={() => navigation.navigate('TreatmentDetail', { treatmentId: tr.id })}
                 />
               ))}
@@ -310,7 +322,7 @@ export function HomeScreen({ navigation }: Props) {
           {/* Coming up */}
           {comingUp.length > 0 ? (
             <>
-              <SectionLabel color={GLOW_DOT.soon} title="Coming up" />
+              <SectionLabel color={GLOW_DOT.soon} title={tx('section.comingUp')} />
               {comingUp.map(({ tr }) => (
                 <Row
                   key={tr.id}
@@ -318,7 +330,7 @@ export function HomeScreen({ navigation }: Props) {
                   title={tr.name}
                   sub={subFor(tr, 'soon')}
                   atHome={tr.atHome}
-                  right={<BookButton onPress={() => navigation.navigate('Book', { treatmentId: tr.id })} />}
+                  right={<BookButton label={tx('common.book')} onPress={() => navigation.navigate('Book', { treatmentId: tr.id })} />}
                   onPress={() => navigation.navigate('TreatmentDetail', { treatmentId: tr.id })}
                 />
               ))}
@@ -328,7 +340,7 @@ export function HomeScreen({ navigation }: Props) {
           {/* Upcoming (booked) */}
           {upcoming.length > 0 ? (
             <>
-              <SectionLabel color={t.positive} title="Upcoming" />
+              <SectionLabel color={t.positive} title={tx('section.upcoming')} />
               {upcoming.map(({ a, tr }) => (
                 <Row
                   key={a.id}
@@ -360,7 +372,7 @@ export function HomeScreen({ navigation }: Props) {
             >
               <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: t.positive }} />
               <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
-                You’re all caught up. Nothing to book right now.
+                {tx('home.caughtUp')}
               </Text>
             </View>
           ) : null}
@@ -383,7 +395,7 @@ export function HomeScreen({ navigation }: Props) {
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s }}>
               <Ionicons name="wallet-outline" size={18} color={t.sub} />
-              <Text style={{ fontSize: 14, color: t.sub }}>Planned this month</Text>
+              <Text style={{ fontSize: 14, color: t.sub }}>{tx('home.plannedThisMonth')}</Text>
             </View>
             <Text style={{ fontSize: 15, fontWeight: '700', color: t.text }}>{formatAED(monthTotal)}</Text>
           </Pressable>
@@ -406,7 +418,7 @@ export function HomeScreen({ navigation }: Props) {
               })}
             >
               <Text style={{ fontSize: 10.5, fontWeight: '700', letterSpacing: 0.6, color: t.muted }}>
-                SPONSORED
+                {tx('common.sponsored')}
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
                 <View

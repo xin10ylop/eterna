@@ -2,8 +2,10 @@ import React from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Card, Chip, GhostButton, IOSSwitch, IconButton, Row, Screen, SectionLabel } from '../../components/ui';
+import { LanguagePicker } from '../../components/LanguagePicker';
 import { spacing, type, type AccentName } from '../../theme';
 import { useEterna, useTheme } from '../../store';
+import { useT } from '../../i18n';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
@@ -12,6 +14,7 @@ const ACCENTS: AccentName[] = ['Terracotta', 'Rosé', 'Mauve', 'Sage'];
 
 export function ProfileScreen({ navigation }: Props) {
   const t = useTheme();
+  const tr = useT();
   const profile = useEterna((s) => s.profile);
   const accent = useEterna((s) => s.accent);
   const setAccent = useEterna((s) => s.setAccent);
@@ -24,7 +27,7 @@ export function ProfileScreen({ navigation }: Props) {
     <Screen>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m, paddingTop: spacing.s }}>
         <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Back" />
-        <Text style={[type.title, { color: t.text }]}>Profile</Text>
+        <Text style={[type.title, { color: t.text }]}>{tr('profile.title')}</Text>
       </View>
 
       <ScrollView
@@ -53,7 +56,7 @@ export function ProfileScreen({ navigation }: Props) {
                 {profile ? `${profile.firstName} ${profile.lastName}`.trim() : 'You'}
               </Text>
               <Text style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>
-                {profile?.email || 'demo account'} · {treatments.length} rituals tracked
+                {profile?.email || 'demo account'} · {tr('profile.ritualsTracked', { n: treatments.length })}
               </Text>
               {profile?.heightCm && profile?.weightKg ? (
                 <Text style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>
@@ -66,12 +69,12 @@ export function ProfileScreen({ navigation }: Props) {
 
         <Card style={{ paddingVertical: 4 }}>
           <Row
-            title="Avatar"
-            subtitle="Skin tone and hair"
+            title={tr('profile.avatar')}
+            subtitle={tr('profile.avatarSub')}
             onPress={() => navigation.navigate('AvatarEdit')}
           />
           <Row
-            title="Notifications"
+            title={tr('profile.notifications')}
             right={
               <IOSSwitch
                 on={profile?.notificationsOn ?? true}
@@ -79,11 +82,15 @@ export function ProfileScreen({ navigation }: Props) {
               />
             }
           />
-          <Row title="Remind me" subtitle={`${profile?.remindDaysBefore ?? 5} days before`} last />
+          <Row
+            title={tr('profile.remind')}
+            subtitle={tr('profile.daysBefore', { n: profile?.remindDaysBefore ?? 5 })}
+            last
+          />
         </Card>
 
         <Card>
-          <SectionLabel>Accent color</SectionLabel>
+          <SectionLabel>{tr('profile.accent')}</SectionLabel>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.s }}>
             {ACCENTS.map((a) => (
               <Chip key={a} label={a} selected={accent === a} onPress={() => setAccent(a)} />
@@ -91,11 +98,20 @@ export function ProfileScreen({ navigation }: Props) {
           </View>
         </Card>
 
-        <Card style={{ paddingVertical: 4 }}>
-          <Row title="My clinics" subtitle={`${savedClinicIds.length} saved`} last />
+        <Card>
+          <SectionLabel>{tr('profile.language')}</SectionLabel>
+          <LanguagePicker />
         </Card>
 
-        <GhostButton title="Sign out" onPress={signOut} />
+        <Card style={{ paddingVertical: 4 }}>
+          <Row
+            title={tr('profile.myClinics')}
+            subtitle={tr('profile.saved', { n: savedClinicIds.length })}
+            last
+          />
+        </Card>
+
+        <GhostButton title={tr('profile.signOut')} onPress={signOut} />
       </ScrollView>
     </Screen>
   );

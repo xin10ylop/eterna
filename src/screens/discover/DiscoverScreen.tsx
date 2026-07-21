@@ -8,6 +8,7 @@ import { Card, Chip, Screen } from '../../components/ui';
 import { ClinicCardSkeleton } from '../../components/anim/Shimmer';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
+import { useT } from '../../i18n';
 import type { RootStackParamList, TabParamList } from '../../navigation/types';
 
 type Props = CompositeScreenProps<
@@ -21,6 +22,7 @@ const FILTERS = ['All', 'Hair', 'Skin', 'Nails', 'Lashes & Brows', 'Spa'];
  *  the Book flow; here you explore, save, and request open slots. */
 export function DiscoverScreen(_props: Props) {
   const t = useTheme();
+  const tr = useT();
   const clinics = useEterna((s) => s.clinics);
   const savedIds = useEterna((s) => s.savedClinicIds);
   const toggleSaved = useEterna((s) => s.toggleSavedClinic);
@@ -54,7 +56,7 @@ export function DiscoverScreen(_props: Props) {
   return (
     <Screen>
       <View style={{ paddingTop: spacing.s, gap: spacing.m }}>
-        <Text style={[type.largeTitle, { color: t.text }]}>Discover</Text>
+        <Text style={[type.largeTitle, { color: t.text }]}>{tr('discover.title')}</Text>
         <View
           style={{
             flexDirection: 'row',
@@ -71,7 +73,7 @@ export function DiscoverScreen(_props: Props) {
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Salons, clinics, spas"
+            placeholder={tr('discover.search')}
             placeholderTextColor={t.muted}
             style={{ flex: 1, paddingVertical: 12, fontSize: 16, color: t.text }}
             autoCorrect={false}
@@ -85,12 +87,12 @@ export function DiscoverScreen(_props: Props) {
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.s }}>
           {FILTERS.map((f) => (
-            <Chip key={f} label={f} selected={filter === f} onPress={() => setFilter(f)} />
+            <Chip key={f} label={tr('filter.' + f)} selected={filter === f} onPress={() => setFilter(f)} />
           ))}
         </ScrollView>
         <View style={{ flexDirection: 'row', gap: spacing.s }}>
-          <Chip label="At home" selected={homeOnly} onPress={() => setHomeOnly((v) => !v)} />
-          <Chip label="Women-only" selected={womenOnly} onPress={() => setWomenOnly((v) => !v)} />
+          <Chip label={tr('common.atHome')} selected={homeOnly} onPress={() => setHomeOnly((v) => !v)} />
+          <Chip label={tr('filter.womenOnly')} selected={womenOnly} onPress={() => setWomenOnly((v) => !v)} />
         </View>
       </View>
 
@@ -108,7 +110,7 @@ export function DiscoverScreen(_props: Props) {
           </>
         ) : list.length === 0 ? (
           <Card>
-            <Text style={{ fontSize: 14, color: t.sub }}>No places match your search.</Text>
+            <Text style={{ fontSize: 14, color: t.sub }}>{tr('discover.none')}</Text>
           </Card>
         ) : (
           list.map((c) => {
@@ -141,7 +143,7 @@ export function DiscoverScreen(_props: Props) {
                   <View style={{ flex: 1 }}>
                     {c.sponsored ? (
                       <Text style={{ fontSize: 10, fontWeight: '700', letterSpacing: 0.5, color: t.muted, marginBottom: 2 }}>
-                        SPONSORED
+                        {tr('common.sponsored')}
                       </Text>
                     ) : null}
                     {/* Airbnb result line: name left, star + rating right */}
@@ -159,10 +161,10 @@ export function DiscoverScreen(_props: Props) {
                       ) : null}
                     </View>
                     <Text style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>
-                      {c.category}
+                      {tr('filter.' + c.category)}
                       {c.distanceKm > 0 ? ` · ${c.distanceKm} km` : ''}
-                      {c.homeService ? ' · Home service' : ''}
-                      {c.slots.length > 0 ? ` · ${c.slots.length} slots open` : ''}
+                      {c.homeService ? ` · ${tr('discover.homeService')}` : ''}
+                      {c.slots.length > 0 ? ` · ${tr('discover.slotsOpen', { n: c.slots.length })}` : ''}
                     </Text>
                   </View>
                   <Pressable

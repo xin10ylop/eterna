@@ -9,6 +9,7 @@ import { addDays, formatLong, monthShort, todayISO, weekdayShort } from '../../l
 import { formatAED } from '../../lib/money';
 import { cardShadow, radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
+import { useT } from '../../i18n';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Book'>;
@@ -20,6 +21,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Book'>;
  */
 export function BookScreen({ navigation, route }: Props) {
   const t = useTheme();
+  const tx = useT();
   const tr = useEterna((s) => s.treatments.find((x) => x.id === route.params.treatmentId));
   const clinics = useEterna((s) => s.clinics);
   const book = useEterna((s) => s.book);
@@ -54,7 +56,7 @@ export function BookScreen({ navigation, route }: Props) {
             }}
           />
           <Entrance delay={500}>
-            <Text style={[type.title, { color: t.text, textAlign: 'center' }]}>You’re all set ✨</Text>
+            <Text style={[type.title, { color: t.text, textAlign: 'center' }]}>{tx('book.allSet')}</Text>
             <Text style={{ fontSize: 15, color: t.sub, textAlign: 'center', marginTop: 4 }}>
               {tr.name} · {formatLong(day)} at {time}
             </Text>
@@ -86,7 +88,7 @@ export function BookScreen({ navigation, route }: Props) {
       <View style={{ paddingHorizontal: spacing.xl, flexDirection: 'row', alignItems: 'center', gap: spacing.m, paddingTop: spacing.s }}>
         <IconButton name="close" onPress={() => navigation.goBack()} accessibilityLabel="Close" />
         <View style={{ flex: 1 }}>
-          <Text style={[type.title, { color: t.text }]}>Book {tr.name.toLowerCase()}</Text>
+          <Text style={[type.title, { color: t.text }]}>{tx('book.title', { name: tr.name.toLowerCase() })}</Text>
           <Text style={{ fontSize: 14, color: t.sub, marginTop: 2 }}>{clinic?.name}</Text>
         </View>
       </View>
@@ -99,7 +101,7 @@ export function BookScreen({ navigation, route }: Props) {
         {/* date cards */}
         <View style={{ gap: spacing.s }}>
           <View style={{ paddingHorizontal: spacing.xl }}>
-            <SectionLabel>Pick a day</SectionLabel>
+            <SectionLabel>{tx('book.pickDay')}</SectionLabel>
           </View>
           <ScrollView
             horizontal
@@ -144,7 +146,7 @@ export function BookScreen({ navigation, route }: Props) {
 
         {/* time grid */}
         <View style={{ paddingHorizontal: spacing.xl, gap: spacing.s }}>
-          <SectionLabel>Pick a time</SectionLabel>
+          <SectionLabel>{tx('book.pickTime')}</SectionLabel>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.s, justifyContent: 'space-between' }}>
             {times.map((x) => {
               const sel = time === x;
@@ -175,7 +177,7 @@ export function BookScreen({ navigation, route }: Props) {
         </View>
         {/* price breakdown ledger (Airbnb receipt pattern) */}
         <View style={{ paddingHorizontal: spacing.xl, gap: spacing.s }}>
-          <SectionLabel>Price details</SectionLabel>
+          <SectionLabel>{tx('book.priceDetails')}</SectionLabel>
           <View
             style={{
               backgroundColor: t.surfaceAlt,
@@ -186,17 +188,15 @@ export function BookScreen({ navigation, route }: Props) {
               paddingHorizontal: spacing.l,
             }}
           >
-            <LedgerRow label={`${tr.name} × 1 session`} value={formatAED(tr.price)} />
-            <LedgerRow label="Booking fee" value="Free" muted />
+            <LedgerRow label={`${tr.name} × 1`} value={formatAED(tr.price)} />
+            <LedgerRow label={tx('book.fee')} value={tx('book.free')} muted />
             <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: t.separator, marginVertical: 4 }} />
-            <LedgerRow label="Total" value={formatAED(tr.price)} bold />
-            <Text style={{ fontSize: 12, color: t.muted, paddingBottom: 4 }}>
-              Paid at the clinic · free reschedule up to 24h before
-            </Text>
+            <LedgerRow label={tx('book.total')} value={formatAED(tr.price)} bold />
+            <Text style={{ fontSize: 12, color: t.muted, paddingBottom: 4 }}>{tx('book.paidAtClinic')}</Text>
             {tr.price >= 400 ? (
               <View style={{ paddingTop: 6, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.separator }}>
                 <Text style={{ fontSize: 12, color: t.sub }}>
-                  Or split into 4× {formatAED(Math.round(tr.price / 4))} with Tabby or Tamara
+                  {tx('book.bnpl', { amount: formatAED(Math.round(tr.price / 4)) })}
                 </Text>
               </View>
             ) : null}
@@ -225,7 +225,7 @@ export function BookScreen({ navigation, route }: Props) {
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 18, fontWeight: '700', color: t.text }}>{formatAED(tr.price)}</Text>
           <Text style={{ fontSize: 12, color: t.sub }}>
-            {day && time ? `${formatLong(day)} · ${time}` : 'usual price'}
+            {day && time ? `${formatLong(day)} · ${time}` : tx('book.usualPrice')}
           </Text>
         </View>
         <Pressable
@@ -247,7 +247,7 @@ export function BookScreen({ navigation, route }: Props) {
         >
           {/* CTA names the selection (Uber Reserve pattern) */}
           <Text style={{ color: day && time ? t.onAccent : t.sub, fontSize: 16, fontWeight: '700' }}>
-            Confirm
+            {tx('book.confirm')}
           </Text>
           {day && time ? (
             <Text style={{ color: t.onAccent, fontSize: 11, fontWeight: '500', opacity: 0.85 }}>

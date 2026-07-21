@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { I18nManager } from 'react-native';
 import type {
   Appointment,
   AvatarConfig,
@@ -8,6 +9,7 @@ import type {
   Session,
   Treatment,
 } from '../types';
+import type { Lang } from '../i18n';
 import { APPOINTMENTS, CLINICS, SEED_EVENT, SESSIONS, TREATMENTS } from '../data/seed';
 import type { AccentName } from '../theme';
 import { todayISO } from '../lib/dates';
@@ -51,6 +53,7 @@ interface EternaState {
   profile: Profile | null;
   draft: OnboardingDraft;
   accent: AccentName;
+  lang: Lang;
 
   // data
   treatments: Treatment[];
@@ -68,6 +71,7 @@ interface EternaState {
   completeOnboarding(): void;
   signOut(): void;
   setAccent(a: AccentName): void;
+  setLang(l: Lang): void;
   setNotifications(on: boolean): void;
 
   toggleReminder(treatmentId: string): void;
@@ -91,6 +95,7 @@ export const useEterna = create<EternaState>((set, get) => ({
   profile: null,
   draft: emptyDraft,
   accent: 'Terracotta',
+  lang: 'en',
 
   treatments: TREATMENTS,
   sessions: SESSIONS,
@@ -125,6 +130,14 @@ export const useEterna = create<EternaState>((set, get) => ({
   signOut: () => set({ isSignedIn: false, profile: null, draft: emptyDraft }),
 
   setAccent: (a) => set({ accent: a }),
+
+  setLang: (l) => {
+    // Text switches immediately; full layout mirroring for Arabic applies on the
+    // next app start (native RTL is a reload-level setting).
+    I18nManager.allowRTL(true);
+    I18nManager.forceRTL(l === 'ar');
+    set({ lang: l });
+  },
 
   setNotifications: (on) =>
     set((s) => (s.profile ? { profile: { ...s.profile, notificationsOn: on } } : s)),

@@ -7,6 +7,7 @@ import { eventPlan, treatmentStatus } from '../../services/logic';
 import { diffDays, formatMedium, todayISO } from '../../lib/dates';
 import { cardShadow, radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
+import { useT } from '../../i18n';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EventPrep'>;
@@ -18,6 +19,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'EventPrep'>;
  */
 export function EventPrepScreen({ navigation }: Props) {
   const t = useTheme();
+  const tx = useT();
   const event = useEterna((s) => s.event);
   const treatments = useEterna((s) => s.treatments);
   const appointments = useEterna((s) => s.appointments);
@@ -38,7 +40,8 @@ export function EventPrepScreen({ navigation }: Props) {
           <Text style={[type.title, { color: t.text }]}>{event ? event.name : 'Event prep'}</Text>
           {event ? (
             <Text style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>
-              in {days < 14 ? `${days} days` : `${Math.round(days / 7)} weeks`} · {plan.length} rituals to time
+              {days < 14 ? tx('event.inDays', { n: days }) : tx('event.inWeeks', { n: Math.round(days / 7) })} ·{' '}
+              {tx('event.ritualsToTime', { n: plan.length })}
             </Text>
           ) : null}
         </View>
@@ -51,11 +54,10 @@ export function EventPrepScreen({ navigation }: Props) {
       >
         {event ? (
           <Text style={{ fontSize: 13, color: t.sub, lineHeight: 19, marginBottom: spacing.s }}>
-            Timed back from {formatMedium(event.dateISO)} so everything peaks together — filler settles
-            first, hair and nails land last. Salons fill up before big dates, so book ahead.
+            {tx('event.intro', { date: formatMedium(event.dateISO) })}
           </Text>
         ) : (
-          <Text style={{ fontSize: 14, color: t.sub }}>No event set yet.</Text>
+          <Text style={{ fontSize: 14, color: t.sub }}>{tx('event.noEvent')}</Text>
         )}
 
         {plan.map(({ treatment: tr, doByISO }) => {
@@ -94,8 +96,8 @@ export function EventPrepScreen({ navigation }: Props) {
                   {tr.name}
                 </Text>
                 <Text numberOfLines={1} style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
-                  Do by {formatMedium(doByISO)} · {clinicName(tr.clinicId)}
-                  {tr.atHome ? ' · At home' : ''}
+                  {tx('event.doBy', { date: formatMedium(doByISO) })} · {clinicName(tr.clinicId)}
+                  {tr.atHome ? ` · ${tx('common.atHome')}` : ''}
                 </Text>
               </View>
               {booked ? (
@@ -113,7 +115,7 @@ export function EventPrepScreen({ navigation }: Props) {
                     transform: [{ scale: pressed ? 0.94 : 1 }],
                   })}
                 >
-                  <Text style={{ color: t.onAccent, fontSize: 13.5, fontWeight: '700' }}>Book</Text>
+                  <Text style={{ color: t.onAccent, fontSize: 13.5, fontWeight: '700' }}>{tx('common.book')}</Text>
                 </Pressable>
               )}
             </View>

@@ -2,16 +2,19 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { GhostButton, PrimaryButton, Screen } from '../../components/ui';
+import { LanguagePicker } from '../../components/LanguagePicker';
 import { Entrance } from '../../components/anim/Entrance';
 import { Sparkles } from '../../components/anim/Lottie';
 import { spacing, type } from '../../theme';
 import { useTheme } from '../../store';
+import { useT } from '../../i18n';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Welcome'>;
 
 export function WelcomeScreen({ navigation }: Props) {
   const t = useTheme();
+  const tr = useT();
   // Brand intro: the wordmark breathes open (letter-spacing widens as it fades in).
   const brand = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -26,6 +29,9 @@ export function WelcomeScreen({ navigation }: Props) {
 
   return (
     <Screen>
+      <View style={{ alignItems: 'center', paddingTop: spacing.s }}>
+        <LanguagePicker />
+      </View>
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.l }}>
         <Entrance spring distance={20}>
           <View style={{ alignItems: 'center', justifyContent: 'center' }}>
@@ -45,14 +51,14 @@ export function WelcomeScreen({ navigation }: Props) {
         </Entrance>
         <Entrance delay={650}>
           <Text style={{ fontSize: 16, color: t.sub, textAlign: 'center', lineHeight: 23, maxWidth: 280 }}>
-            Everything you do to feel beautiful, remembered in one place.
+            {tr('welcome.tagline')}
           </Text>
         </Entrance>
       </View>
       <Entrance delay={850} distance={10}>
         <View style={{ paddingBottom: spacing.xxl, gap: spacing.xs }}>
-          <PrimaryButton title="Get started" onPress={() => navigation.navigate('Features')} />
-          <GhostButton title="I already have an account" onPress={() => navigation.navigate('SignIn')} />
+          <PrimaryButton title={tr('welcome.getStarted')} onPress={() => navigation.navigate('Features')} />
+          <GhostButton title={tr('welcome.haveAccount')} onPress={() => navigation.navigate('SignIn')} />
         </View>
       </Entrance>
     </Screen>

@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator, type BottomTabBarButtonProps } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useEterna, useTheme } from '../store';
+import { useT } from '../i18n';
 import type { RootStackParamList, TabParamList } from './types';
 
 import { WelcomeScreen } from '../screens/onboarding/WelcomeScreen';
@@ -64,8 +65,16 @@ function AddTabButton(props: BottomTabBarButtonProps) {
   );
 }
 
+const TAB_LABEL: Record<string, string> = {
+  Home: 'tab.home',
+  Planning: 'tab.planning',
+  Discover: 'tab.discover',
+  Budget: 'tab.budget',
+};
+
 function MainTabs() {
   const t = useTheme();
+  const tr = useT();
   return (
     <Tabs.Navigator
       screenOptions={({ route }) => ({
@@ -73,6 +82,7 @@ function MainTabs() {
         tabBarActiveTintColor: t.accent,
         tabBarInactiveTintColor: t.muted,
         tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
+        tabBarLabel: TAB_LABEL[route.name] ? tr(TAB_LABEL[route.name]) : undefined,
         tabBarStyle: {
           backgroundColor: t.tabBg,
           borderTopColor: t.border,
