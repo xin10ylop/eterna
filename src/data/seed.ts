@@ -27,20 +27,24 @@ export const ZONES: Zone[] = [
 ];
 
 /**
- * The four markers shown on the Home avatar (hair, face, body, hands). Each
- * aggregates related zones so the figure stays uncluttered; tapping opens the
- * primary zone. Positions are % of the avatar display box.
+ * The five fixed markers shown on the Home avatar — hair, face, body, hands,
+ * feet. Each carries a matching line icon and aggregates related zones so the
+ * figure stays uncluttered; tapping opens the primary zone. Positions are fixed
+ * % of the avatar display box, measured against the rendered figure so every
+ * marker lands exactly on its body part. `icon` is an Ionicons glyph name.
  */
 export const AVATAR_MARKERS: {
   id: ZoneId;
   label: string;
+  icon: string;
   zones: ZoneId[];
   marker: { xPct: number; yPct: number };
 }[] = [
-  { id: 'hair', label: 'Hair', zones: ['hair'], marker: { xPct: 50, yPct: 3 } },
-  { id: 'face', label: 'Face', zones: ['face', 'lips'], marker: { xPct: 50, yPct: 8 } },
-  { id: 'torso', label: 'Body', zones: ['torso', 'hips', 'legs'], marker: { xPct: 50, yPct: 33 } },
-  { id: 'hands', label: 'Hands', zones: ['hands'], marker: { xPct: 18, yPct: 52 } },
+  { id: 'hair', label: 'Hair', icon: 'sparkles-outline', zones: ['hair'], marker: { xPct: 50, yPct: 6 } },
+  { id: 'face', label: 'Face', icon: 'happy-outline', zones: ['face', 'lips'], marker: { xPct: 50, yPct: 13 } },
+  { id: 'torso', label: 'Body', icon: 'body-outline', zones: ['torso', 'hips'], marker: { xPct: 50, yPct: 28 } },
+  { id: 'hands', label: 'Hands', icon: 'hand-left-outline', zones: ['hands'], marker: { xPct: 13, yPct: 54 } },
+  { id: 'legs', label: 'Feet', icon: 'footsteps-outline', zones: ['legs'], marker: { xPct: 42, yPct: 95 } },
 ];
 
 export const PRACTITIONERS: Practitioner[] = [

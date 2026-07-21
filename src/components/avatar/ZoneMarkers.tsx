@@ -1,17 +1,19 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
-import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, RadialGradient, Stop } from 'react-native-svg';
 import { AVATAR_MARKERS } from '../../data/seed';
 import type { ZoneId } from '../../types';
 import { useTheme } from '../../store';
 
 /**
- * Attention glows on the avatar — hair, face, body, hands.
+ * Fixed glowing markers on the avatar — hair, face, body, hands, feet.
  *
- * A body part that needs attention softly glows from within: a large, soft
- * radial light in the accent color that breathes (no hard dot, no dome). Calm
- * parts show nothing. Each glow is tappable and shows a small count when
- * several items are due.
+ * Each body part carries a small "pearl" of warm light: a luminous bead with a
+ * white-hot core and a soft glow halo, so it reads as a clean modern glow — not
+ * a bare dot, not a muddy blob. A part that needs attention brightens and
+ * breathes (the glow gently pulses) and shows a count when several items are
+ * due; calm parts stay a quiet dim pearl. Positions are fixed % of the display
+ * box, measured against the figure so each pearl sits exactly on its part.
  */
 
 export interface ZoneMarkerDatum {
@@ -19,23 +21,24 @@ export interface ZoneMarkerDatum {
   attentionCount: number;
 }
 
-const GLOW = 130; // glow canvas size (px)
-const HIT = 64; // touch target
+const CANVAS = 54;
+const C = CANVAS / 2;
+const GLOW = '#F2A97E'; // luminous warm glow — reads as light on every skin tone
 
 const AnimatedSvg = Animated.createAnimatedComponent(Svg);
 
 function Marker({
+  id,
   attention,
   count,
   onPress,
   label,
-  id,
 }: {
+  id: string;
   attention: boolean;
   count: number;
   onPress: () => void;
   label: string;
-  id: string;
 }) {
   const t = useTheme();
   const pulse = useRef(new Animated.Value(0)).current;
@@ -52,50 +55,75 @@ function Marker({
     return () => loop.stop();
   }, [attention, pulse]);
 
-  if (!attention) return null;
+  const haloR = attention ? 13 : 10;
+  const orbR = attention ? 7 : 5;
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${label}, ${count} due`}
+      accessibilityLabel={attention ? `${label}, ${count} due` : label}
       onPress={onPress}
-      style={{ width: HIT, height: HIT, alignItems: 'center', justifyContent: 'center' }}
+      hitSlop={8}
+      style={{ width: CANVAS, height: CANVAS, alignItems: 'center', justifyContent: 'center' }}
     >
-      {/* soft light from within — two overlaid glows for depth */}
       <AnimatedSvg
-        width={GLOW}
-        height={GLOW}
-        style={{
-          position: 'absolute',
-          opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.55, 1] }),
-          transform: [
-            { scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.82, 1.12] }) },
-          ],
-        }}
+        width={CANVAS}
+        height={CANVAS}
+        style={
+          attention
+            ? {
+                opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.86, 1] }),
+                transform: [
+                  { scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.93, 1.07] }) },
+                ],
+              }
+            : undefined
+        }
       >
         <Defs>
-          <RadialGradient id={`g-${id}`} cx="50%" cy="50%" r="50%">
-            <Stop offset="0%" stopColor={t.accent} stopOpacity={0.5} />
-            <Stop offset="32%" stopColor={t.accent} stopOpacity={0.28} />
-            <Stop offset="64%" stopColor={t.accent} stopOpacity={0.1} />
-            <Stop offset="100%" stopColor={t.accent} stopOpacity={0} />
+          <RadialGradient id={`halo-${id}`} cx="50%" cy="50%" r="50%">
+            <Stop offset="0%" stopColor={GLOW} stopOpacity={0.7} />
+            <Stop offset="55%" stopColor={GLOW} stopOpacity={0.26} />
+            <Stop offset="100%" stopColor={GLOW} stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id={`orb-${id}`} cx="42%" cy="38%" r="65%">
+            <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.98} />
+            <Stop offset="42%" stopColor={GLOW} stopOpacity={0.95} />
+            <Stop offset="100%" stopColor={t.accent} stopOpacity={0.95} />
           </RadialGradient>
         </Defs>
-        <Circle cx={GLOW / 2} cy={GLOW / 2} r={GLOW / 2} fill={`url(#g-${id})`} />
+        {/* soft glow halo */}
+        <Circle cx={C} cy={C} r={haloR} fill={`url(#halo-${id})`} opacity={attention ? 1 : 0.4} />
+        {/* luminous bead */}
+        <Circle cx={C} cy={C} r={orbR} fill={`url(#orb-${id})`} opacity={attention ? 1 : 0.55} />
+        {/* specular highlight */}
+        <Ellipse
+          cx={C - 3}
+          cy={C - 3.5}
+          rx={2.4}
+          ry={1.7}
+          fill="#FFFFFF"
+          opacity={attention ? 0.85 : 0.4}
+        />
       </AnimatedSvg>
       {count > 1 ? (
         <View
           style={{
-            minWidth: 18,
-            height: 18,
+            position: 'absolute',
+            top: 10,
+            right: 10,
+            minWidth: 17,
+            height: 17,
             borderRadius: 9,
             paddingHorizontal: 4,
             backgroundColor: t.accent,
             alignItems: 'center',
             justifyContent: 'center',
+            borderWidth: 1.5,
+            borderColor: '#fff',
           }}
         >
-          <Text style={{ color: t.onAccent, fontSize: 10, fontWeight: '800' }}>{count}</Text>
+          <Text style={{ color: t.onAccent, fontSize: 9.5, fontWeight: '800' }}>{count}</Text>
         </View>
       ) : null}
     </Pressable>
@@ -123,8 +151,8 @@ export function ZoneMarkers({
               position: 'absolute',
               left: `${m.marker.xPct}%`,
               top: `${m.marker.yPct}%`,
-              marginLeft: -HIT / 2,
-              marginTop: -HIT / 2,
+              marginLeft: -CANVAS / 2,
+              marginTop: -CANVAS / 2,
             }}
           >
             <Marker

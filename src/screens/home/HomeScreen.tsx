@@ -121,7 +121,7 @@ export function HomeScreen({ navigation }: Props) {
             />
           </AvatarFigure>
           <Text style={{ textAlign: 'center', fontSize: 12, color: t.muted, marginTop: spacing.s }}>
-            Tap a dot to see what needs attention
+            Tap a marker to see what needs attention
           </Text>
         </Entrance>
       </View>
