@@ -1,3 +1,4 @@
+import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { ZoneId } from '../types';
 
 export type RootStackParamList = {
@@ -17,10 +18,11 @@ export type RootStackParamList = {
   Notifications: undefined;
   Ready: undefined;
   // main
-  Tabs: undefined;
+  Tabs: NavigatorScreenParams<TabParamList> | undefined;
   ZoneDetail: { zone: ZoneId };
   TreatmentDetail: { treatmentId: string };
   EventPrep: undefined;
+  MyClinics: undefined;
   Book: { treatmentId: string };
   AddRitual: undefined;
   Profile: undefined;

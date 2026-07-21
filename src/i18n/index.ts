@@ -98,6 +98,23 @@ const en: Dict = {
   'profile.signOut': 'Sign out',
   'profile.ritualsTracked': '{n} rituals tracked',
   'profile.restartRTL': 'Restart the app to fully mirror the layout.',
+
+  'home.seeAll': 'See your plan · {n}',
+  'home.upNext': 'Up next',
+  'event.add': 'Add an event',
+  'event.set': 'Set event',
+  'event.change': 'Change',
+  'event.name': 'Event name',
+  'event.namePlaceholder': 'Wedding, Eid, holiday…',
+  'event.when': 'When',
+  'clinics.title': 'My clinics',
+  'clinics.saved': '{n} saved',
+  'clinics.add': 'Add your own',
+  'clinics.addPlaceholder': 'Clinic name',
+  'clinics.find': 'Find clinics',
+  'clinics.empty': 'No saved clinics yet. Find and save your favourites.',
+  'common.add': 'Add',
+  'common.remove': 'Remove',
 };
 
 const ar: Dict = {
@@ -179,6 +196,23 @@ const ar: Dict = {
   'profile.signOut': 'تسجيل الخروج',
   'profile.ritualsTracked': '{n} طقوس متابَعة',
   'profile.restartRTL': 'أعيدي تشغيل التطبيق لعكس التخطيط بالكامل.',
+
+  'home.seeAll': 'خطتك · {n}',
+  'home.upNext': 'التالي',
+  'event.add': 'أضيفي مناسبة',
+  'event.set': 'حفظ المناسبة',
+  'event.change': 'تغيير',
+  'event.name': 'اسم المناسبة',
+  'event.namePlaceholder': 'زفاف، عيد، إجازة…',
+  'event.when': 'متى',
+  'clinics.title': 'عياداتي',
+  'clinics.saved': '{n} محفوظة',
+  'clinics.add': 'أضيفي عيادتك',
+  'clinics.addPlaceholder': 'اسم العيادة',
+  'clinics.find': 'ابحثي عن عيادات',
+  'clinics.empty': 'لا عيادات محفوظة بعد. ابحثي واحفظي المفضّلة لديك.',
+  'common.add': 'إضافة',
+  'common.remove': 'إزالة',
 };
 
 const fr: Dict = {
@@ -260,6 +294,23 @@ const fr: Dict = {
   'profile.signOut': 'Se déconnecter',
   'profile.ritualsTracked': '{n} soins suivis',
   'profile.restartRTL': 'Redémarrez l’app pour inverser toute la mise en page.',
+
+  'home.seeAll': 'Votre plan · {n}',
+  'home.upNext': 'À suivre',
+  'event.add': 'Ajouter un événement',
+  'event.set': 'Enregistrer',
+  'event.change': 'Modifier',
+  'event.name': 'Nom de l’événement',
+  'event.namePlaceholder': 'Mariage, Aïd, vacances…',
+  'event.when': 'Quand',
+  'clinics.title': 'Mes cliniques',
+  'clinics.saved': '{n} enregistrées',
+  'clinics.add': 'Ajouter la vôtre',
+  'clinics.addPlaceholder': 'Nom de la clinique',
+  'clinics.find': 'Trouver des cliniques',
+  'clinics.empty': 'Aucune clinique enregistrée. Trouvez et enregistrez vos favorites.',
+  'common.add': 'Ajouter',
+  'common.remove': 'Retirer',
 };
 
 const DICTS: Record<Lang, Dict> = { en, ar, fr };

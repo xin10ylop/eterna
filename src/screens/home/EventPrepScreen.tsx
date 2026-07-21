@@ -1,10 +1,10 @@
-import React, { useMemo } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { IconButton, Screen } from '../../components/ui';
+import { Chip, IconButton, PrimaryButton, Screen } from '../../components/ui';
 import { eventPlan, treatmentStatus } from '../../services/logic';
-import { diffDays, formatMedium, todayISO } from '../../lib/dates';
+import { addDays, diffDays, formatMedium, todayISO } from '../../lib/dates';
 import { cardShadow, radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import { useT } from '../../i18n';
@@ -24,6 +24,15 @@ export function EventPrepScreen({ navigation }: Props) {
   const treatments = useEterna((s) => s.treatments);
   const appointments = useEterna((s) => s.appointments);
   const clinics = useEterna((s) => s.clinics);
+  const setEvent = useEterna((s) => s.setEvent);
+
+  const [editing, setEditing] = useState(!event);
+  const [name, setName] = useState(event?.name ?? '');
+  const [weeks, setWeeks] = useState(4);
+  const save = () => {
+    setEvent({ name: name.trim() || 'My event', dateISO: addDays(todayISO(), weeks * 7) });
+    setEditing(false);
+  };
 
   const plan = useMemo(
     () => (event ? eventPlan(event.dateISO, treatments) : []),
@@ -45,20 +54,60 @@ export function EventPrepScreen({ navigation }: Props) {
             </Text>
           ) : null}
         </View>
+        {event && !editing ? (
+          <IconButton name="create-outline" onPress={() => setEditing(true)} accessibilityLabel={tx('event.change')} />
+        ) : null}
       </View>
 
       <ScrollView
         style={{ marginTop: spacing.l }}
         contentContainerStyle={{ gap: spacing.s, paddingBottom: spacing.xxl }}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        {event ? (
+        {editing ? (
+          <View style={{ gap: spacing.m, marginBottom: spacing.m }}>
+            <View style={{ gap: spacing.s }}>
+              <Text style={[type.label, { color: t.muted }]}>{tx('event.name')}</Text>
+              <TextInput
+                value={name}
+                onChangeText={setName}
+                placeholder={tx('event.namePlaceholder')}
+                placeholderTextColor={t.muted}
+                style={{
+                  backgroundColor: t.surface,
+                  borderRadius: radii.m,
+                  borderWidth: 1,
+                  borderColor: t.border,
+                  paddingHorizontal: 14,
+                  paddingVertical: 12,
+                  fontSize: 15,
+                  color: t.text,
+                }}
+              />
+            </View>
+            <View style={{ gap: spacing.s }}>
+              <Text style={[type.label, { color: t.muted }]}>{tx('event.when')}</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.s }}>
+                {[2, 4, 8, 12, 26].map((w) => (
+                  <Chip
+                    key={w}
+                    label={tx('event.inWeeks', { n: w })}
+                    selected={weeks === w}
+                    onPress={() => setWeeks(w)}
+                  />
+                ))}
+              </View>
+            </View>
+            <PrimaryButton title={tx('event.set')} onPress={save} />
+          </View>
+        ) : null}
+
+        {event && !editing ? (
           <Text style={{ fontSize: 13, color: t.sub, lineHeight: 19, marginBottom: spacing.s }}>
             {tx('event.intro', { date: formatMedium(event.dateISO) })}
           </Text>
-        ) : (
-          <Text style={{ fontSize: 14, color: t.sub }}>{tx('event.noEvent')}</Text>
-        )}
+        ) : null}
 
         {plan.map(({ treatment: tr, doByISO }) => {
           const booked = treatmentStatus(tr, appointments) === 'booked';

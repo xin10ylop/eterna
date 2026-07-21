@@ -22,6 +22,7 @@ import { TreatmentDetailScreen } from '../screens/home/TreatmentDetailScreen';
 import { EventPrepScreen } from '../screens/home/EventPrepScreen';
 import { PlanningScreen } from '../screens/planning/PlanningScreen';
 import { DiscoverScreen } from '../screens/discover/DiscoverScreen';
+import { MyClinicsScreen } from '../screens/discover/MyClinicsScreen';
 import { BudgetScreen } from '../screens/budget/BudgetScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { BookScreen } from '../screens/modals/BookScreen';
@@ -166,6 +167,7 @@ export function RootNavigator() {
             <Stack.Screen name="ZoneDetail" component={ZoneDetailScreen} />
             <Stack.Screen name="TreatmentDetail" component={TreatmentDetailScreen} />
             <Stack.Screen name="EventPrep" component={EventPrepScreen} />
+            <Stack.Screen name="MyClinics" component={MyClinicsScreen} />
             <Stack.Screen name="Profile" component={ProfileScreen} />
             {/* Distinct route name from the onboarding AvatarStudio: a shared
                 name across the two conditional groups made the main app

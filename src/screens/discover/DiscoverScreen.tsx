@@ -4,7 +4,7 @@ import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { Card, Chip, Screen } from '../../components/ui';
+import { Card, Chip, IconButton, Screen } from '../../components/ui';
 import { ClinicCardSkeleton } from '../../components/anim/Shimmer';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
@@ -20,7 +20,7 @@ const FILTERS = ['All', 'Hair', 'Skin', 'Nails', 'Lashes & Brows', 'Spa'];
 
 /** Discover, find and save new places. Booking a specific ritual lives in
  *  the Book flow; here you explore, save, and request open slots. */
-export function DiscoverScreen(_props: Props) {
+export function DiscoverScreen({ navigation }: Props) {
   const t = useTheme();
   const tr = useT();
   const clinics = useEterna((s) => s.clinics);
@@ -56,7 +56,14 @@ export function DiscoverScreen(_props: Props) {
   return (
     <Screen>
       <View style={{ paddingTop: spacing.s, gap: spacing.m }}>
-        <Text style={[type.largeTitle, { color: t.text }]}>{tr('discover.title')}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text style={[type.largeTitle, { color: t.text }]}>{tr('discover.title')}</Text>
+          <IconButton
+            name="bookmark-outline"
+            onPress={() => navigation.navigate('MyClinics')}
+            accessibilityLabel={tr('clinics.title')}
+          />
+        </View>
         <View
           style={{
             flexDirection: 'row',

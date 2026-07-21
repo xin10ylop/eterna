@@ -107,6 +107,7 @@ export function ProfileScreen({ navigation }: Props) {
           <Row
             title={tr('profile.myClinics')}
             subtitle={tr('profile.saved', { n: savedClinicIds.length })}
+            onPress={() => navigation.navigate('MyClinics')}
             last
           />
         </Card>
