@@ -44,59 +44,75 @@ export function PlanningScreen({ navigation, route }: Props) {
     if (focusDate) setTab('Schedule');
   }, [focusDate]);
 
-  // guided tour, chapter "planning": the week strip, then the view switch
+  // guided tour, chapter "planning", in two parts because the screen itself
+  // changes between them: first the week strip on Schedule, then the tour
+  // flips to My routine so she sees the REAL list while it's explained
   const guideStage = useEterna((s) => s.guideStage);
   const guideOffset = useEterna((s) => s.guideOffset);
   const guideTotal = useEterna((s) => s.guideTotal);
   const setGuide = useEterna((s) => s.setGuide);
-  const segRef = useRef<View>(null);
+  const [guidePart, setGuidePart] = useState<1 | 2>(1);
   const weekRef = useRef<View>(null);
+  const routineRef = useRef<View>(null);
   useEffect(() => {
-    // the tour explains the calendar — make sure it's the visible view
-    if (guideStage === 'planning') setTab('Schedule');
+    // the chapter starts on the calendar
+    if (guideStage === 'planning') {
+      setGuidePart(1);
+      setTab('Schedule');
+    }
   }, [guideStage]);
-  const guideRects = useGuideRects(guideStage === 'planning', { week: weekRef, seg: segRef }, 500);
+  const weekRects = useGuideRects(guideStage === 'planning' && guidePart === 1, { week: weekRef }, 500);
+  const routineRects = useGuideRects(
+    guideStage === 'planning' && guidePart === 2,
+    { routine: routineRef },
+    450,
+  );
   const guideSteps = useMemo<GuideStep[] | null>(() => {
-    if (guideStage !== 'planning' || !guideRects) return null;
-    const steps: GuideStep[] = [];
-    if (guideRects.week)
-      steps.push({
-        key: 'week',
-        rect: guideRects.week,
-        title: tx('guide.week.title'),
-        body: tx('guide.week.body'),
-      });
-    if (guideRects.seg)
-      steps.push({
-        key: 'views',
-        rect: guideRects.seg,
-        title: tx('guide.routine.title'),
-        body: tx('guide.routine.body'),
-      });
-    return steps.length > 0 ? steps : null;
-  }, [guideStage, guideRects, tx]);
+    if (guideStage !== 'planning') return null;
+    if (guidePart === 1 && weekRects?.week)
+      return [
+        { key: 'week', rect: weekRects.week, title: tx('guide.week.title'), body: tx('guide.week.body') },
+      ];
+    if (guidePart === 2 && routineRects?.routine) {
+      // spotlight the top of the list, so the card fits comfortably below
+      const r = routineRects.routine;
+      return [
+        {
+          key: 'routine',
+          rect: { ...r, h: Math.min(r.h, 320) },
+          title: tx('guide.routine.title'),
+          body: tx('guide.routine.body'),
+        },
+      ];
+    }
+    return null;
+  }, [guideStage, guidePart, weekRects, routineRects, tx]);
 
   return (
     <Screen>
       <View style={{ paddingTop: spacing.s, gap: spacing.l, flex: 1 }}>
         <Text style={[type.largeTitle, { color: t.text }]}>Planning</Text>
-        <View ref={segRef} collapsable={false}>
-          <Segmented options={['Schedule', 'My routine']} value={tab} onChange={setTab} />
-        </View>
+        <Segmented options={['Schedule', 'My routine']} value={tab} onChange={setTab} />
         {tab === 'Schedule' ? (
           <ScheduleView nav={navigation} focusDate={focusDate} weekRef={weekRef} />
         ) : (
-          <RoutineView nav={navigation} />
+          <RoutineView nav={navigation} listRef={routineRef} />
         )}
       </View>
       {guideSteps ? (
         <GuideTour
           steps={guideSteps}
-          offset={guideOffset}
+          offset={guidePart === 1 ? guideOffset : guideOffset + 1}
           total={guideTotal}
           onComplete={() => {
-            setGuide({ stage: 'discover', offset: guideOffset + guideSteps.length });
-            navigation.navigate('Discover');
+            if (guidePart === 1) {
+              // part two: show the real routine list while it's explained
+              setTab('My routine');
+              setGuidePart(2);
+            } else {
+              setGuide({ stage: 'discover', offset: guideOffset + 2 });
+              navigation.navigate('Discover');
+            }
           }}
           onSkip={() => setGuide({ stage: null, offset: 0 })}
         />
@@ -381,7 +397,14 @@ const RED = '#C83A2C';
  * Everything she keeps up with, at a glance: grouped by body area, each ritual
  * with its rhythm and which clinic it's at. Tap for the full story.
  */
-function RoutineView({ nav }: { nav: Props['navigation'] }) {
+function RoutineView({
+  nav,
+  listRef,
+}: {
+  nav: Props['navigation'];
+  /** Guide target: the list area, measured by the tour. */
+  listRef?: React.RefObject<View | null>;
+}) {
   const t = useTheme();
   const treatments = useEterna((s) => s.treatments);
   const appointments = useEterna((s) => s.appointments);
@@ -399,6 +422,7 @@ function RoutineView({ nav }: { nav: Props['navigation'] }) {
   const clinicName = (id: string) => clinics.find((c) => c.id === id)?.name ?? '';
 
   return (
+    <View ref={listRef} collapsable={false} style={{ flex: 1 }}>
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: spacing.l, paddingBottom: 120 }}>
       {groups.map((g) => (
         <View key={g.zone.id} style={{ gap: spacing.s }}>
@@ -444,5 +468,6 @@ function RoutineView({ nav }: { nav: Props['navigation'] }) {
         </View>
       ))}
     </ScrollView>
+    </View>
   );
 }

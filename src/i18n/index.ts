@@ -142,13 +142,13 @@ const en: Dict = {
   'guide.done': 'Done',
   'guide.avatar.title': 'Your body is the map',
   'guide.avatar.body':
-    'Each glow is a part of you. The colour says what is needed, the breathing speed says how soon. Tap any part to see what belongs there.',
+    'Each glow is a part of you and answers one question: does something here need booking? The faster it breathes, the closer the date. Tap any part to see and book it.',
   'guide.legend.calm': 'All good',
-  'guide.legend.calmSub': 'slow and light',
-  'guide.legend.soon': 'Coming up',
-  'guide.legend.soonSub': 'speeds up',
+  'guide.legend.calmSub': 'done or booked',
+  'guide.legend.soon': 'Book soon',
+  'guide.legend.soonSub': 'due soon, not booked',
   'guide.legend.due': 'Book now',
-  'guide.legend.dueSub': 'fastest',
+  'guide.legend.dueSub': 'overdue, not booked',
   'guide.events.title': 'Getting ready for something?',
   'guide.events.body':
     'Add a wedding, an Eid, any big day. Eterna helps you get every ritual fresh right on time.',
@@ -158,9 +158,9 @@ const en: Dict = {
   'guide.week.title': 'Your week at a glance',
   'guide.week.body':
     'Bookings show as dots, events sparkle. Tap a day to see it hour by hour, and the arrows move between weeks.',
-  'guide.routine.title': 'Two views',
+  'guide.routine.title': 'My routine',
   'guide.routine.body':
-    'My routine lists everything you keep up with, grouped by body area, each with its clinic.',
+    'Everything you keep up with, grouped by body area, each with its clinic. Switch views up top any time.',
   'guide.discover.title': 'Find your places',
   'guide.discover.body':
     'Search salons and clinics, open one to see its services and prices, and save it to your clinics.',
@@ -296,13 +296,13 @@ const ar: Dict = {
   'guide.done': 'تم',
   'guide.avatar.title': 'جسمك هو الخريطة',
   'guide.avatar.body':
-    'كل توهج يمثل جزءًا منك. اللون يخبرك بما هو مطلوب، وسرعة النبض تخبرك كم اقترب الموعد. المسي أي جزء لرؤية ما يخصه.',
+    'كل توهج يمثل جزءًا منك ويجيب عن سؤال واحد: هل هنا ما يحتاج حجزًا؟ كلما تسارع النبض اقترب الموعد. المسي أي جزء لرؤيته وحجزه.',
   'guide.legend.calm': 'كل شيء تمام',
-  'guide.legend.calmSub': 'هادئ وبطيء',
-  'guide.legend.soon': 'يقترب',
-  'guide.legend.soonSub': 'يتسارع',
+  'guide.legend.calmSub': 'منجز أو محجوز',
+  'guide.legend.soon': 'احجزي قريبًا',
+  'guide.legend.soonSub': 'يستحق قريبًا ولم يُحجز',
   'guide.legend.due': 'احجزي الآن',
-  'guide.legend.dueSub': 'الأسرع',
+  'guide.legend.dueSub': 'متأخر ولم يُحجز',
   'guide.events.title': 'تستعدين لمناسبة؟',
   'guide.events.body':
     'أضيفي زفافًا أو عيدًا أو أي يوم مهم، وستساعدك إيترنا لتكون كل طقوسك جاهزة في وقتها.',
@@ -311,8 +311,9 @@ const ar: Dict = {
   'guide.week.title': 'أسبوعك في لمحة',
   'guide.week.body':
     'الحجوزات تظهر كنقاط، والمناسبات تلمع. المسي أي يوم لرؤيته ساعة بساعة، والأسهم تنقل بين الأسابيع.',
-  'guide.routine.title': 'طريقتان للعرض',
-  'guide.routine.body': 'روتيني يعرض كل ما تواظبين عليه، مجمّعًا حسب منطقة الجسم، مع عيادة كل طقس.',
+  'guide.routine.title': 'روتيني',
+  'guide.routine.body':
+    'كل ما تواظبين عليه، مجمّعًا حسب منطقة الجسم، مع عيادة كل طقس. بدّلي العرض من الأعلى متى شئتِ.',
   'guide.discover.title': 'اعثري على أماكنك',
   'guide.discover.body':
     'ابحثي عن الصالونات والعيادات، افتحي أي مكان لرؤية خدماته وأسعاره، واحفظيه ضمن عياداتك.',
@@ -447,13 +448,13 @@ const fr: Dict = {
   'guide.done': 'Terminé',
   'guide.avatar.title': 'Votre corps est la carte',
   'guide.avatar.body':
-    'Chaque halo est une partie de vous. La couleur dit ce qu’il faut, le rythme dit pour quand. Touchez une zone pour voir ce qui s’y rapporte.',
+    'Chaque halo est une partie de vous et répond à une question : faut-il réserver ici ? Plus il respire vite, plus la date est proche. Touchez une zone pour voir et réserver.',
   'guide.legend.calm': 'Tout va bien',
-  'guide.legend.calmSub': 'doux et lent',
-  'guide.legend.soon': 'Approche',
-  'guide.legend.soonSub': 's’accélère',
-  'guide.legend.due': 'À réserver',
-  'guide.legend.dueSub': 'le plus rapide',
+  'guide.legend.calmSub': 'fait ou réservé',
+  'guide.legend.soon': 'Réserver bientôt',
+  'guide.legend.soonSub': 'bientôt dû, non réservé',
+  'guide.legend.due': 'Réserver vite',
+  'guide.legend.dueSub': 'en retard, non réservé',
   'guide.events.title': 'Un grand jour approche ?',
   'guide.events.body':
     'Ajoutez un mariage, un Aïd, une occasion. Eterna vous aide à ce que chaque soin soit frais au bon moment.',
@@ -463,9 +464,9 @@ const fr: Dict = {
   'guide.week.title': 'Votre semaine en un regard',
   'guide.week.body':
     'Les réservations sont des points, les événements scintillent. Touchez un jour pour le voir heure par heure, les flèches changent de semaine.',
-  'guide.routine.title': 'Deux vues',
+  'guide.routine.title': 'Ma routine',
   'guide.routine.body':
-    'Ma routine liste tout ce que vous entretenez, par zone du corps, avec la clinique de chaque soin.',
+    'Tout ce que vous entretenez, par zone du corps, avec la clinique de chaque soin. Changez de vue en haut à tout moment.',
   'guide.discover.title': 'Trouvez vos adresses',
   'guide.discover.body':
     'Cherchez salons et cliniques, ouvrez-en un pour voir ses services et ses prix, et gardez-le dans vos cliniques.',
