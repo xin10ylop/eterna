@@ -39,9 +39,10 @@ const STYLE: Record<
     r: number;
   }
 > = {
-  // calm: a "dark white" — warm greige, so it actually shows on the pale
-  // figure and pale backgrounds alike, while still reading as neutral light
-  calm: { rgb: '190,168,153', core: 0.75, mid: 0.6, period: 4400, oMin: 0.5, oMax: 0.78, sMin: 0.96, sMax: 1.05, r: 18 },
+  // calm: a "dark white" — warm greige deep enough to read over skin (hands,
+  // torso), with a restrained white core so the hue isn't washed out. Still
+  // the slowest breath of the three.
+  calm: { rgb: '164,136,118', core: 0.55, mid: 0.7, period: 3200, oMin: 0.6, oMax: 0.85, sMin: 0.96, sMax: 1.05, r: 19 },
   // soon's period is a placeholder — it's recomputed from urgency below
   soon: { rgb: '96,40,24', core: 0.14, mid: 0.78, period: 2400, oMin: 0.85, oMax: 1.0, sMin: 0.9, sMax: 1.15, r: 22 },
   due: { rgb: '188,34,24', core: 0.3, mid: 0.74, period: 1100, oMin: 0.88, oMax: 1.0, sMin: 0.9, sMax: 1.2, r: 23 },
