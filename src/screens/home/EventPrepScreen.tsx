@@ -2,8 +2,9 @@ import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { Chip, IconButton, PrimaryButton, ProgressBar, Screen } from '../../components/ui';
-import { eventReadiness, type PrepRitual } from '../../services/logic';
+import { IconButton, PrimaryButton, ProgressBar, Screen } from '../../components/ui';
+import { CalendarPicker } from '../../components/ui/CalendarPicker';
+import { eventReadiness, type EventRef } from '../../services/logic';
 import { addDays, diffDays, formatMedium, todayISO } from '../../lib/dates';
 import { cardShadow, radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
@@ -58,19 +59,19 @@ export function EventPrepScreen({ navigation, route }: Props) {
 
   const [adding, setAdding] = useState(events.length === 0 || !!route.params?.add);
   const [name, setName] = useState('');
-  const [weeks, setWeeks] = useState(4);
+  const [dateISO, setDateISO] = useState(addDays(todayISO(), 28));
   const save = () => {
-    addEvent(name.trim() || 'My event', addDays(todayISO(), weeks * 7));
+    addEvent(name.trim() || 'My event', dateISO);
     setName('');
-    setWeeks(4);
+    setDateISO(addDays(todayISO(), 28));
     setAdding(false);
   };
 
   const clinicName = (id: string) => clinics.find((c) => c.id === id)?.name ?? '';
   const multi = upcoming.length > 1;
 
-  /** Which events a visit covers — chips, with a link + note when shared. */
-  const EventTags = ({ item }: { item: PrepRitual }) =>
+  /** Which events an item falls before — chips, with a link + note when shared. */
+  const EventTags = ({ item }: { item: { events: EventRef[]; shared: boolean } }) =>
     multi ? (
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: 4, alignItems: 'center' }}>
         {item.shared ? <Ionicons name="link" size={12} color={t.accent} /> : null}
@@ -158,16 +159,7 @@ export function EventPrepScreen({ navigation, route }: Props) {
             </View>
             <View style={{ gap: spacing.s }}>
               <Text style={[type.label, { color: t.muted }]}>{tx('event.when')}</Text>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.s }}>
-                {[2, 4, 8, 12, 26].map((w) => (
-                  <Chip
-                    key={w}
-                    label={tx('event.inWeeks', { n: w })}
-                    selected={weeks === w}
-                    onPress={() => setWeeks(w)}
-                  />
-                ))}
-              </View>
+              <CalendarPicker value={dateISO} onSelect={setDateISO} minISO={addDays(todayISO(), 1)} />
             </View>
             <View style={{ flexDirection: 'row', gap: spacing.s }}>
               {events.length > 0 ? (
@@ -321,21 +313,30 @@ export function EventPrepScreen({ navigation, route }: Props) {
         {readiness.booked.length > 0 ? (
           <Text style={[type.label, { color: t.muted }, sectionLabel]}>{tx('event.booked')}</Text>
         ) : null}
-        {readiness.booked.map((item, idx) => (
-          <View key={`bk-${item.treatment.id}-${idx}`} style={{ ...rowBase, borderColor: t.border }}>
-            <Ionicons name="checkmark-circle" size={24} color={t.positive} />
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
-                {item.treatment.name}
-              </Text>
-              <Text numberOfLines={1} style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
-                {item.bookedDateISO ? formatMedium(item.bookedDateISO) : ''}
-                {clinicName(item.treatment.clinicId) ? ` · ${clinicName(item.treatment.clinicId)}` : ''}
-              </Text>
-              <EventTags item={item} />
+        {readiness.booked.map((item, idx) => {
+          const [mon, day] = formatMedium(item.dateISO).split(' ');
+          const sub = [item.timeLabel, clinicName(item.clinicId ?? '')].filter(Boolean).join(' · ');
+          return (
+            <View key={`bk-${idx}`} style={{ ...rowBase, borderColor: t.border }}>
+              <View style={{ alignItems: 'center', width: 44 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: t.positive }}>{mon.toUpperCase()}</Text>
+                <Text style={{ fontSize: 18, fontWeight: '800', color: t.text }}>{day}</Text>
+              </View>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
+                  {item.name}
+                </Text>
+                {sub ? (
+                  <Text numberOfLines={1} style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
+                    {sub}
+                  </Text>
+                ) : null}
+                <EventTags item={item} />
+              </View>
+              <Ionicons name="checkmark-circle" size={22} color={t.positive} />
             </View>
-          </View>
-        ))}
+          );
+        })}
 
         {/* ADD-ONS — anything extra for an event flows into the plan */}
         {upcoming.length > 0 ? (

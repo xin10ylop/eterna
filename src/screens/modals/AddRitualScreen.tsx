@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { IOSSwitch, IconButton, PrimaryButton, Screen, SectionLabel, Segmented } from '../../components/ui';
+import { CalendarPicker } from '../../components/ui/CalendarPicker';
 import { addWeeks, todayISO } from '../../lib/dates';
 import { formatAED } from '../../lib/money';
 import { PRACTITIONERS } from '../../data/seed';
@@ -88,7 +89,7 @@ export function AddRitualScreen({ navigation }: Props) {
 
   const [query, setQuery] = useState('');
   const [pick, setPick] = useState<CatalogItem>(CATALOG[0]!);
-  const [last, setLast] = useState('2 weeks ago');
+  const [lastDoneISO, setLastDoneISO] = useState(addWeeks(todayISO(), -2));
   const [cadence, setCadence] = useState(pick.cadence);
   const [unit, setUnit] = useState('Weeks');
   const matchClinic = (zone: ZoneId): string => {
@@ -106,9 +107,6 @@ export function AddRitualScreen({ navigation }: Props) {
     return q ? CATALOG.filter((c) => c.name.toLowerCase().includes(q)) : CATALOG;
   }, [query]);
 
-  const lastISO =
-    last === 'Today' ? todayISO() : last === '2 weeks ago' ? addWeeks(todayISO(), -2) : addWeeks(todayISO(), -4);
-
   const submit = () => {
     if (!clinicId) return;
     const practitioner = PRACTITIONERS[5]!;
@@ -122,7 +120,7 @@ export function AddRitualScreen({ navigation }: Props) {
       clinicId,
       practitionerId: practitioner.id,
       price: pick.price,
-      lastDoneISO: oneOff ? addWeeks(todayISO(), -520) : lastISO,
+      lastDoneISO: oneOff ? addWeeks(todayISO(), -520) : lastDoneISO,
       reminderOn: true,
       atHome: atHome || undefined,
       oneOff: oneOff || undefined,
@@ -229,11 +227,13 @@ export function AddRitualScreen({ navigation }: Props) {
           </View>
         </View>
 
-        {/* last done */}
-        <View style={{ gap: spacing.s }}>
-          <SectionLabel>Last done</SectionLabel>
-          <Segmented options={LAST_OPTS} value={last} onChange={setLast} />
-        </View>
+        {/* last done — pick the actual date */}
+        {oneOff ? null : (
+          <View style={{ gap: spacing.s }}>
+            <SectionLabel>Last done</SectionLabel>
+            <CalendarPicker value={lastDoneISO} onSelect={setLastDoneISO} maxISO={todayISO()} />
+          </View>
+        )}
 
         {/* how often — repeats on a cadence, or a one-off for an event */}
         <View style={{ gap: spacing.s }}>
