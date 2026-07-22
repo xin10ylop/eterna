@@ -226,11 +226,17 @@ export const useEterna = create<EternaState>((set, get) => ({
   addTreatment: (t) => set((s) => ({ treatments: [...s.treatments, t] })),
 
   toggleSavedClinic: (clinicId) =>
-    set((s) => ({
-      savedClinicIds: s.savedClinicIds.includes(clinicId)
-        ? s.savedClinicIds.filter((id) => id !== clinicId)
-        : [...s.savedClinicIds, clinicId],
-    })),
+    set((s) => {
+      const removing = s.savedClinicIds.includes(clinicId);
+      return {
+        savedClinicIds: removing
+          ? s.savedClinicIds.filter((id) => id !== clinicId)
+          : [...s.savedClinicIds, clinicId],
+        // removing a clinic clears its ticked services too, so Discover doesn't
+        // keep showing ticks for a place that's no longer hers
+        myServices: removing ? { ...s.myServices, [clinicId]: [] } : s.myServices,
+      };
+    }),
 
   toggleMyService: (clinicId, offeringName) =>
     set((s) => {
