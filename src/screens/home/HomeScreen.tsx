@@ -57,6 +57,20 @@ export function HomeScreen({ navigation }: Props) {
     return m;
   }, [treatments, appointments]);
 
+  // the next few visits already on the books, soonest first
+  const nextBookings = useMemo(
+    () =>
+      appointments
+        .filter((a) => a.dateISO >= todayISO())
+        .sort((a, b) => a.dateISO.localeCompare(b.dateISO))
+        .slice(0, 3)
+        .map((appt) => ({
+          appt,
+          name: treatments.find((tr) => tr.id === appt.treatmentId)?.name ?? 'Appointment',
+        })),
+    [appointments, treatments],
+  );
+
   const hour = new Date().getHours();
   const dayPart = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
   const greeting = tx('greeting.' + dayPart);
@@ -241,6 +255,49 @@ export function HomeScreen({ navigation }: Props) {
         <Text style={{ fontSize: 12, color: t.muted, textAlign: 'center', paddingTop: spacing.xs }}>
           {tx('home.tapHint')}
         </Text>
+
+        {/* approaching bookings — tap one to see it on the calendar */}
+        {nextBookings.length > 0 ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ flexGrow: 0, marginTop: spacing.s }}
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: 'center',
+              paddingHorizontal: spacing.xl,
+              gap: spacing.s,
+              alignItems: 'center',
+            }}
+          >
+            {nextBookings.map(({ appt, name }) => (
+              <Pressable
+                key={appt.id}
+                accessibilityRole="button"
+                accessibilityLabel={`${name}, ${formatMedium(appt.dateISO)}`}
+                onPress={() => navigation.navigate('Planning', { dateISO: appt.dateISO })}
+                style={({ pressed }) => ({
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  paddingVertical: 7,
+                  paddingHorizontal: 12,
+                  borderRadius: radii.pill,
+                  backgroundColor: t.surfaceAlt,
+                  borderWidth: 1,
+                  borderColor: t.border,
+                  opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.positive }} />
+                <Text numberOfLines={1} style={{ fontSize: 12.5, color: t.sub, maxWidth: 170 }}>
+                  <Text style={{ fontWeight: '700', color: t.text }}>{formatMedium(appt.dateISO)}</Text>
+                  {`  ${name}`}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        ) : null}
 
         {/* quiet link to the full plan */}
         {toBook > 0 ? (

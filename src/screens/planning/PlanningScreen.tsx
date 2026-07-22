@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -36,15 +36,24 @@ type Props = CompositeScreenProps<
  * and Rituals (the cadence list grouped by urgency). Month-grid + selected-day
  * agenda pattern adapted from pliability's calendar on Mobbin.
  */
-export function PlanningScreen({ navigation }: Props) {
+export function PlanningScreen({ navigation, route }: Props) {
   const t = useTheme();
   const [tab, setTab] = useState('Schedule');
+  // arriving from Home with a date (a tapped booking) → land on the calendar
+  const focusDate = route.params?.dateISO;
+  useEffect(() => {
+    if (focusDate) setTab('Schedule');
+  }, [focusDate]);
   return (
     <Screen>
       <View style={{ paddingTop: spacing.s, gap: spacing.l, flex: 1 }}>
         <Text style={[type.largeTitle, { color: t.text }]}>Planning</Text>
         <Segmented options={['Schedule', 'Rituals']} value={tab} onChange={setTab} />
-        {tab === 'Schedule' ? <ScheduleView nav={navigation} /> : <RitualsView nav={navigation} />}
+        {tab === 'Schedule' ? (
+          <ScheduleView nav={navigation} focusDate={focusDate} />
+        ) : (
+          <RitualsView nav={navigation} />
+        )}
       </View>
     </Screen>
   );
@@ -52,11 +61,18 @@ export function PlanningScreen({ navigation }: Props) {
 
 /* --------------------------------- Schedule --------------------------------- */
 
-function ScheduleView({ nav }: { nav: Props['navigation'] }) {
+function ScheduleView({ nav, focusDate }: { nav: Props['navigation']; focusDate?: string }) {
   const t = useTheme();
   const [mode, setMode] = useState('Month');
   const [selected, setSelected] = useState(todayISO());
   const [anchor, setAnchor] = useState(startOfMonth(todayISO()));
+  // a booking tapped on Home selects its day here
+  useEffect(() => {
+    if (focusDate) {
+      setSelected(focusDate);
+      setAnchor(startOfMonth(focusDate));
+    }
+  }, [focusDate]);
   const appointments = useEterna((s) => s.appointments);
   const treatments = useEterna((s) => s.treatments);
   const clinics = useEterna((s) => s.clinics);

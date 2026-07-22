@@ -30,7 +30,7 @@ export type RootStackParamList = {
 
 export type TabParamList = {
   Home: undefined;
-  Planning: undefined;
+  Planning: { dateISO?: string } | undefined;
   Add: undefined;
   Discover: undefined;
   Budget: undefined;
