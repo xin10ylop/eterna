@@ -26,9 +26,9 @@ const STYLE: Record<
   GlowStatus,
   { rgb: string; core: number; period: number; oMin: number; oMax: number; sMin: number; sMax: number; r: number }
 > = {
-  calm: { rgb: '188,102,66', core: 0.4, period: 4200, oMin: 0.34, oMax: 0.58, sMin: 0.92, sMax: 1.03, r: 20 },
-  soon: { rgb: '188,102,66', core: 0.4, period: 3200, oMin: 0.72, oMax: 0.98, sMin: 0.9, sMax: 1.14, r: 22 },
-  due: { rgb: '186,36,26', core: 0.42, period: 1150, oMin: 0.82, oMax: 1.0, sMin: 0.9, sMax: 1.2, r: 23 },
+  calm: { rgb: '172,88,54', core: 0.2, period: 4200, oMin: 0.46, oMax: 0.68, sMin: 0.92, sMax: 1.04, r: 20 },
+  soon: { rgb: '146,60,36', core: 0.18, period: 3000, oMin: 0.8, oMax: 1.0, sMin: 0.9, sMax: 1.15, r: 22 },
+  due: { rgb: '188,34,24', core: 0.3, period: 1100, oMin: 0.88, oMax: 1.0, sMin: 0.9, sMax: 1.2, r: 23 },
 };
 
 const AnimatedSvg = Animated.createAnimatedComponent(Svg);

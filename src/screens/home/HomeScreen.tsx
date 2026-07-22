@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { Dimensions, Pressable, Text, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -24,9 +24,9 @@ type Props = CompositeScreenProps<
 
 /**
  * Home is the avatar. The glowing body parts ARE the interface — tap one to see
- * and book what's due there. No list, no booking box: those would undercut the
- * whole point of the glow. Just a greeting, an events rail, the figure, and a
- * quiet link to the full plan.
+ * and book what's due there. A warm greeting, a small event chip, the figure
+ * sized to the space it's given (so nothing overlaps), and a quiet link to the
+ * full plan.
  */
 export function HomeScreen({ navigation }: Props) {
   const t = useTheme();
@@ -35,11 +35,14 @@ export function HomeScreen({ navigation }: Props) {
   const treatments = useEterna((s) => s.treatments);
   const appointments = useEterna((s) => s.appointments);
   const events = useEterna((s) => s.events);
+  // measure the space the figure gets, so it fills it and never spills into the
+  // header, chip, or the link below
+  const [stageH, setStageH] = useState(0);
 
   const upcomingEvents = useMemo(
     () =>
       events
-        .filter((e) => diffDays(todayISO(), e.dateISO) > 0)
+        .filter((e) => diffDays(todayISO(), e.dateISO) >= 0)
         .sort((a, b) => a.dateISO.localeCompare(b.dateISO)),
     [events],
   );
@@ -58,6 +61,8 @@ export function HomeScreen({ navigation }: Props) {
   const nextCountdown = nextEvent ? countdownLabel(tx, diffDays(todayISO(), nextEvent.dateISO)) : '';
   const hour = new Date().getHours();
   const dayPart = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
+  const greeting = tx('greeting.' + dayPart);
+  const name = profile?.firstName?.trim();
   const line =
     toBook === 0
       ? tx('home.toBook.zero')
@@ -80,30 +85,28 @@ export function HomeScreen({ navigation }: Props) {
           }}
         >
           <View style={{ flex: 1 }}>
-            {profile?.firstName ? (
+            {name ? (
               <>
-                <Text style={{ fontSize: 13.5, color: t.sub, fontWeight: '600' }}>
-                  {tx('greeting.' + dayPart)}
-                </Text>
-                <Text style={[type.display, { color: t.text, marginTop: 1 }]} numberOfLines={1}>
-                  {profile.firstName}
+                <Text style={{ fontSize: 15, color: t.sub, fontWeight: '600' }}>{greeting},</Text>
+                <Text style={[type.largeTitle, { color: t.text, marginTop: 2 }]} numberOfLines={1}>
+                  {name}
                 </Text>
               </>
             ) : (
-              <Text style={[type.display, { color: t.text }]} numberOfLines={1}>
-                {tx('greeting.' + dayPart)}
+              <Text style={[type.largeTitle, { color: t.text }]} numberOfLines={1}>
+                {greeting}
               </Text>
             )}
-            <Text style={{ fontSize: 14, color: t.sub, marginTop: 3 }}>{line}</Text>
+            <Text style={{ fontSize: 13.5, color: t.sub, marginTop: 3 }}>{line}</Text>
           </View>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={tx('profile.title')}
             onPress={() => navigation.navigate('Profile')}
             style={{
-              width: 42,
-              height: 42,
-              borderRadius: 21,
+              width: 44,
+              height: 44,
+              borderRadius: 22,
               backgroundColor: t.accentSoft,
               alignItems: 'center',
               justifyContent: 'center',
@@ -113,67 +116,76 @@ export function HomeScreen({ navigation }: Props) {
           </Pressable>
         </View>
 
-        {/* events — the earlier clean pill: the next one up, or "add an event".
-            Tapping opens the full Events screen (list + add). One event, no cram. */}
+        {/* small event chip — auto-width, not a full-width bar */}
         <Pressable
           accessibilityRole="button"
           onPress={() => navigation.navigate('EventPrep', nextEvent ? undefined : { add: true })}
           style={({ pressed }) => ({
             marginHorizontal: spacing.xl,
             marginTop: spacing.m,
+            alignSelf: 'flex-start',
+            maxWidth: '100%',
             flexDirection: 'row',
             alignItems: 'center',
-            gap: spacing.s,
-            paddingVertical: 11,
-            paddingHorizontal: spacing.m,
+            gap: 7,
+            paddingVertical: 8,
+            paddingHorizontal: 13,
             borderRadius: radii.pill,
             backgroundColor: nextEvent ? t.accentSoft : t.surfaceAlt,
-            borderWidth: 1,
-            borderColor: nextEvent ? 'transparent' : t.border,
-            transform: [{ scale: pressed ? 0.99 : 1 }],
+            borderWidth: nextEvent ? 0 : 1,
+            borderColor: t.border,
+            opacity: pressed ? 0.7 : 1,
           })}
         >
           <Ionicons
             name={nextEvent ? 'calendar-clear-outline' : 'add-circle-outline'}
-            size={16}
+            size={14}
             color={t.accent}
           />
-          <Text
-            numberOfLines={1}
-            style={{ flex: 1, fontSize: 13.5, fontWeight: '600', color: nextEvent ? t.accent : t.sub }}
-          >
-            {nextEvent ? `${nextEvent.name}    ${nextCountdown}` : tx('event.add')}
-          </Text>
-          <Ionicons name="chevron-forward" size={15} color={nextEvent ? t.accent : t.muted} />
+          {nextEvent ? (
+            <Text numberOfLines={1} style={{ fontSize: 13, color: t.accent, maxWidth: 240 }}>
+              <Text style={{ fontWeight: '700' }}>{nextCountdown}</Text>
+              {`  ·  ${nextEvent.name}`}
+            </Text>
+          ) : (
+            <Text style={{ fontSize: 13, fontWeight: '600', color: t.sub }}>{tx('event.add')}</Text>
+          )}
         </Pressable>
 
-        {/* avatar hero — the glows are the interface */}
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Entrance spring distance={22}>
-            <AvatarFigure
-              height={Math.min(580, Dimensions.get('window').height * 0.64)}
-              skinTone={profile?.avatar?.skinTone ?? 0}
-              hairColor={profile?.avatar?.hairColor ?? 0}
-            >
-              <ZoneMarkers
-                zoneGlows={zoneGlows}
-                onOpenZone={(zone) => navigation.navigate('ZoneDetail', { zone })}
-              />
-            </AvatarFigure>
-          </Entrance>
-          <Text style={{ fontSize: 12, color: t.muted, marginTop: 2 }}>
-            {tx('home.tapHint')}
-          </Text>
+        {/* figure — sized to the measured stage so it can't overlap anything */}
+        <View
+          style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+          onLayout={(e) => setStageH(e.nativeEvent.layout.height)}
+        >
+          {stageH > 0 ? (
+            <Entrance spring distance={22}>
+              <AvatarFigure
+                height={Math.min(620, stageH - 4)}
+                skinTone={profile?.avatar?.skinTone ?? 0}
+                hairColor={profile?.avatar?.hairColor ?? 0}
+              >
+                <ZoneMarkers
+                  zoneGlows={zoneGlows}
+                  onOpenZone={(zone) => navigation.navigate('ZoneDetail', { zone })}
+                />
+              </AvatarFigure>
+            </Entrance>
+          ) : null}
         </View>
 
-        {/* quiet link to the full plan — text only, not a box */}
+        {/* tap hint — its own row, never under the figure */}
+        <Text style={{ fontSize: 12, color: t.muted, textAlign: 'center', paddingTop: spacing.xs }}>
+          {tx('home.tapHint')}
+        </Text>
+
+        {/* quiet link to the full plan */}
         {toBook > 0 ? (
           <Pressable
             accessibilityRole="button"
             onPress={() => navigation.navigate('Planning')}
             style={{ alignItems: 'center', paddingBottom: spacing.l, paddingTop: spacing.xs }}
           >
-            <Text style={{ fontSize: 13.5, fontWeight: '600', color: t.accent }}>
+            <Text style={{ fontSize: 13.5, fontWeight: '700', color: t.accent }}>
               {tx('home.seeAll', { n: toBook })}
             </Text>
           </Pressable>
