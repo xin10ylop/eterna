@@ -7,7 +7,7 @@ import { eventReadiness, type PrepRitual } from '../../services/logic';
 import { addDays, diffDays, formatMedium, todayISO } from '../../lib/dates';
 import { cardShadow, radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
-import { useT } from '../../i18n';
+import { countdownLabel, useT } from '../../i18n';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EventPrep'>;
@@ -223,8 +223,7 @@ export function EventPrepScreen({ navigation, route }: Props) {
                     {ev.name}
                   </Text>
                   <Text style={{ fontSize: 12.5, color: t.accent, marginTop: 1 }}>
-                    {d < 14 ? tx('event.inDays', { n: d }) : tx('event.inWeeks', { n: Math.round(d / 7) })} ·{' '}
-                    {formatMedium(ev.dateISO)}
+                    {countdownLabel(tx, d)} · {formatMedium(ev.dateISO)}
                   </Text>
                 </View>
                 <Pressable

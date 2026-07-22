@@ -52,6 +52,9 @@ const en: Dict = {
 
   'event.inDays': 'in {n} days',
   'event.inWeeks': 'in {n} weeks',
+  'event.today': 'today',
+  'event.inDay': 'tomorrow',
+  'event.inWeek': 'in 1 week',
   'event.prepCount': '{n} rituals to prep before then',
   'event.onTrack': 'Everything’s on track for it',
   'event.ritualsToTime': '{n} rituals to time',
@@ -170,6 +173,9 @@ const ar: Dict = {
 
   'event.inDays': 'خلال {n} أيام',
   'event.inWeeks': 'خلال {n} أسابيع',
+  'event.today': 'اليوم',
+  'event.inDay': 'غدًا',
+  'event.inWeek': 'خلال أسبوع',
   'event.prepCount': '{n} طقوس للتحضير قبله',
   'event.onTrack': 'كل شيء جاهز له',
   'event.ritualsToTime': '{n} طقوس للتنسيق',
@@ -288,6 +294,9 @@ const fr: Dict = {
 
   'event.inDays': 'dans {n} jours',
   'event.inWeeks': 'dans {n} semaines',
+  'event.today': "aujourd'hui",
+  'event.inDay': 'demain',
+  'event.inWeek': 'dans 1 semaine',
   'event.prepCount': '{n} soins à préparer d’ici là',
   'event.onTrack': 'Tout est prêt pour l’événement',
   'event.ritualsToTime': '{n} soins à planifier',
@@ -380,6 +389,18 @@ export function translate(lang: Lang, key: string, vars?: Record<string, string 
   let s = DICTS[lang][key] ?? en[key] ?? key;
   if (vars) for (const k of Object.keys(vars)) s = s.split(`{${k}}`).join(String(vars[k]));
   return s;
+}
+
+type TFn = (key: string, vars?: Record<string, string | number>) => string;
+
+/** A human countdown that respects singular/zero: today · tomorrow · in N days ·
+ *  in 1 week · in N weeks. Shared by the Home pill and the Events screen. */
+export function countdownLabel(t: TFn, days: number): string {
+  if (days <= 0) return t('event.today');
+  if (days === 1) return t('event.inDay');
+  if (days < 14) return t('event.inDays', { n: days });
+  const w = Math.round(days / 7);
+  return w === 1 ? t('event.inWeek') : t('event.inWeeks', { n: w });
 }
 
 /** Hook: returns a `t(key, vars)` bound to the current language. */

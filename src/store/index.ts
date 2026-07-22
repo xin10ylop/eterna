@@ -14,6 +14,7 @@ import type { Lang } from '../i18n';
 import { APPOINTMENTS, CLINICS, SEED_EVENTS, SESSIONS, TREATMENTS, treatmentsForRoutine } from '../data/seed';
 import type { AccentName } from '../theme';
 import { todayISO } from '../lib/dates';
+import { setLocale } from '../lib/locale';
 
 /**
  * App state. One store, sliced by concern. No persistence yet by design —
@@ -142,6 +143,7 @@ export const useEterna = create<EternaState>((set, get) => ({
   setLang: (l) => {
     // Text switches immediately; full layout mirroring for Arabic applies on the
     // next app start (native RTL is a reload-level setting).
+    setLocale(l); // keep date/number helpers in sync
     I18nManager.allowRTL(true);
     I18nManager.forceRTL(l === 'ar');
     set({ lang: l });

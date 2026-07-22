@@ -13,7 +13,7 @@ import { needsAttention, treatmentStatus, zoneGlow, type GlowStatus } from '../.
 import { diffDays, todayISO } from '../../lib/dates';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
-import { useT } from '../../i18n';
+import { countdownLabel, useT } from '../../i18n';
 import type { ZoneId } from '../../types';
 import type { RootStackParamList, TabParamList } from '../../navigation/types';
 
@@ -55,12 +55,7 @@ export function HomeScreen({ navigation }: Props) {
   }, [treatments, appointments]);
 
   const nextEvent = upcomingEvents[0] ?? null;
-  const nextCountdown = nextEvent
-    ? (() => {
-        const d = diffDays(todayISO(), nextEvent.dateISO);
-        return d < 14 ? tx('event.inDays', { n: d }) : tx('event.inWeeks', { n: Math.round(d / 7) });
-      })()
-    : '';
+  const nextCountdown = nextEvent ? countdownLabel(tx, diffDays(todayISO(), nextEvent.dateISO)) : '';
   const hour = new Date().getHours();
   const dayPart = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
   const line =

@@ -2,6 +2,7 @@
  *  `todayISO()` so tests (and the demo seed) can stay deterministic. */
 
 import type { Cadence } from '../types';
+import { getLocale } from './locale';
 
 export function todayISO(): string {
   return toISO(new Date());
@@ -79,34 +80,46 @@ export function startOfWeek(iso: string): string {
   return addDays(iso, -weekdayMon0(iso));
 }
 
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
-const MONTHS_SHORT = MONTHS.map((m) => m.slice(0, 3));
-const WEEKDAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const MONTHS_BY: Record<string, string[]> = {
+  en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+  ar: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+  fr: ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'],
+};
+const MONTHS_SHORT_BY: Record<string, string[]> = {
+  en: MONTHS_BY.en!.map((m) => m.slice(0, 3)),
+  ar: MONTHS_BY.ar!, // Arabic month names don't abbreviate — use them whole
+  fr: MONTHS_BY.fr!.map((m) => m.slice(0, 4)),
+};
+const WEEKDAYS_SHORT_BY: Record<string, string[]> = {
+  en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+  ar: ['الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'],
+  fr: ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'],
+};
+const months = () => MONTHS_BY[getLocale()] ?? MONTHS_BY.en!;
+const monthsShort = () => MONTHS_SHORT_BY[getLocale()] ?? MONTHS_SHORT_BY.en!;
+const weekdaysShort = () => WEEKDAYS_SHORT_BY[getLocale()] ?? WEEKDAYS_SHORT_BY.en!;
 
 export function formatMonthYear(iso: string): string {
   const d = fromISO(iso);
-  return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  return `${months()[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 export function formatMedium(iso: string): string {
   const d = fromISO(iso);
-  return `${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}`;
+  return `${monthsShort()[d.getMonth()]} ${d.getDate()}`;
 }
 
 export function formatLong(iso: string): string {
   const d = fromISO(iso);
-  return `${WEEKDAYS_SHORT[weekdayMon0(iso)]}, ${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}`;
+  return `${weekdaysShort()[weekdayMon0(iso)]}, ${monthsShort()[d.getMonth()]} ${d.getDate()}`;
 }
 
 export function monthShort(iso: string): string {
-  return MONTHS_SHORT[fromISO(iso).getMonth()] ?? '';
+  return monthsShort()[fromISO(iso).getMonth()] ?? '';
 }
 
 export function weekdayShort(iso: string): string {
-  return WEEKDAYS_SHORT[weekdayMon0(iso)] ?? '';
+  return weekdaysShort()[weekdayMon0(iso)] ?? '';
 }
 
 /** "3 days overdue", "due tomorrow", "due in 5 weeks"… */
