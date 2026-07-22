@@ -9,7 +9,7 @@ import { PRACTITIONERS } from '../../data/seed';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import type { RootStackParamList } from '../../navigation/types';
-import type { Treatment, ZoneId } from '../../types';
+import type { Clinic, Treatment, ZoneId } from '../../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddRitual'>;
 
@@ -64,6 +64,18 @@ const LAST_OPTS = ['Today', '2 weeks ago', '1 month ago'];
 const UNITS = ['Days', 'Weeks', 'Months'];
 const UNIT_MAP: Record<string, 'day' | 'week' | 'month'> = { Days: 'day', Weeks: 'week', Months: 'month' };
 
+/** Which kind of salon a zone's rituals belong to, so a new ritual defaults to a
+ *  sensible clinic instead of whatever happens to be first. */
+const ZONE_CATEGORY: Record<ZoneId, Clinic['category']> = {
+  hair: 'Hair',
+  face: 'Skin',
+  lips: 'Skin',
+  torso: 'Spa',
+  hands: 'Nails',
+  hips: 'Spa',
+  legs: 'Spa',
+};
+
 /** Add a ritual: search the catalogue, set cadence, pick where (your clinics or
  *  browse Discover, or add your own). */
 export function AddRitualScreen({ navigation }: Props) {
@@ -79,7 +91,11 @@ export function AddRitualScreen({ navigation }: Props) {
   const [last, setLast] = useState('2 weeks ago');
   const [cadence, setCadence] = useState(pick.cadence);
   const [unit, setUnit] = useState('Weeks');
-  const [clinicId, setClinicId] = useState<string>(savedIds[0] ?? '');
+  const matchClinic = (zone: ZoneId): string => {
+    const sc = clinics.filter((c) => savedIds.includes(c.id));
+    return sc.find((c) => c.category === ZONE_CATEGORY[zone])?.id ?? sc[0]?.id ?? '';
+  };
+  const [clinicId, setClinicId] = useState<string>(matchClinic(CATALOG[0]!.zone));
   const [ownName, setOwnName] = useState('');
 
   const saved = useMemo(() => clinics.filter((c) => savedIds.includes(c.id)), [clinics, savedIds]);
@@ -174,6 +190,10 @@ export function AddRitualScreen({ navigation }: Props) {
                     onPress={() => {
                       setPick(c);
                       setCadence(c.cadence);
+                      // catalogue intervals are in weeks; keep the unit in sync
+                      setUnit('Weeks');
+                      // default to a clinic that actually does this kind of ritual
+                      setClinicId(matchClinic(c.zone));
                     }}
                     style={{
                       flexDirection: 'row',

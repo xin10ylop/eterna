@@ -440,7 +440,9 @@ function RitualsView({ nav }: { nav: Props['navigation'] }) {
           </View>
           {g.items.map((tr) => {
             const clinic = clinics.find((c) => c.id === tr.clinicId);
-            const appt = appointments.find((a) => a.treatmentId === tr.id);
+            const appt = appointments
+              .filter((a) => a.treatmentId === tr.id && a.dateISO >= todayISO())
+              .sort((a, b) => a.dateISO.localeCompare(b.dateISO))[0];
             return (
               <Card key={tr.id} onPress={() => nav.navigate('TreatmentDetail', { treatmentId: tr.id })}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>

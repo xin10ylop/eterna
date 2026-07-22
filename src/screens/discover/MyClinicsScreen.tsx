@@ -29,7 +29,7 @@ export function MyClinicsScreen({ navigation }: Props) {
     if (!n) return;
     addOwnClinic(n);
     setName('');
-    showToast(tr('clinics.title'));
+    showToast(n);
   };
 
   return (

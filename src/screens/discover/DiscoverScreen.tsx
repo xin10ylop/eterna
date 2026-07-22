@@ -43,6 +43,8 @@ export function DiscoverScreen({ navigation }: Props) {
   const list = useMemo(() => {
     const q = query.trim().toLowerCase();
     return clinics
+      // her own added clinics live in "My clinics", not the public directory
+      .filter((c) => !c.id.startsWith('c-own-'))
       .filter((c) => {
         if (filter !== 'All' && c.category !== filter) return false;
         if (homeOnly && !c.homeService) return false;
@@ -50,7 +52,13 @@ export function DiscoverScreen({ navigation }: Props) {
         if (q && !c.name.toLowerCase().includes(q)) return false;
         return true;
       })
-      .sort((a, b) => (b.sponsored ? 1 : 0) - (a.sponsored ? 1 : 0));
+      // sponsored first (paid placement), then nearest, then best-rated
+      .sort((a, b) => {
+        const sp = (b.sponsored ? 1 : 0) - (a.sponsored ? 1 : 0);
+        if (sp !== 0) return sp;
+        if (a.distanceKm !== b.distanceKm) return a.distanceKm - b.distanceKm;
+        return b.rating - a.rating;
+      });
   }, [clinics, filter, homeOnly, womenOnly, query]);
 
   return (

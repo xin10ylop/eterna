@@ -10,6 +10,7 @@ import {
   bookedThisMonth,
   budgetByMonth,
   expectedNextMonth,
+  projectedNextMonthCount,
   spentThisMonth,
 } from '../../services/logic';
 import { formatLong, isSameMonth, monthShort, startOfMonth, todayISO } from '../../lib/dates';
@@ -66,8 +67,21 @@ export function BudgetScreen({ navigation }: Props) {
     () => expectedNextMonth(appointments, treatments),
     [appointments, treatments],
   );
-  const months = useMemo(() => budgetByMonth(sessions, appointments), [sessions, appointments]);
-  const maxMonth = Math.max(1, ...months.map((m) => m.spent + m.booked));
+  const months = useMemo(
+    () => budgetByMonth(sessions, appointments, treatments),
+    [sessions, appointments, treatments],
+  );
+  const maxMonth = Math.max(1, ...months.map((m) => m.spent + m.booked + m.projected));
+  const dueTogether = useMemo(
+    () => projectedNextMonthCount(appointments, treatments),
+    [appointments, treatments],
+  );
+  // average over completed/current months only — the future forecast month would
+  // drag a true "monthly average" down
+  const avgMonthly = useMemo(() => {
+    const past = months.filter((m) => m.monthISO <= startOfMonth(todayISO()));
+    return Math.round(past.reduce((x, m) => x + m.spent + m.booked, 0) / Math.max(1, past.length));
+  }, [months]);
 
   const byZone = useMemo(() => {
     const m = startOfMonth(todayISO());
@@ -83,7 +97,9 @@ export function BudgetScreen({ navigation }: Props) {
   }, [sessions, treatments]);
   const maxZone = Math.max(1, ...byZone.map((x) => x.total));
 
-  const upcoming = [...appointments].sort((a, b) => (a.dateISO < b.dateISO ? -1 : 1));
+  const upcoming = appointments
+    .filter((a) => a.dateISO >= todayISO())
+    .sort((a, b) => (a.dateISO < b.dateISO ? -1 : 1));
 
   return (
     <Screen>
@@ -131,7 +147,9 @@ export function BudgetScreen({ navigation }: Props) {
           <SectionLabel>Highlights</SectionLabel>
           <Text style={{ fontSize: 16, fontWeight: '600', color: t.text, lineHeight: 23 }}>
             {nextMonth > spent + booked
-              ? 'Next month is set to cost more than this one, two rituals fall due together.'
+              ? dueTogether > 1
+                ? `Next month is set to cost more than this one — ${dueTogether} rituals fall due together.`
+                : 'Next month is set to cost more than this one.'
               : 'Next month is on track to cost less than this one.'}
           </Text>
           <View style={{ flexDirection: 'row', gap: spacing.l, marginTop: spacing.m }}>
@@ -152,7 +170,7 @@ export function BudgetScreen({ navigation }: Props) {
           {/* stat header: value + range (Apple Health chart grammar) */}
           <View style={{ marginBottom: spacing.m }}>
             <Text style={{ fontSize: 26, fontWeight: '700', color: t.text, letterSpacing: -0.5 }}>
-              {formatAED(Math.round(months.reduce((x, m) => x + m.spent + m.booked, 0) / Math.max(1, months.length)))}
+              {formatAED(avgMonthly)}
               <Text style={{ fontSize: 14, fontWeight: '500', color: t.sub }}>  monthly average</Text>
             </Text>
             <Text style={{ fontSize: 12, color: t.muted, marginTop: 1 }}>
@@ -161,7 +179,7 @@ export function BudgetScreen({ navigation }: Props) {
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: spacing.s, height: 110 }}>
             {months.map((m) => {
-              const h = ((m.spent + m.booked) / maxMonth) * 84;
+              const h = ((m.spent + m.booked + m.projected) / maxMonth) * 84;
               const isNow = isSameMonth(m.monthISO, todayISO());
               const isFuture = m.monthISO > todayISO();
               return (

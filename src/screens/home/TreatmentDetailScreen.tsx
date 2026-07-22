@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Card, GhostButton, IOSSwitch, IconButton, PrimaryButton, Row, Screen, SectionLabel } from '../../components/ui';
 import { needsAttention, nextDueISO, treatmentStatus } from '../../services/logic';
-import { formatLong, formatMedium, humanizeDue } from '../../lib/dates';
+import { formatLong, formatMedium, humanizeDue, todayISO } from '../../lib/dates';
 import { formatAED } from '../../lib/money';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
@@ -46,7 +46,9 @@ export function TreatmentDetailScreen({ navigation, route }: Props) {
 
   const status = treatmentStatus(tr, appointments);
   const clinic = clinics.find((c) => c.id === tr.clinicId);
-  const appt = appointments.find((a) => a.treatmentId === tr.id);
+  const appt = appointments
+    .filter((a) => a.treatmentId === tr.id && a.dateISO >= todayISO())
+    .sort((a, b) => a.dateISO.localeCompare(b.dateISO))[0];
   const ordered = [...sessions].sort((a, b) => (a.dateISO < b.dateISO ? 1 : -1));
 
   const statusLine =
