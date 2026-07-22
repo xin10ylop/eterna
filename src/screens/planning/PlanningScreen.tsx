@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { PanResponder, Pressable, ScrollView, Text, View } from 'react-native';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -89,6 +89,21 @@ function ScheduleView({ nav, focusDate }: { nav: Props['navigation']; focusDate?
     setWeekStart(next);
     setSelected(next);
   };
+  // swipe the strip by hand: a clear horizontal drag moves a week; taps on the
+  // day boxes still land because we only claim the gesture once it MOVES
+  const weekPan = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, g) =>
+          Math.abs(g.dx) > 14 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
+        onPanResponderRelease: (_, g) => {
+          if (g.dx <= -40) shiftWeek(1);
+          else if (g.dx >= 40) shiftWeek(-1);
+        },
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [weekStart],
+  );
   const shiftMonth = (dir: number) => {
     const first = startOfMonth(addMonths(selected, dir));
     setWeekStart(startOfWeek(first));
@@ -145,9 +160,9 @@ function ScheduleView({ nav, focusDate }: { nav: Props['navigation']; focusDate?
         </Pressable>
       </View>
 
-      {/* the week: big day boxes; small arrows underneath move a week */}
+      {/* the week: big day boxes; swipe by hand or use the small arrows below */}
       <View style={{ gap: spacing.s }}>
-        <View style={{ flexDirection: 'row', gap: 6 }}>
+        <View style={{ flexDirection: 'row', gap: 6 }} {...weekPan.panHandlers}>
           {Array.from({ length: 7 }).map((_, i) => {
             const iso = addDays(weekStart, i);
             const sel = iso === selected;
@@ -169,6 +184,12 @@ function ScheduleView({ nav, focusDate }: { nav: Props['navigation']; focusDate?
                   backgroundColor: sel ? t.accent : hasEvent ? t.accentSoft : t.surface,
                 }}
               >
+                {/* an event day carries its little spark */}
+                {hasEvent ? (
+                  <View style={{ position: 'absolute', top: 4, right: 5 }}>
+                    <Ionicons name="sparkles" size={10} color={sel ? t.onAccent : t.accent} />
+                  </View>
+                ) : null}
                 <Text style={{ fontSize: 11, fontWeight: '600', color: sel ? t.onAccent : t.muted }}>
                   {weekdayShort(iso)}
                 </Text>
