@@ -27,14 +27,11 @@ export function DiscoverScreen({ navigation }: Props) {
   const clinics = useEterna((s) => s.clinics);
   const savedIds = useEterna((s) => s.savedClinicIds);
   const toggleSaved = useEterna((s) => s.toggleSavedClinic);
-  const myServices = useEterna((s) => s.myServices);
-  const toggleMyService = useEterna((s) => s.toggleMyService);
   const showToast = useEterna((s) => s.showToast);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('All');
   const [homeOnly, setHomeOnly] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [slotChoice, setSlotChoice] = useState<string | null>(null);
   // Skeleton pass on first open, becomes the real fetch state with Supabase.
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -132,13 +129,11 @@ export function DiscoverScreen({ navigation }: Props) {
           list.map((c) => {
             const saved = savedIds.includes(c.id);
             const open = expanded === c.id;
-            const chosen = open ? slotChoice : null;
             return (
               <Card
                 key={c.id}
                 onPress={() => {
                   setExpanded(open ? null : c.id);
-                  setSlotChoice(null);
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
@@ -206,112 +201,47 @@ export function DiscoverScreen({ navigation }: Props) {
                     />
                   </Pressable>
                 </View>
-                {/* the clinic's menu: what they do, price and time, and one tap
-                    to say "I do this here" — that's how it joins My clinics */}
-                {open && c.offerings.length > 0 ? (
-                  <View style={{ marginTop: spacing.m, borderTopWidth: 1, borderTopColor: t.separator, paddingTop: spacing.m, gap: 4 }}>
-                    {c.offerings.map((o) => {
-                      const on = (myServices[c.id] ?? []).includes(o.name);
-                      return (
-                        <Pressable
-                          key={o.name}
-                          accessibilityRole="checkbox"
-                          accessibilityState={{ checked: on }}
-                          onPress={() => toggleMyService(c.id, o.name)}
-                          style={({ pressed }) => ({
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: spacing.m,
-                            paddingVertical: 10,
-                            paddingHorizontal: spacing.s,
-                            borderRadius: radii.m,
-                            backgroundColor: on ? t.accentSoft : 'transparent',
-                            opacity: pressed ? 0.7 : 1,
-                          })}
-                        >
-                          <View
-                            style={{
-                              width: 22,
-                              height: 22,
-                              borderRadius: 11,
-                              borderWidth: 1.5,
-                              borderColor: on ? t.accent : t.muted,
-                              backgroundColor: on ? t.accent : 'transparent',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            {on ? <Ionicons name="checkmark" size={14} color={t.onAccent} /> : null}
-                          </View>
-                          <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: t.text }}>{o.name}</Text>
-                          <Text style={{ fontSize: 12.5, color: t.sub }}>
-                            {formatAED(o.price)} · {o.mins} {tr('clinics.min')}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                    <Text style={{ fontSize: 11.5, color: t.muted, paddingHorizontal: spacing.s }}>
-                      {tr('clinics.useHere')}
-                    </Text>
-                  </View>
-                ) : null}
-                {open && c.slots.length > 0 ? (
-                  <View style={{ marginTop: spacing.m, borderTopWidth: 1, borderTopColor: t.separator, paddingTop: spacing.m, gap: spacing.s }}>
-                    <Text style={[type.label, { color: t.muted }]}>Next available</Text>
-                    {/* Uber option rows: outcome subline, selected = 2px ink outline */}
-                    {c.slots.map((s) => {
-                      const sel = chosen === s;
-                      return (
-                        <Pressable
-                          key={s}
-                          accessibilityRole="button"
-                          accessibilityState={{ selected: sel }}
-                          onPress={() => setSlotChoice(sel ? null : s)}
-                          style={({ pressed }) => ({
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: spacing.m,
-                            paddingVertical: 11,
-                            paddingHorizontal: spacing.m,
-                            borderRadius: radii.l,
-                            borderWidth: sel ? 2 : 1,
-                            borderColor: sel ? t.text : t.border,
-                            backgroundColor: sel ? t.surfaceAlt : t.bg,
-                            transform: [{ scale: pressed ? 0.98 : 1 }],
-                          })}
-                        >
-                          <Ionicons name="time-outline" size={17} color={sel ? t.text : t.muted} />
-                          <View style={{ flex: 1 }}>
-                            <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>{s}</Text>
-                            <Text style={{ fontSize: 12, color: t.sub, marginTop: 1 }}>
-                              45 min · with first available
-                            </Text>
-                          </View>
-                          {sel ? <Ionicons name="checkmark-circle" size={19} color={t.accent} /> : null}
-                        </Pressable>
-                      );
-                    })}
-                    {/* CTA names the selection (Uber confirm pattern) */}
+                {/* clinic profile: their services with price and time, and one
+                    clear action — add it to My clinics. Browsing only. */}
+                {open ? (
+                  <View style={{ marginTop: spacing.m, borderTopWidth: 1, borderTopColor: t.separator, paddingTop: spacing.s }}>
+                    {c.offerings.map((o) => (
+                      <View
+                        key={o.name}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: spacing.m,
+                          paddingVertical: 9,
+                        }}
+                      >
+                        <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: t.accent }} />
+                        <Text numberOfLines={1} style={{ flex: 1, fontSize: 14, fontWeight: '600', color: t.text }}>
+                          {o.name}
+                        </Text>
+                        <Text style={{ fontSize: 12.5, color: t.sub }}>
+                          {formatAED(o.price)} · {o.mins} {tr('clinics.min')}
+                        </Text>
+                      </View>
+                    ))}
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityState={{ disabled: !chosen }}
                       onPress={() => {
-                        if (!chosen) return;
-                        showToast(`Requested ${chosen} at ${c.name}`);
-                        setExpanded(null);
-                        setSlotChoice(null);
+                        if (!saved) toggleSaved(c.id);
+                        showToast(saved ? c.name : `${c.name} ✓`);
+                        if (!saved) setExpanded(null);
                       }}
                       style={({ pressed }) => ({
-                        marginTop: spacing.xs,
+                        marginTop: spacing.s,
                         paddingVertical: 13,
                         borderRadius: radii.l,
                         alignItems: 'center',
-                        backgroundColor: chosen ? t.accent : t.faint,
-                        transform: [{ scale: pressed && chosen ? 0.98 : 1 }],
+                        backgroundColor: saved ? t.faint : t.accent,
+                        transform: [{ scale: pressed ? 0.98 : 1 }],
                       })}
                     >
-                      <Text style={{ color: chosen ? t.onAccent : t.sub, fontSize: 15, fontWeight: '700' }}>
-                        {chosen ? `Request ${chosen}` : 'Pick a time'}
+                      <Text style={{ color: saved ? t.sub : t.onAccent, fontSize: 15, fontWeight: '700' }}>
+                        {saved ? tr('discover.inMyClinics') : tr('discover.addToMyClinics')}
                       </Text>
                     </Pressable>
                   </View>

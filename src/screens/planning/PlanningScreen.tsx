@@ -61,350 +61,214 @@ export function PlanningScreen({ navigation, route }: Props) {
 
 /* --------------------------------- Schedule --------------------------------- */
 
+/**
+ * One simple calendar: a week strip you move with arrows (and month arrows to
+ * jump further), tap a day to see its schedule below. No month/week/day modes.
+ */
 function ScheduleView({ nav, focusDate }: { nav: Props['navigation']; focusDate?: string }) {
   const t = useTheme();
-  const [mode, setMode] = useState('Month');
   const [selected, setSelected] = useState(todayISO());
-  const [anchor, setAnchor] = useState(startOfMonth(todayISO()));
+  const [weekStart, setWeekStart] = useState(startOfWeek(todayISO()));
+  const appointments = useEterna((s) => s.appointments);
+  const treatments = useEterna((s) => s.treatments);
+  const clinics = useEterna((s) => s.clinics);
+  const salonEvents = useEterna((s) => s.events);
+
   // a booking tapped on Home selects its day here
   useEffect(() => {
     if (focusDate) {
       setSelected(focusDate);
-      setAnchor(startOfMonth(focusDate));
+      setWeekStart(startOfWeek(focusDate));
     }
   }, [focusDate]);
-  const appointments = useEterna((s) => s.appointments);
-  const treatments = useEterna((s) => s.treatments);
-  const clinics = useEterna((s) => s.clinics);
 
-  const salonEvents = useEterna((s) => s.events);
-  const eventsOn = (iso: string) => appointments.filter((a) => a.dateISO === iso);
+  const apptsOn = (iso: string) => appointments.filter((a) => a.dateISO === iso);
   const eventOn = (iso: string) => salonEvents.filter((e) => e.dateISO === iso);
-  // predicted (not yet booked) due dates, rendered as outlined markers,
-  // solid = booked (Apple Health's solid-vs-hatched cycle language)
+  // predicted (not yet booked) due dates, outlined; solid = booked
   const predicted = useMemo(() => {
     const booked = new Set(appointments.map((a) => a.treatmentId));
-    return new Set(
-      treatments.filter((tr) => !booked.has(tr.id)).map((tr) => nextDueISO(tr)),
-    );
+    return new Set(treatments.filter((tr) => !booked.has(tr.id)).map((tr) => nextDueISO(tr)));
   }, [appointments, treatments]);
 
-  const dayAppts = eventsOn(selected).sort((a, b) => (a.timeLabel < b.timeLabel ? -1 : 1));
+  const shiftWeek = (dir: number) => {
+    const next = addDays(weekStart, dir * 7);
+    setWeekStart(next);
+    setSelected(next);
+  };
+  const shiftMonth = (dir: number) => {
+    const first = startOfMonth(addMonths(selected, dir));
+    setWeekStart(startOfWeek(first));
+    setSelected(first);
+  };
+
+  const dayAppts = apptsOn(selected).sort((a, b) => (a.timeLabel < b.timeLabel ? -1 : 1));
   const dayEvents = eventOn(selected);
-  const dayAgenda = (
-    <View style={{ gap: spacing.s }}>
-      <SectionLabel>{formatLong(selected)}</SectionLabel>
-      {dayEvents.map((ev) => (
-        <Pressable
-          key={ev.id}
-          accessibilityRole="button"
-          onPress={() => nav.navigate('EventPrep')}
-          style={({ pressed }) => ({
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: spacing.m,
-            backgroundColor: t.accentSoft,
-            borderRadius: radii.card,
-            padding: spacing.m,
-            transform: [{ scale: pressed ? 0.99 : 1 }],
-          })}
-        >
-          <View
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 12,
-              backgroundColor: t.bg,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Ionicons name="sparkles" size={17} color={t.accent} />
-          </View>
-          <Text style={{ flex: 1, fontSize: 15, fontWeight: '700', color: t.text }}>{ev.name}</Text>
-          <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 0.5, color: t.accent }}>EVENT</Text>
-        </Pressable>
-      ))}
-      {dayAppts.map((a) => {
-        const tr = treatments.find((x) => x.id === a.treatmentId);
-        const clinic = clinics.find((c) => c.id === a.clinicId);
-        return (
-          <Card
-            key={a.id}
-            onPress={() => tr && nav.navigate('TreatmentDetail', { treatmentId: tr.id })}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
-              <View
-                style={{
-                  backgroundColor: t.accentSoft,
-                  borderRadius: radii.m,
-                  paddingVertical: 6,
-                  paddingHorizontal: 10,
-                  alignItems: 'center',
-                }}
-              >
-                <Text style={{ fontSize: 14, fontWeight: '700', color: t.accent }}>{a.timeLabel}</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
-                  {tr?.name ?? 'Appointment'}
-                </Text>
-                <Text style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>
-                  {clinic?.name} · {formatAED(a.price)}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color={t.muted} />
-            </View>
-          </Card>
-        );
-      })}
-      {dayEvents.length === 0 && dayAppts.length === 0 ? (
-        <Card>
-          <Text style={{ fontSize: 14, color: t.sub }}>Nothing booked this day.</Text>
-        </Card>
-      ) : null}
-    </View>
-  );
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: spacing.l, paddingBottom: 120 }}>
-      <Segmented options={['Month', 'Week', 'Day']} value={mode} onChange={setMode} />
+      {/* month header: arrows jump a whole month */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Pressable
+          accessibilityLabel="Previous month"
+          onPress={() => shiftMonth(-1)}
+          hitSlop={8}
+          style={({ pressed }) => ({ padding: 8, opacity: pressed ? 0.5 : 1 })}
+        >
+          <Ionicons name="chevron-back" size={18} color={t.accent} />
+        </Pressable>
+        <Pressable onPress={() => { setSelected(todayISO()); setWeekStart(startOfWeek(todayISO())); }}>
+          <Text style={{ fontSize: 17, fontWeight: '700', color: t.text }}>{formatMonthYear(selected)}</Text>
+        </Pressable>
+        <Pressable
+          accessibilityLabel="Next month"
+          onPress={() => shiftMonth(1)}
+          hitSlop={8}
+          style={({ pressed }) => ({ padding: 8, opacity: pressed ? 0.5 : 1 })}
+        >
+          <Ionicons name="chevron-forward" size={18} color={t.accent} />
+        </Pressable>
+      </View>
 
-      {mode === 'Month' ? (
-        <View style={{ gap: spacing.m }}>
-          {/* month header */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Pressable
-              accessibilityLabel="Previous month"
-              onPress={() => setAnchor(startOfMonth(addMonths(anchor, -1)))}
-              style={({ pressed }) => ({ padding: 8, opacity: pressed ? 0.5 : 1 })}
-            >
-              <Ionicons name="chevron-back" size={18} color={t.accent} />
-            </Pressable>
-            <Text style={{ fontSize: 17, fontWeight: '700', color: t.text }}>
-              {formatMonthYear(anchor)}
-            </Text>
-            <Pressable
-              accessibilityLabel="Next month"
-              onPress={() => setAnchor(startOfMonth(addMonths(anchor, 1)))}
-              style={({ pressed }) => ({ padding: 8, opacity: pressed ? 0.5 : 1 })}
-            >
-              <Ionicons name="chevron-forward" size={18} color={t.accent} />
-            </Pressable>
-          </View>
-          {/* weekday header */}
-          <View style={{ flexDirection: 'row' }}>
-            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
-              <Text
-                key={i}
-                style={{ flex: 1, textAlign: 'center', fontSize: 11, fontWeight: '600', color: t.muted }}
-              >
-                {d}
-              </Text>
-            ))}
-          </View>
-          {/* grid */}
-          <MonthGrid
-            anchor={anchor}
-            selected={selected}
-            onSelect={setSelected}
-            hasEvents={(iso) => eventsOn(iso).length > 0}
-            isPredicted={(iso) => predicted.has(iso)}
-            isEvent={(iso) => eventOn(iso).length > 0}
-          />
-          {/* marker legend */}
-          <View style={{ flexDirection: 'row', gap: spacing.l, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.accent }} />
-              <Text style={{ fontSize: 11, color: t.muted }}>Booked</Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <View style={{ width: 6, height: 6, borderRadius: 3, borderWidth: 1, borderColor: t.accent }} />
-              <Text style={{ fontSize: 11, color: t.muted }}>Predicted due</Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <View style={{ width: 11, height: 11, borderRadius: 6, borderWidth: 1.5, borderColor: t.accent }} />
-              <Text style={{ fontSize: 11, color: t.muted }}>Event</Text>
-            </View>
-          </View>
-          {dayAgenda}
-        </View>
-      ) : null}
-
-      {mode === 'Week' ? (
-        <View style={{ gap: spacing.l }}>
-          <View style={{ flexDirection: 'row', gap: 6 }}>
-            {Array.from({ length: 7 }).map((_, i) => {
-              const iso = addDays(startOfWeek(todayISO()), i);
-              const sel = iso === selected;
-              const today = iso === todayISO();
-              return (
-                <Pressable
-                  key={iso}
-                  accessibilityRole="button"
-                  onPress={() => setSelected(iso)}
-                  style={{
-                    flex: 1,
-                    alignItems: 'center',
-                    paddingVertical: 10,
-                    borderRadius: radii.m,
-                    backgroundColor: sel ? t.accent : t.surface,
-                  }}
-                >
-                  <Text style={{ fontSize: 11, fontWeight: '600', color: sel ? t.onAccent : t.muted }}>
-                    {weekdayShort(iso)}
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 16,
-                      fontWeight: '700',
-                      marginTop: 2,
-                      color: sel ? t.onAccent : today ? t.accent : t.text,
-                    }}
-                  >
-                    {iso.slice(8)}
-                  </Text>
-                  {eventsOn(iso).length > 0 ? (
-                    <View
-                      style={{
-                        width: 4,
-                        height: 4,
-                        borderRadius: 2,
-                        marginTop: 3,
-                        backgroundColor: sel ? t.onAccent : t.accent,
-                      }}
-                    />
-                  ) : null}
-                </Pressable>
-              );
-            })}
-          </View>
-          {dayAgenda}
-        </View>
-      ) : null}
-
-      {mode === 'Day' ? (
-        <View style={{ gap: spacing.l }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Pressable
-              accessibilityLabel="Previous day"
-              onPress={() => setSelected(addDays(selected, -1))}
-              style={({ pressed }) => ({ padding: 8, opacity: pressed ? 0.5 : 1 })}
-            >
-              <Ionicons name="chevron-back" size={18} color={t.accent} />
-            </Pressable>
-            <Pressable onPress={() => setSelected(todayISO())}>
-              <Text style={{ fontSize: 15, fontWeight: '600', color: t.accent }}>Today</Text>
-            </Pressable>
-            <Pressable
-              accessibilityLabel="Next day"
-              onPress={() => setSelected(addDays(selected, 1))}
-              style={({ pressed }) => ({ padding: 8, opacity: pressed ? 0.5 : 1 })}
-            >
-              <Ionicons name="chevron-forward" size={18} color={t.accent} />
-            </Pressable>
-          </View>
-          {dayAgenda}
-        </View>
-      ) : null}
-    </ScrollView>
-  );
-}
-
-function MonthGrid({
-  anchor,
-  selected,
-  onSelect,
-  hasEvents,
-  isPredicted,
-  isEvent,
-}: {
-  anchor: string;
-  selected: string;
-  onSelect: (iso: string) => void;
-  hasEvents: (iso: string) => boolean;
-  isPredicted?: (iso: string) => boolean;
-  isEvent?: (iso: string) => boolean;
-}) {
-  const t = useTheme();
-  const cells = useMemo(() => {
-    const lead = weekdayMon0(anchor);
-    const total = daysInMonth(anchor);
-    const list: (string | null)[] = Array.from({ length: lead }, () => null);
-    for (let d = 0; d < total; d++) list.push(addDays(anchor, d));
-    while (list.length % 7 !== 0) list.push(null);
-    return list;
-  }, [anchor]);
-
-  return (
-    <View style={{ gap: 4 }}>
-      {Array.from({ length: cells.length / 7 }).map((_, row) => (
-        <View key={row} style={{ flexDirection: 'row' }}>
-          {cells.slice(row * 7, row * 7 + 7).map((iso, col) => {
-            if (!iso) return <View key={col} style={{ flex: 1, height: 44 }} />;
+      {/* week strip: arrows move a week, tap a day for its schedule */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        <Pressable
+          accessibilityLabel="Previous week"
+          onPress={() => shiftWeek(-1)}
+          hitSlop={8}
+          style={({ pressed }) => ({ padding: 4, opacity: pressed ? 0.5 : 1 })}
+        >
+          <Ionicons name="chevron-back" size={15} color={t.muted} />
+        </Pressable>
+        <View style={{ flex: 1, flexDirection: 'row', gap: 5 }}>
+          {Array.from({ length: 7 }).map((_, i) => {
+            const iso = addDays(weekStart, i);
             const sel = iso === selected;
             const today = iso === todayISO();
-            const evt = isEvent?.(iso) ?? false;
+            const hasAppt = apptsOn(iso).length > 0;
+            const hasEvent = eventOn(iso).length > 0;
+            const isDue = predicted.has(iso);
             return (
               <Pressable
-                key={col}
+                key={iso}
                 accessibilityRole="button"
                 accessibilityLabel={iso}
-                onPress={() => onSelect(iso)}
-                style={{ flex: 1, height: 44, alignItems: 'center', justifyContent: 'center' }}
+                onPress={() => setSelected(iso)}
+                style={{
+                  flex: 1,
+                  alignItems: 'center',
+                  paddingVertical: 9,
+                  borderRadius: radii.m,
+                  backgroundColor: sel ? t.accent : hasEvent ? t.accentSoft : t.surface,
+                }}
               >
-                <View
+                <Text style={{ fontSize: 10.5, fontWeight: '600', color: sel ? t.onAccent : t.muted }}>
+                  {weekdayShort(iso)}
+                </Text>
+                <Text
                   style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 17,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: sel ? t.accent : today ? t.accentSoft : 'transparent',
-                    borderWidth: evt && !sel ? 1.5 : 0,
-                    borderColor: t.accent,
+                    fontSize: 16,
+                    fontWeight: '700',
+                    marginTop: 2,
+                    color: sel ? t.onAccent : today ? t.accent : t.text,
                   }}
                 >
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      fontWeight: today || sel ? '700' : '400',
-                      color: sel ? t.onAccent : today ? t.accent : t.text,
-                    }}
-                  >
-                    {Number(iso.slice(8))}
-                  </Text>
-                </View>
-                {hasEvents(iso) ? (
-                  <View
-                    style={{
-                      width: 5,
-                      height: 5,
-                      borderRadius: 3,
-                      backgroundColor: t.accent,
-                      marginTop: 1,
-                    }}
-                  />
-                ) : isPredicted?.(iso) ? (
-                  <View
-                    style={{
-                      width: 5,
-                      height: 5,
-                      borderRadius: 3,
-                      borderWidth: 1,
-                      borderColor: t.accent,
-                      marginTop: 1,
-                    }}
-                  />
+                  {Number(iso.slice(8))}
+                </Text>
+                {hasAppt ? (
+                  <View style={{ width: 5, height: 5, borderRadius: 3, marginTop: 3, backgroundColor: sel ? t.onAccent : t.accent }} />
+                ) : isDue ? (
+                  <View style={{ width: 5, height: 5, borderRadius: 3, marginTop: 3, borderWidth: 1, borderColor: sel ? t.onAccent : t.accent }} />
                 ) : (
-                  <View style={{ height: 6 }} />
+                  <View style={{ height: 8 }} />
                 )}
               </Pressable>
             );
           })}
         </View>
-      ))}
-    </View>
+        <Pressable
+          accessibilityLabel="Next week"
+          onPress={() => shiftWeek(1)}
+          hitSlop={8}
+          style={({ pressed }) => ({ padding: 4, opacity: pressed ? 0.5 : 1 })}
+        >
+          <Ionicons name="chevron-forward" size={15} color={t.muted} />
+        </Pressable>
+      </View>
+
+      {/* the selected day's schedule */}
+      <View style={{ gap: spacing.s }}>
+        <SectionLabel>{formatLong(selected)}</SectionLabel>
+        {dayEvents.map((ev) => (
+          <Pressable
+            key={ev.id}
+            accessibilityRole="button"
+            onPress={() => nav.navigate('EventPrep')}
+            style={({ pressed }) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.m,
+              backgroundColor: t.accentSoft,
+              borderRadius: radii.card,
+              padding: spacing.m,
+              transform: [{ scale: pressed ? 0.99 : 1 }],
+            })}
+          >
+            <View
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 12,
+                backgroundColor: t.bg,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="sparkles" size={17} color={t.accent} />
+            </View>
+            <Text style={{ flex: 1, fontSize: 15, fontWeight: '700', color: t.text }}>{ev.name}</Text>
+            <Ionicons name="chevron-forward" size={15} color={t.accent} />
+          </Pressable>
+        ))}
+        {dayAppts.map((a) => {
+          const tr = treatments.find((x) => x.id === a.treatmentId);
+          const clinic = clinics.find((c) => c.id === a.clinicId);
+          return (
+            <Card
+              key={a.id}
+              onPress={() => tr && nav.navigate('TreatmentDetail', { treatmentId: tr.id })}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
+                <View
+                  style={{
+                    backgroundColor: t.accentSoft,
+                    borderRadius: radii.m,
+                    paddingVertical: 6,
+                    paddingHorizontal: 10,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: t.accent }}>{a.timeLabel}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
+                    {tr?.name ?? 'Appointment'}
+                  </Text>
+                  <Text style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>
+                    {clinic?.name} · {formatAED(a.price)}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={t.muted} />
+              </View>
+            </Card>
+          );
+        })}
+        {dayEvents.length === 0 && dayAppts.length === 0 ? (
+          <Card>
+            <Text style={{ fontSize: 14, color: t.sub }}>Nothing booked this day.</Text>
+          </Card>
+        ) : null}
+      </View>
+    </ScrollView>
   );
 }
 

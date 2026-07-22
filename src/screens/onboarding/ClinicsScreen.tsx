@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Pressable, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { GhostButton } from '../../components/ui';
@@ -19,21 +19,54 @@ export function ClinicsScreen({ navigation }: NativeStackScreenProps<RootStackPa
   const myServices = useEterna((s) => s.myServices);
   const toggleMyService = useEterna((s) => s.toggleMyService);
   const [open, setOpen] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
 
   const chosenCount = Object.values(myServices).reduce((n, list) => n + list.length, 0);
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return q ? clinics.filter((c) => c.name.toLowerCase().includes(q)) : clinics;
+  }, [clinics, query]);
 
   return (
     <OnboardingShell
       step={3}
       alignTop
       title="Where do you go?"
-      subtitle="Tap a place and tick what you do there. Change it any time."
+      subtitle="Search your places, then tick what you do at each. Change it any time."
       cta={chosenCount > 0 ? `Continue with ${chosenCount}` : 'Continue'}
       onNext={() => navigation.navigate('Plan')}
       footer={<GhostButton title="Skip for now" onPress={() => navigation.navigate('Plan')} />}
     >
       <View style={{ gap: spacing.s, paddingTop: spacing.s }}>
-        {clinics.map((c) => {
+        {/* search first — she finds HER clinic, the app assumes nothing */}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.s,
+            backgroundColor: t.surface,
+            borderRadius: radii.m,
+            borderWidth: 1,
+            borderColor: t.border,
+            paddingHorizontal: 12,
+          }}
+        >
+          <Ionicons name="search" size={16} color={t.muted} />
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search your clinic"
+            placeholderTextColor={t.muted}
+            accessibilityLabel="Search your clinic"
+            style={{ flex: 1, paddingVertical: 11, fontSize: 15, color: t.text }}
+          />
+        </View>
+        {results.length === 0 ? (
+          <Text style={{ fontSize: 13.5, color: t.sub, paddingVertical: spacing.s }}>
+            Nothing found. You can add your own places later in My clinics.
+          </Text>
+        ) : null}
+        {results.map((c) => {
           const mine = myServices[c.id] ?? [];
           const isOpen = open === c.id;
           return (

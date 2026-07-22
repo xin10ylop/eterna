@@ -10,75 +10,35 @@ import { PRACTITIONERS } from '../../data/seed';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import type { RootStackParamList } from '../../navigation/types';
-import type { Clinic, ClinicService, Treatment, ZoneId } from '../../types';
+import type { ClinicService, Treatment, ZoneId } from '../../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddRitual'>;
 
-type CatalogItem = { name: string; zone: ZoneId; price: number; cadence: number };
-
-/** A broad catalogue — too many to fit, so it's searchable. */
-const CATALOG: CatalogItem[] = [
-  { name: 'Roots touch-up', zone: 'hair', price: 380, cadence: 6 },
-  { name: 'Cut & style', zone: 'hair', price: 280, cadence: 8 },
-  { name: 'Hair color', zone: 'hair', price: 450, cadence: 8 },
-  { name: 'Keratin treatment', zone: 'hair', price: 700, cadence: 16 },
-  { name: 'Blow-dry', zone: 'hair', price: 120, cadence: 2 },
-  { name: 'Hair extensions', zone: 'hair', price: 1200, cadence: 8 },
-  { name: 'Olaplex treatment', zone: 'hair', price: 200, cadence: 4 },
-  { name: 'Botox', zone: 'face', price: 960, cadence: 16 },
-  { name: 'Lip filler', zone: 'lips', price: 1120, cadence: 12 },
-  { name: 'Hydrafacial', zone: 'face', price: 440, cadence: 4 },
-  { name: 'Signature facial', zone: 'face', price: 350, cadence: 4 },
-  { name: 'Microneedling', zone: 'face', price: 600, cadence: 4 },
-  { name: 'Chemical peel', zone: 'face', price: 500, cadence: 6 },
-  { name: 'Skin booster', zone: 'face', price: 900, cadence: 12 },
-  { name: 'Brow shaping', zone: 'face', price: 140, cadence: 3 },
-  { name: 'Brow lamination', zone: 'face', price: 300, cadence: 6 },
-  { name: 'Lash lift', zone: 'face', price: 320, cadence: 6 },
-  { name: 'Lash extensions', zone: 'face', price: 400, cadence: 3 },
-  { name: 'Threading', zone: 'face', price: 60, cadence: 2 },
-  { name: 'Teeth whitening', zone: 'face', price: 1500, cadence: 26 },
-  { name: 'Gel manicure', zone: 'hands', price: 180, cadence: 3 },
-  { name: 'Acrylic nails', zone: 'hands', price: 250, cadence: 3 },
-  { name: 'Pedicure', zone: 'legs', price: 220, cadence: 4 },
-  { name: 'Laser hair removal', zone: 'hips', price: 480, cadence: 6 },
-  { name: 'Waxing', zone: 'legs', price: 200, cadence: 4 },
-  { name: 'Deep tissue massage', zone: 'torso', price: 340, cadence: 4 },
-  { name: 'Body scrub', zone: 'torso', price: 280, cadence: 6 },
-  { name: 'Hammam', zone: 'torso', price: 300, cadence: 4 },
-  { name: 'Spray tan', zone: 'torso', price: 200, cadence: 2 },
-  { name: 'Body contouring', zone: 'hips', price: 800, cadence: 4 },
-  { name: 'Something else', zone: 'torso', price: 200, cadence: 6 },
-];
-
-const ZONE_LABEL: Record<ZoneId, string> = {
-  hair: 'Hair',
-  face: 'Face',
-  lips: 'Lips',
-  torso: 'Body',
-  hands: 'Hands',
-  hips: 'Hips',
-  legs: 'Legs',
+/** Body zone for known treatment names, so the right part of the avatar glows. */
+const ZONE_HINTS: Record<string, ZoneId> = {
+  'Roots touch-up': 'hair', 'Cut & style': 'hair', 'Hair color': 'hair', 'Keratin treatment': 'hair',
+  'Blow-dry': 'hair', 'Hair extensions': 'hair', 'Olaplex treatment': 'hair',
+  Botox: 'face', Hydrafacial: 'face', 'Signature facial': 'face', Microneedling: 'face',
+  'Chemical peel': 'face', 'Skin booster': 'face', 'Brow shaping': 'face', 'Brow lamination': 'face',
+  'Lash lift': 'face', 'Lash extensions': 'face', Threading: 'face', 'Teeth whitening': 'face',
+  'Lip filler': 'lips',
+  'Gel manicure': 'hands', 'Acrylic nails': 'hands',
+  Pedicure: 'legs', Waxing: 'legs', 'Leg wax': 'legs',
+  'Deep tissue massage': 'torso', 'Body scrub': 'torso', Hammam: 'torso', 'Spray tan': 'torso',
+  'Laser hair removal': 'hips', 'Body contouring': 'hips',
+};
+const SERVICE_ZONE: Record<ClinicService, ZoneId> = {
+  Hair: 'hair', Skin: 'face', Nails: 'hands', 'Lashes & Brows': 'face', Spa: 'torso',
 };
 
-const LAST_OPTS = ['Today', '2 weeks ago', '1 month ago'];
 const UNITS = ['Days', 'Weeks', 'Months'];
 const UNIT_MAP: Record<string, 'day' | 'week' | 'month'> = { Days: 'day', Weeks: 'week', Months: 'month' };
 
-/** Which kind of service a zone's rituals need, so a new ritual defaults to a
- *  clinic that actually offers it instead of whatever happens to be first. */
-const ZONE_CATEGORY: Record<ZoneId, ClinicService> = {
-  hair: 'Hair',
-  face: 'Skin',
-  lips: 'Skin',
-  torso: 'Spa',
-  hands: 'Nails',
-  hips: 'Spa',
-  legs: 'Spa',
-};
-
-/** Add a ritual: search the catalogue, set cadence, pick where (your clinics or
- *  browse Discover, or add your own). */
+/**
+ * Add a ritual the way she thinks: pick WHERE first (her clinics), then WHAT
+ * from that clinic's own menu (its prices and times), then how often — nothing
+ * pre-assumed: she sets the rhythm herself.
+ */
 export function AddRitualScreen({ navigation }: Props) {
   const t = useTheme();
   const clinics = useEterna((s) => s.clinics);
@@ -87,59 +47,46 @@ export function AddRitualScreen({ navigation }: Props) {
   const addOwnClinic = useEterna((s) => s.addOwnClinic);
   const showToast = useEterna((s) => s.showToast);
 
-  const [query, setQuery] = useState('');
-  const [pick, setPick] = useState<CatalogItem>(CATALOG[0]!);
-  const [lastDoneISO, setLastDoneISO] = useState(addWeeks(todayISO(), -2));
-  const [cadence, setCadence] = useState(pick.cadence);
-  const [unit, setUnit] = useState('Weeks');
-  const matchClinic = (zone: ZoneId, treatmentName?: string): string => {
-    const sc = clinics.filter((c) => savedIds.includes(c.id));
-    return (
-      // first: a clinic that actually has this treatment on its menu
-      (treatmentName
-        ? sc.find((c) => c.offerings.some((o) => o.name === treatmentName))?.id
-        : undefined) ??
-      sc.find((c) => c.services.includes(ZONE_CATEGORY[zone]))?.id ??
-      sc[0]?.id ??
-      ''
-    );
-  };
-  const [clinicId, setClinicId] = useState<string>(matchClinic(CATALOG[0]!.zone, CATALOG[0]!.name));
-  const [ownName, setOwnName] = useState('');
+  const [clinicId, setClinicId] = useState<string>('');
+  const [serviceName, setServiceName] = useState<string>('');
+  const [customName, setCustomName] = useState('');
+  const [customPrice, setCustomPrice] = useState('');
   const [oneOff, setOneOff] = useState(false);
   const [atHome, setAtHome] = useState(false);
+  const [cadence, setCadence] = useState(0); // 0 = not chosen yet — her call
+  const [unit, setUnit] = useState('Weeks');
+  const [lastDoneISO, setLastDoneISO] = useState(addWeeks(todayISO(), -2));
+  const [ownName, setOwnName] = useState('');
 
   const saved = useMemo(() => clinics.filter((c) => savedIds.includes(c.id)), [clinics, savedIds]);
-  /** This clinic's own menu entry for the picked ritual, with its price and time. */
-  const offeringAt = (c: Clinic) => c.offerings.find((o) => o.name === pick.name);
-  const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return q ? CATALOG.filter((c) => c.name.toLowerCase().includes(q)) : CATALOG;
-  }, [query]);
+  const clinic = clinics.find((c) => c.id === clinicId);
+  const offering = clinic?.offerings.find((o) => o.name === serviceName);
+  const finalName = serviceName === '__custom__' ? customName.trim() : serviceName;
+  const canSubmit = !!clinicId && !!finalName && (oneOff || cadence > 0);
 
   const submit = () => {
-    if (!clinicId) return;
-    // the chosen clinic's own price for this ritual, when it's on their menu
-    const chosenClinic = clinics.find((c) => c.id === clinicId);
-    const offering = chosenClinic?.offerings.find((o) => o.name === pick.name);
-    const practitioner = PRACTITIONERS[5]!;
+    if (!canSubmit) return;
+    const zone =
+      ZONE_HINTS[finalName] ??
+      (offering ? SERVICE_ZONE[offering.service] : clinic?.services[0] ? SERVICE_ZONE[clinic.services[0]] : 'torso');
+    const price = offering?.price ?? (Number(customPrice.replace(/[^0-9]/g, '')) || 0);
     const treatment: Treatment = {
       id: `t-add-${Date.now()}`,
-      name: pick.name,
-      zone: pick.zone,
-      // a one-off doesn't repeat; a far-past "last done" keeps it showing as
-      // still-to-do in event prep until it's booked
+      name: finalName,
+      zone,
+      // a one-off doesn't repeat; the far-past "last done" keeps it visible in
+      // event prep until she books it
       cadence: oneOff ? { every: 1, unit: 'month' } : { every: cadence, unit: UNIT_MAP[unit] ?? 'week' },
       clinicId,
-      practitionerId: practitioner.id,
-      price: offering?.price ?? pick.price,
+      practitionerId: PRACTITIONERS[5]!.id,
+      price,
       lastDoneISO: oneOff ? addWeeks(todayISO(), -520) : lastDoneISO,
       reminderOn: true,
       atHome: atHome || undefined,
       oneOff: oneOff || undefined,
     };
     addTreatment(treatment);
-    showToast('Added to your rituals');
+    showToast(`Added ${finalName}`);
     navigation.goBack();
   };
 
@@ -156,229 +103,51 @@ export function AddRitualScreen({ navigation }: Props) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* what — searchable list */}
+        {/* 1 · where — her clinics first */}
         <View style={{ gap: spacing.s }}>
-          <SectionLabel>What is it?</SectionLabel>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: spacing.s,
-              backgroundColor: t.surface,
-              borderRadius: radii.m,
-              borderWidth: 1,
-              borderColor: t.border,
-              paddingHorizontal: 12,
-            }}
-          >
-            <Ionicons name="search" size={16} color={t.muted} />
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Search treatments"
-              placeholderTextColor={t.muted}
-              style={{ flex: 1, paddingVertical: 11, fontSize: 15, color: t.text }}
-              autoCorrect={false}
-              accessibilityLabel="Search treatments"
-            />
-            {query ? (
-              <Pressable onPress={() => setQuery('')} accessibilityLabel="Clear">
-                <Ionicons name="close-circle" size={17} color={t.muted} />
-              </Pressable>
-            ) : null}
-          </View>
-          <View
-            style={{
-              maxHeight: 280,
-              borderRadius: radii.l,
-              borderWidth: 1,
-              borderColor: t.border,
-              overflow: 'hidden',
-            }}
-          >
-            <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
-              {results.map((c, i) => {
-                const sel = pick.name === c.name;
-                return (
-                  <Pressable
-                    key={c.name}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: sel }}
-                    onPress={() => {
-                      setPick(c);
-                      setCadence(c.cadence);
-                      // catalogue intervals are in weeks; keep the unit in sync
-                      setUnit('Weeks');
-                      // default to a clinic that actually does this ritual
-                      setClinicId(matchClinic(c.zone, c.name));
-                    }}
+          <SectionLabel>Where?</SectionLabel>
+          <View style={{ gap: spacing.s }}>
+            {saved.map((c) => {
+              const sel = clinicId === c.id;
+              return (
+                <Pressable
+                  key={c.id}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: sel }}
+                  onPress={() => {
+                    setClinicId(c.id);
+                    setServiceName('');
+                  }}
+                  style={({ pressed }) => ({
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.m,
+                    backgroundColor: t.surface,
+                    borderRadius: radii.l,
+                    borderWidth: sel ? 1.5 : 1,
+                    borderColor: sel ? t.accent : t.border,
+                    padding: spacing.m,
+                    transform: [{ scale: pressed ? 0.98 : 1 }],
+                  })}
+                >
+                  <View
                     style={{
-                      flexDirection: 'row',
+                      width: 36,
+                      height: 36,
+                      borderRadius: radii.s,
+                      backgroundColor: t.accentSoft,
                       alignItems: 'center',
-                      gap: spacing.m,
-                      paddingVertical: 12,
-                      paddingHorizontal: spacing.m,
-                      backgroundColor: sel ? t.accentSoft : t.bg,
-                      borderTopWidth: i === 0 ? 0 : 1,
-                      borderTopColor: t.separator,
+                      justifyContent: 'center',
                     }}
                   >
-                    <View style={{ flex: 1, minWidth: 0 }}>
-                      <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>{c.name}</Text>
-                      <Text style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
-                        {ZONE_LABEL[c.zone]} · {formatAED(c.price)}
-                      </Text>
-                    </View>
-                    {sel ? <Ionicons name="checkmark-circle" size={20} color={t.accent} /> : null}
-                  </Pressable>
-                );
-              })}
-              {results.length === 0 ? (
-                <Text style={{ fontSize: 14, color: t.sub, padding: spacing.l }}>No matches.</Text>
-              ) : null}
-            </ScrollView>
-          </View>
-        </View>
-
-        {/* last done — pick the actual date */}
-        {oneOff ? null : (
-          <View style={{ gap: spacing.s }}>
-            <SectionLabel>Last done</SectionLabel>
-            <CalendarPicker value={lastDoneISO} onSelect={setLastDoneISO} maxISO={todayISO()} />
-          </View>
-        )}
-
-        {/* how often — repeats on a cadence, or a one-off for an event */}
-        <View style={{ gap: spacing.s }}>
-          <SectionLabel>How often?</SectionLabel>
-          <Segmented
-            options={['Repeats', 'Just once']}
-            value={oneOff ? 'Just once' : 'Repeats'}
-            onChange={(v) => setOneOff(v === 'Just once')}
-          />
-          {oneOff ? (
-            <Text style={{ fontSize: 13, color: t.sub, paddingHorizontal: 4, lineHeight: 19 }}>
-              A one-off. It won't repeat on your avatar, it only shows when you're prepping for an event.
-            </Text>
-          ) : (
-            <>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: spacing.xl,
-                  backgroundColor: t.surface,
-                  borderRadius: radii.card,
-                  paddingVertical: spacing.l,
-                }}
-              >
-                <Pressable
-                  accessibilityLabel="Less often"
-                  onPress={() => setCadence((c) => Math.max(1, c - 1))}
-                  style={({ pressed }) => ({
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
-                    backgroundColor: t.surfaceAlt,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transform: [{ scale: pressed ? 0.9 : 1 }],
-                  })}
-                >
-                  <Ionicons name="remove" size={18} color={t.accent} />
+                    <Text style={{ fontWeight: '700', color: t.accent }}>{c.name[0]}</Text>
+                  </View>
+                  <Text style={{ flex: 1, fontSize: 15, fontWeight: '600', color: t.text }}>{c.name}</Text>
+                  {sel ? <Ionicons name="checkmark-circle" size={22} color={t.accent} /> : null}
                 </Pressable>
-                <Text style={{ fontSize: 17, fontWeight: '700', color: t.text, minWidth: 96, textAlign: 'center' }}>
-                  {cadence} {unit.toLowerCase()}
-                </Text>
-                <Pressable
-                  accessibilityLabel="More often"
-                  onPress={() => setCadence((c) => Math.min(365, c + 1))}
-                  style={({ pressed }) => ({
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
-                    backgroundColor: t.surfaceAlt,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transform: [{ scale: pressed ? 0.9 : 1 }],
-                  })}
-                >
-                  <Ionicons name="add" size={18} color={t.accent} />
-                </Pressable>
-              </View>
-              <Segmented options={UNITS} value={unit} onChange={setUnit} />
-            </>
-          )}
-        </View>
+              );
+            })}
 
-        {/* at home */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>At home</Text>
-            <Text style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
-              A home-visit beautician instead of the salon.
-            </Text>
-          </View>
-          <IOSSwitch on={atHome} onToggle={() => setAtHome((v) => !v)} />
-        </View>
-
-        {/* where — her clinics; the ones that do this ritual come first, showing
-            THEIR price and time for it */}
-        <View style={{ gap: spacing.s }}>
-          <SectionLabel>Where do you get it done?</SectionLabel>
-          <View style={{ gap: spacing.s }}>
-            {[...saved]
-              .sort((a, b) => (offeringAt(b) ? 1 : 0) - (offeringAt(a) ? 1 : 0))
-              .map((c) => {
-                const sel = clinicId === c.id;
-                const o = offeringAt(c);
-                return (
-                  <Pressable
-                    key={c.id}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: sel }}
-                    onPress={() => setClinicId(c.id)}
-                    style={({ pressed }) => ({
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: spacing.m,
-                      backgroundColor: t.surface,
-                      borderRadius: radii.l,
-                      borderWidth: sel ? 1.5 : 1,
-                      borderColor: sel ? t.accent : t.border,
-                      padding: spacing.m,
-                      transform: [{ scale: pressed ? 0.98 : 1 }],
-                    })}
-                  >
-                    <View
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: radii.s,
-                        backgroundColor: t.accentSoft,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Text style={{ fontWeight: '700', color: t.accent }}>{c.name[0]}</Text>
-                    </View>
-                    <View style={{ flex: 1, minWidth: 0 }}>
-                      <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
-                        {c.name}
-                      </Text>
-                      {o ? (
-                        <Text style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
-                          {formatAED(o.price)} · {o.mins} min
-                        </Text>
-                      ) : null}
-                    </View>
-                    {sel ? <Ionicons name="checkmark-circle" size={22} color={t.accent} /> : null}
-                  </Pressable>
-                );
-              })}
-
-            {/* browse in Discover */}
             <Pressable
               accessibilityRole="button"
               onPress={() => navigation.navigate('Tabs', { screen: 'Discover' })}
@@ -398,7 +167,6 @@ export function AddRitualScreen({ navigation }: Props) {
               <Text style={{ fontSize: 14, fontWeight: '700', color: t.accent }}>Browse clinics</Text>
             </Pressable>
 
-            {/* add your own */}
             <View style={{ flexDirection: 'row', gap: spacing.s }}>
               <TextInput
                 value={ownName}
@@ -424,8 +192,9 @@ export function AddRitualScreen({ navigation }: Props) {
                 onPress={() => {
                   const name = ownName.trim();
                   if (!name) return;
-                  const clinic = addOwnClinic(name);
-                  setClinicId(clinic.id);
+                  const c = addOwnClinic(name);
+                  setClinicId(c.id);
+                  setServiceName('');
                   setOwnName('');
                   showToast(`Added ${name}`);
                 }}
@@ -443,10 +212,217 @@ export function AddRitualScreen({ navigation }: Props) {
             </View>
           </View>
         </View>
+
+        {/* 2 · what — that clinic's own menu, its prices and times */}
+        {clinic ? (
+          <View style={{ gap: spacing.s }}>
+            <SectionLabel>What do you get done at {clinic.name}?</SectionLabel>
+            <View
+              style={{
+                borderRadius: radii.card,
+                borderWidth: 1,
+                borderColor: t.border,
+                overflow: 'hidden',
+              }}
+            >
+              {clinic.offerings.map((o, i) => {
+                const sel = serviceName === o.name;
+                return (
+                  <Pressable
+                    key={o.name}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: sel }}
+                    onPress={() => setServiceName(o.name)}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: spacing.m,
+                      paddingVertical: 12,
+                      paddingHorizontal: spacing.m,
+                      backgroundColor: sel ? t.accentSoft : t.bg,
+                      borderTopWidth: i === 0 ? 0 : 1,
+                      borderTopColor: t.separator,
+                    }}
+                  >
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
+                        {o.name}
+                      </Text>
+                      <Text style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
+                        {formatAED(o.price)} · {o.mins} min
+                      </Text>
+                    </View>
+                    {sel ? <Ionicons name="checkmark-circle" size={20} color={t.accent} /> : null}
+                  </Pressable>
+                );
+              })}
+              {/* something not on the menu */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: serviceName === '__custom__' }}
+                onPress={() => setServiceName('__custom__')}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: spacing.s,
+                  paddingVertical: 12,
+                  paddingHorizontal: spacing.m,
+                  backgroundColor: serviceName === '__custom__' ? t.accentSoft : t.bg,
+                  borderTopWidth: clinic.offerings.length === 0 ? 0 : 1,
+                  borderTopColor: t.separator,
+                }}
+              >
+                <Ionicons name="add" size={16} color={t.accent} />
+                <Text style={{ flex: 1, fontSize: 15, fontWeight: '600', color: t.accent }}>
+                  Something else
+                </Text>
+                {serviceName === '__custom__' ? (
+                  <Ionicons name="checkmark-circle" size={20} color={t.accent} />
+                ) : null}
+              </Pressable>
+            </View>
+            {serviceName === '__custom__' ? (
+              <View style={{ flexDirection: 'row', gap: spacing.s }}>
+                <TextInput
+                  value={customName}
+                  onChangeText={setCustomName}
+                  placeholder="Service name"
+                  placeholderTextColor={t.muted}
+                  accessibilityLabel="Service name"
+                  style={{
+                    flex: 2,
+                    backgroundColor: t.surface,
+                    borderRadius: radii.m,
+                    borderWidth: 1,
+                    borderColor: t.border,
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
+                    fontSize: 15,
+                    color: t.text,
+                  }}
+                />
+                <TextInput
+                  value={customPrice}
+                  onChangeText={setCustomPrice}
+                  placeholder="AED"
+                  placeholderTextColor={t.muted}
+                  keyboardType="number-pad"
+                  accessibilityLabel="Price"
+                  style={{
+                    flex: 1,
+                    backgroundColor: t.surface,
+                    borderRadius: radii.m,
+                    borderWidth: 1,
+                    borderColor: t.border,
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
+                    fontSize: 15,
+                    color: t.text,
+                  }}
+                />
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+
+        {/* 3 · how often — entirely her choice, nothing pre-filled */}
+        {clinic && finalName ? (
+          <>
+            <View style={{ gap: spacing.s }}>
+              <SectionLabel>How often?</SectionLabel>
+              <Segmented
+                options={['Repeats', 'Just once']}
+                value={oneOff ? 'Just once' : 'Repeats'}
+                onChange={(v) => setOneOff(v === 'Just once')}
+              />
+              {oneOff ? (
+                <Text style={{ fontSize: 13, color: t.sub, paddingHorizontal: 4, lineHeight: 19 }}>
+                  A one-off. It won't repeat on your avatar, it only shows when you're prepping for an event.
+                </Text>
+              ) : (
+                <>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: spacing.xl,
+                      backgroundColor: t.surface,
+                      borderRadius: radii.card,
+                      paddingVertical: spacing.l,
+                    }}
+                  >
+                    <Pressable
+                      accessibilityLabel="Less often"
+                      onPress={() => setCadence((c) => Math.max(0, c - 1))}
+                      style={({ pressed }) => ({
+                        width: 36,
+                        height: 36,
+                        borderRadius: 18,
+                        backgroundColor: t.surfaceAlt,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transform: [{ scale: pressed ? 0.9 : 1 }],
+                      })}
+                    >
+                      <Ionicons name="remove" size={18} color={t.accent} />
+                    </Pressable>
+                    <Text
+                      style={{
+                        fontSize: 17,
+                        fontWeight: '700',
+                        color: cadence === 0 ? t.muted : t.text,
+                        minWidth: 110,
+                        textAlign: 'center',
+                      }}
+                    >
+                      {cadence === 0 ? 'Choose' : `${cadence} ${unit.toLowerCase()}`}
+                    </Text>
+                    <Pressable
+                      accessibilityLabel="More often"
+                      onPress={() => setCadence((c) => Math.min(365, c + 1))}
+                      style={({ pressed }) => ({
+                        width: 36,
+                        height: 36,
+                        borderRadius: 18,
+                        backgroundColor: t.surfaceAlt,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transform: [{ scale: pressed ? 0.9 : 1 }],
+                      })}
+                    >
+                      <Ionicons name="add" size={18} color={t.accent} />
+                    </Pressable>
+                  </View>
+                  <Segmented options={UNITS} value={unit} onChange={setUnit} />
+                </>
+              )}
+            </View>
+
+            {/* at home */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>At home</Text>
+                <Text style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
+                  A home-visit beautician instead of the salon.
+                </Text>
+              </View>
+              <IOSSwitch on={atHome} onToggle={() => setAtHome((v) => !v)} />
+            </View>
+
+            {/* last done — real date, her pick */}
+            {oneOff ? null : (
+              <View style={{ gap: spacing.s }}>
+                <SectionLabel>Last done</SectionLabel>
+                <CalendarPicker value={lastDoneISO} onSelect={setLastDoneISO} maxISO={todayISO()} />
+              </View>
+            )}
+          </>
+        ) : null}
       </ScrollView>
 
       <View style={{ position: 'absolute', left: spacing.xl, right: spacing.xl, bottom: spacing.xxl }}>
-        <PrimaryButton title="Add to rituals" onPress={submit} disabled={!clinicId} />
+        <PrimaryButton title="Add to rituals" onPress={submit} disabled={!canSubmit} />
       </View>
     </Screen>
   );

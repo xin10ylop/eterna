@@ -99,14 +99,23 @@ export function HomeScreen({ navigation }: Props) {
           }}
         >
           <View style={{ flex: 1 }}>
-            <Text
-              style={{ fontSize: 26, fontWeight: '700', color: t.text, letterSpacing: -0.4 }}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.7}
-            >
-              {name ? `${greeting}, ${name}` : greeting}
-            </Text>
+            {name ? (
+              <>
+                <Text style={{ fontSize: 17, fontWeight: '600', color: t.sub }}>{greeting},</Text>
+                <Text
+                  style={{ fontSize: 27, fontWeight: '700', color: t.text, letterSpacing: -0.4, marginTop: 1 }}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.7}
+                >
+                  {name}
+                </Text>
+              </>
+            ) : (
+              <Text style={{ fontSize: 27, fontWeight: '700', color: t.text, letterSpacing: -0.4 }}>
+                {greeting}
+              </Text>
+            )}
             <Text style={{ fontSize: 13.5, color: t.sub, marginTop: 4 }}>{line}</Text>
           </View>
           <Pressable
@@ -241,7 +250,7 @@ export function HomeScreen({ navigation }: Props) {
           {stageH > 0 ? (
             <Entrance spring distance={22}>
               <AvatarFigure
-                height={Math.min(620, stageH - 4)}
+                height={Math.min(540, stageH - 8)}
                 skinTone={profile?.avatar?.skinTone ?? 0}
                 hairColor={profile?.avatar?.hairColor ?? 0}
               >
