@@ -131,11 +131,9 @@ export function MyClinicsScreen({ navigation }: Props) {
                 <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
                   {c.name}
                 </Text>
-                {c.homeService || c.womenOnly ? (
+                {c.homeService ? (
                   <Text numberOfLines={1} style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
-                    {[c.homeService ? tr('discover.homeService') : null, c.womenOnly ? tr('filter.womenOnly') : null]
-                      .filter(Boolean)
-                      .join(' · ')}
+                    {tr('discover.homeService')}
                   </Text>
                 ) : null}
               </View>

@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -10,7 +10,6 @@ import {
   bookedThisMonth,
   budgetByMonth,
   expectedNextMonth,
-  projectedNextMonthCount,
   spentThisMonth,
 } from '../../services/logic';
 import { formatLong, isSameMonth, monthShort, startOfMonth, todayISO } from '../../lib/dates';
@@ -72,10 +71,8 @@ export function BudgetScreen({ navigation }: Props) {
     [sessions, appointments, treatments],
   );
   const maxMonth = Math.max(1, ...months.map((m) => m.spent + m.booked + m.projected));
-  const dueTogether = useMemo(
-    () => projectedNextMonthCount(appointments, treatments),
-    [appointments, treatments],
-  );
+  // Apple Health-style: a bar's amount shows only when she taps it
+  const [pickedMonth, setPickedMonth] = useState<string | null>(null);
   // average over completed/current months only — the future forecast month would
   // drag a true "monthly average" down
   const avgMonthly = useMemo(() => {
@@ -142,28 +139,6 @@ export function BudgetScreen({ navigation }: Props) {
           </View>
         </Card>
 
-        {/* insight sentence (Apple Health Highlights pattern) */}
-        <Card>
-          <SectionLabel>Highlights</SectionLabel>
-          <Text style={{ fontSize: 16, fontWeight: '600', color: t.text, lineHeight: 23 }}>
-            {nextMonth > spent + booked
-              ? dueTogether > 1
-                ? `Next month is set to cost more than this one — ${dueTogether} rituals fall due together.`
-                : 'Next month is set to cost more than this one.'
-              : 'Next month is on track to cost less than this one.'}
-          </Text>
-          <View style={{ flexDirection: 'row', gap: spacing.l, marginTop: spacing.m }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: t.accent }} />
-              <Text style={{ fontSize: 13, color: t.sub }}>This month {formatAED(spent + booked)}</Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: t.faint }} />
-              <Text style={{ fontSize: 13, color: t.sub }}>Next {formatAED(nextMonth)}</Text>
-            </View>
-          </View>
-        </Card>
-
         {/* six month bars */}
         <Card>
           <SectionLabel>Last months</SectionLabel>
@@ -177,33 +152,53 @@ export function BudgetScreen({ navigation }: Props) {
               {monthShort(months[0]?.monthISO ?? todayISO())} – {monthShort(months[months.length - 1]?.monthISO ?? todayISO())}
             </Text>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: spacing.s, height: 110 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: spacing.s, height: 128 }}>
             {months.map((m) => {
-              const h = ((m.spent + m.booked + m.projected) / maxMonth) * 84;
+              const total = m.spent + m.booked + m.projected;
+              const h = (total / maxMonth) * 84;
               const isNow = isSameMonth(m.monthISO, todayISO());
               const isFuture = m.monthISO > todayISO();
+              const picked = pickedMonth === m.monthISO;
               return (
-                <View key={m.monthISO} style={{ flex: 1, alignItems: 'center', gap: 4 }}>
+                <Pressable
+                  key={m.monthISO}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${monthShort(m.monthISO)}, ${formatAED(total)}`}
+                  onPress={() => setPickedMonth(picked ? null : m.monthISO)}
+                  style={{ flex: 1, alignItems: 'center', gap: 4 }}
+                >
+                  {/* the amount appears only for the tapped month (Apple Health) */}
+                  <View style={{ height: 18, justifyContent: 'flex-end' }}>
+                    {picked ? (
+                      <Text
+                        numberOfLines={1}
+                        style={{ fontSize: 10.5, fontWeight: '700', color: t.accent }}
+                      >
+                        {formatAED(total)}
+                      </Text>
+                    ) : null}
+                  </View>
                   <View
                     style={{
                       width: '68%',
                       height: Math.max(4, h),
                       borderRadius: 6,
-                      backgroundColor: isFuture ? t.accentSoft : isNow ? t.accent : t.faint,
+                      backgroundColor: isFuture ? t.accentSoft : isNow || picked ? t.accent : t.faint,
                       borderWidth: isFuture ? 1 : 0,
                       borderColor: t.accent,
+                      opacity: picked || !pickedMonth ? 1 : 0.45,
                     }}
                   />
                   <Text
                     style={{
                       fontSize: 11,
-                      fontWeight: isNow ? '700' : '500',
-                      color: isNow ? t.accent : t.muted,
+                      fontWeight: isNow || picked ? '700' : '500',
+                      color: isNow || picked ? t.accent : t.muted,
                     }}
                   >
                     {monthShort(m.monthISO)}
                   </Text>
-                </View>
+                </Pressable>
               );
             })}
           </View>

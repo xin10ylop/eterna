@@ -35,7 +35,7 @@ export function NotificationsScreen({
     <OnboardingShell
       step={5}
       title="Your quiet reminders"
-      subtitle="One gentle nudge per ritual — never a daily buzz."
+      subtitle="One gentle nudge per ritual, never a daily buzz."
       cta="Set reminders"
       onNext={() => navigation.navigate('Ready')}
       footer={<GhostButton title="Maybe later" onPress={() => navigation.navigate('Ready')} />}
@@ -88,34 +88,10 @@ export function NotificationsScreen({
 
 /* ----------------------------------- Ready ----------------------------------- */
 
-/** Celebration anatomy (Duolingo): burst + headline + stat chips + one CTA. */
-function StatChip({ icon, value, label }: { icon: keyof typeof Ionicons.glyphMap; value: string; label: string }) {
-  const t = useTheme();
-  return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: t.surfaceAlt,
-        borderWidth: 1,
-        borderColor: t.border,
-        borderRadius: radii.l,
-        paddingVertical: spacing.m,
-        alignItems: 'center',
-        gap: 2,
-      }}
-    >
-      <Ionicons name={icon} size={16} color={t.accent} />
-      <Text style={{ fontSize: 16, fontWeight: '700', color: t.text }}>{value}</Text>
-      <Text style={{ fontSize: 11, color: t.sub }}>{label}</Text>
-    </View>
-  );
-}
-
 export function ReadyScreen({ navigation: _n }: NativeStackScreenProps<RootStackParamList, 'Ready'>) {
   const t = useTheme();
   const complete = useEterna((s) => s.completeOnboarding);
   const firstName = useEterna((s) => s.draft.firstName);
-  const routine = useEterna((s) => s.draft.routine);
   const avatar = useEterna((s) => s.draft.avatar);
   const fade = useRef(new Animated.Value(0)).current;
 
@@ -129,29 +105,23 @@ export function ReadyScreen({ navigation: _n }: NativeStackScreenProps<RootStack
         <View style={{ alignItems: 'center' }}>
           <Confetti size={280} style={{ position: 'absolute', top: -60 }} />
           <AnimatedCheck size={56} />
-          <Entrance spring delay={400} distance={26}>
+          {/* gentle fade, no spring: the figure settles instead of bouncing */}
+          <Entrance delay={350} distance={8}>
             <AvatarFigure
-              height={260}
+              height={280}
               skinTone={avatar.skinTone}
               hairColor={avatar.hairColor}
               style={{ marginTop: spacing.m }}
             />
           </Entrance>
         </View>
-        <Entrance delay={650}>
+        <Entrance delay={600}>
           <Text style={[type.title, { color: t.text, textAlign: 'center' }]}>
             {firstName ? `${firstName}, your space is ready` : 'Your space is ready'}
           </Text>
           <Text style={{ fontSize: 15, color: t.sub, textAlign: 'center', maxWidth: 280, lineHeight: 22, marginTop: 6 }}>
             Your rituals are on the avatar. Tap a glowing area to see what needs attention.
           </Text>
-        </Entrance>
-        <Entrance delay={800} distance={10}>
-          <View style={{ flexDirection: 'row', gap: spacing.s, alignSelf: 'stretch', paddingHorizontal: spacing.s }}>
-            <StatChip icon="sparkles-outline" value={String(routine.length || 3)} label="rituals" />
-            <StatChip icon="body-outline" value="7" label="zones mapped" />
-            <StatChip icon="wallet-outline" value="Ready" label="budget forecast" />
-          </View>
         </Entrance>
       </Animated.View>
       <View style={{ paddingBottom: spacing.xxl }}>

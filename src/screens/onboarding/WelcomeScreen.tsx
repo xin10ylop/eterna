@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { GhostButton, PrimaryButton, Screen } from '../../components/ui';
-import { LanguagePicker } from '../../components/LanguagePicker';
 import { Entrance } from '../../components/anim/Entrance';
 import { Sparkles } from '../../components/anim/Lottie';
 import { spacing, type } from '../../theme';
@@ -29,9 +28,6 @@ export function WelcomeScreen({ navigation }: Props) {
 
   return (
     <Screen>
-      <View style={{ alignItems: 'center', paddingTop: spacing.s }}>
-        <LanguagePicker />
-      </View>
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.l }}>
         <Entrance spring distance={20}>
           <View style={{ alignItems: 'center', justifyContent: 'center' }}>
@@ -57,7 +53,7 @@ export function WelcomeScreen({ navigation }: Props) {
       </View>
       <Entrance delay={850} distance={10}>
         <View style={{ paddingBottom: spacing.xxl, gap: spacing.xs }}>
-          <PrimaryButton title={tr('welcome.getStarted')} onPress={() => navigation.navigate('Features')} />
+          <PrimaryButton title={tr('welcome.getStarted')} onPress={() => navigation.navigate('Language')} />
           <GhostButton title={tr('welcome.haveAccount')} onPress={() => navigation.navigate('SignIn')} />
         </View>
       </Entrance>

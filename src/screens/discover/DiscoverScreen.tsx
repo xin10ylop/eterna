@@ -30,7 +30,6 @@ export function DiscoverScreen({ navigation }: Props) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('All');
   const [homeOnly, setHomeOnly] = useState(false);
-  const [womenOnly, setWomenOnly] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [slotChoice, setSlotChoice] = useState<string | null>(null);
   // Skeleton pass on first open, becomes the real fetch state with Supabase.
@@ -46,9 +45,9 @@ export function DiscoverScreen({ navigation }: Props) {
       // her own added clinics live in "My clinics", not the public directory
       .filter((c) => !c.id.startsWith('c-own-'))
       .filter((c) => {
-        if (filter !== 'All' && c.category !== filter) return false;
+        // a clinic offers several services; it matches when any of them does
+        if (filter !== 'All' && !c.services.includes(filter as (typeof c.services)[number])) return false;
         if (homeOnly && !c.homeService) return false;
-        if (womenOnly && !c.womenOnly) return false;
         if (q && !c.name.toLowerCase().includes(q)) return false;
         return true;
       })
@@ -59,7 +58,7 @@ export function DiscoverScreen({ navigation }: Props) {
         if (a.distanceKm !== b.distanceKm) return a.distanceKm - b.distanceKm;
         return b.rating - a.rating;
       });
-  }, [clinics, filter, homeOnly, womenOnly, query]);
+  }, [clinics, filter, homeOnly, query]);
 
   return (
     <Screen>
@@ -107,7 +106,6 @@ export function DiscoverScreen({ navigation }: Props) {
         </ScrollView>
         <View style={{ flexDirection: 'row', gap: spacing.s }}>
           <Chip label={tr('common.atHome')} selected={homeOnly} onPress={() => setHomeOnly((v) => !v)} />
-          <Chip label={tr('filter.womenOnly')} selected={womenOnly} onPress={() => setWomenOnly((v) => !v)} />
         </View>
       </View>
 
@@ -175,11 +173,10 @@ export function DiscoverScreen({ navigation }: Props) {
                         </View>
                       ) : null}
                     </View>
-                    <Text style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>
-                      {tr('filter.' + c.category)}
+                    <Text numberOfLines={1} style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>
+                      {c.services.map((s) => tr('filter.' + s)).join(' · ')}
                       {c.distanceKm > 0 ? ` · ${c.distanceKm} km` : ''}
                       {c.homeService ? ` · ${tr('discover.homeService')}` : ''}
-                      {c.slots.length > 0 ? ` · ${tr('discover.slotsOpen', { n: c.slots.length })}` : ''}
                     </Text>
                   </View>
                   <Pressable

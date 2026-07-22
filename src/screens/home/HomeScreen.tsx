@@ -92,7 +92,9 @@ export function HomeScreen({ navigation }: Props) {
             paddingHorizontal: spacing.xl,
             paddingTop: spacing.s,
             flexDirection: 'row',
-            alignItems: 'center',
+            // top-align so the monogram sits level with the greeting no matter
+            // how many lines the name takes
+            alignItems: 'flex-start',
             gap: spacing.m,
           }}
         >
@@ -118,6 +120,7 @@ export function HomeScreen({ navigation }: Props) {
               backgroundColor: t.accentSoft,
               alignItems: 'center',
               justifyContent: 'center',
+              marginTop: 2,
             }}
           >
             <Text style={{ fontSize: 15, fontWeight: '700', color: t.accent }}>{initials}</Text>
@@ -299,20 +302,7 @@ export function HomeScreen({ navigation }: Props) {
           </ScrollView>
         ) : null}
 
-        {/* quiet link to the full plan */}
-        {toBook > 0 ? (
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => navigation.navigate('Planning')}
-            style={{ alignItems: 'center', paddingBottom: spacing.l, paddingTop: spacing.xs }}
-          >
-            <Text style={{ fontSize: 13.5, fontWeight: '700', color: t.accent }}>
-              {tx('home.seeAll', { n: toBook })}
-            </Text>
-          </Pressable>
-        ) : (
-          <View style={{ paddingBottom: spacing.l }} />
-        )}
+        <View style={{ paddingBottom: spacing.l }} />
       </View>
     </Screen>
   );

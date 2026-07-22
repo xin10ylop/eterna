@@ -9,6 +9,7 @@ import { useT } from '../i18n';
 import type { RootStackParamList, TabParamList } from './types';
 
 import { WelcomeScreen } from '../screens/onboarding/WelcomeScreen';
+import { LanguageScreen } from '../screens/onboarding/LanguageScreen';
 import { FeaturesScreen } from '../screens/onboarding/FeaturesScreen';
 import { SignInScreen, SignUpScreen, VerifyScreen } from '../screens/onboarding/AuthScreens';
 import { BirthdayScreen, NameScreen, RoutineScreen } from '../screens/onboarding/ProfileSteps';
@@ -155,6 +156,7 @@ export function RootNavigator() {
         {!isSignedIn ? (
           <Stack.Group>
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
+            <Stack.Screen name="Language" component={LanguageScreen} />
             <Stack.Screen name="Features" component={FeaturesScreen} />
             <Stack.Screen name="SignUp" component={SignUpScreen} />
             <Stack.Screen name="SignIn" component={SignInScreen} />

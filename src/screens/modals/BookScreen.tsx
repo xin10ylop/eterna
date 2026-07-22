@@ -244,13 +244,6 @@ export function BookScreen({ navigation, route }: Props) {
                 </Text>
               </>
             )}
-            {tr.price >= 400 && !tr.pkg ? (
-              <View style={{ paddingTop: 6, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.separator }}>
-                <Text style={{ fontSize: 12, color: t.sub }}>
-                  {tx('book.bnpl', { amount: formatAED(Math.round(tr.price / 4)) })}
-                </Text>
-              </View>
-            ) : null}
           </View>
         </View>
       </ScrollView>

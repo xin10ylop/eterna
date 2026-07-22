@@ -4,6 +4,7 @@ import type { ZoneId } from '../types';
 export type RootStackParamList = {
   // onboarding
   Welcome: undefined;
+  Language: undefined;
   Features: undefined;
   SignIn: undefined;
   SignUp: undefined;

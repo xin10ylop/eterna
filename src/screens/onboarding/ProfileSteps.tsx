@@ -56,10 +56,8 @@ export function NameScreen({ navigation }: NativeStackScreenProps<RootStackParam
             if (e1) setE1(null);
           }}
           error={e1}
-          placeholder="Lina"
           autoComplete="given-name"
           textContentType="givenName"
-          autoFocus
         />
         <Field
           label="Last name (optional)"
@@ -69,7 +67,6 @@ export function NameScreen({ navigation }: NativeStackScreenProps<RootStackParam
             if (e2) setE2(null);
           }}
           error={e2}
-          placeholder="Haddad"
           autoComplete="family-name"
           textContentType="familyName"
         />
@@ -82,14 +79,12 @@ export function NameScreen({ navigation }: NativeStackScreenProps<RootStackParam
 /* --------------------------------- Birthday --------------------------------- */
 
 export function BirthdayScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Birthday'>) {
-  const t = useTheme();
   const setDraft = useEterna((s) => s.setDraft);
   const years = useMemo(() => {
     const now = new Date().getFullYear();
     return Array.from({ length: 70 }, (_, i) => String(now - 16 - i));
   }, []);
   const [yearIdx, setYearIdx] = useState(14); // a sensible default, ~30
-  const [agreed, setAgreed] = useState(false);
 
   return (
     <OnboardingShell
@@ -97,7 +92,6 @@ export function BirthdayScreen({ navigation }: NativeStackScreenProps<RootStackP
       title="What year were you born?"
       subtitle="Used only to tailor treatment cadences to you."
       cta="Continue"
-      ctaDisabled={!agreed}
       onNext={() => {
         setDraft({ birthdayISO: `${years[yearIdx]}-01-01` });
         navigation.navigate('Routine');
@@ -105,32 +99,6 @@ export function BirthdayScreen({ navigation }: NativeStackScreenProps<RootStackP
     >
       <View style={{ gap: spacing.xl, paddingTop: spacing.s, alignItems: 'center' }}>
         <WheelPicker items={years} index={yearIdx} onChange={setYearIdx} width={140} />
-        <Pressable
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: agreed }}
-          onPress={() => setAgreed(!agreed)}
-          style={{ flexDirection: 'row', gap: spacing.m, alignItems: 'flex-start' }}
-        >
-          <View
-            style={{
-              width: 22,
-              height: 22,
-              borderRadius: 6,
-              borderWidth: 1.5,
-              borderColor: agreed ? t.accent : t.muted,
-              backgroundColor: agreed ? t.accent : 'transparent',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginTop: 1,
-            }}
-          >
-            {agreed ? <Text style={{ color: t.onAccent, fontSize: 13, fontWeight: '800' }}>✓</Text> : null}
-          </View>
-          <Text style={{ flex: 1, fontSize: 13, color: t.sub, lineHeight: 19 }}>
-            I agree to the Terms of Service and acknowledge the Privacy Policy. Health-related data
-            stays on this device in the demo.
-          </Text>
-        </Pressable>
       </View>
     </OnboardingShell>
   );

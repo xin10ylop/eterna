@@ -35,19 +35,20 @@ export interface Practitioner {
   role: PractitionerRole;
 }
 
+export type ClinicService = 'Hair' | 'Skin' | 'Nails' | 'Lashes & Brows' | 'Spa';
+
 export interface Clinic {
   id: string;
   name: string;
-  category: 'Hair' | 'Skin' | 'Nails' | 'Lashes & Brows' | 'Spa';
+  /** Every clinic offers its own mix of services; most offer several. */
+  services: ClinicService[];
   rating: number;
   distanceKm: number;
   /** Next open slots, newest first. Mocked; will come from booking API later. */
   slots: string[];
   /** Offers at-home service (home-visit beautician). */
   homeService?: boolean;
-  /** Ladies-only salon (a table-stakes filter in the Gulf). */
-  womenOnly?: boolean;
-  /** Paid placement — surfaced as a clearly-labelled "Sponsored" suggestion. */
+  /** Paid placement, surfaced as a clearly-labelled "Sponsored" suggestion. */
   sponsored?: boolean;
 }
 

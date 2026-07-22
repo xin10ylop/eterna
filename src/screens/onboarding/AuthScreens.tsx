@@ -132,6 +132,7 @@ export function SignUpScreen({ navigation }: NativeStackScreenProps<RootStackPar
   const setDraft = useEterna((s) => s.setDraft);
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
+  const [agreed, setAgreed] = useState(false);
   const strength = passwordStrength(pw);
   const strengthLabel = ['Too short', 'Okay', 'Good', 'Strong'][strength];
 
@@ -141,6 +142,7 @@ export function SignUpScreen({ navigation }: NativeStackScreenProps<RootStackPar
       title="Create your account"
       subtitle="Your rituals stay private to you."
       cta="Continue"
+      ctaDisabled={!agreed}
       onNext={() => {
         if (email.trim()) setDraft({ email: email.trim() });
         navigation.navigate('Verify');
@@ -194,6 +196,32 @@ export function SignUpScreen({ navigation }: NativeStackScreenProps<RootStackPar
           We'll email booking confirmations and ritual reminders, nothing else. Demo preview: you
           can continue without filling this in.
         </Caption>
+        {/* terms belong here, where the account is created */}
+        <Pressable
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: agreed }}
+          onPress={() => setAgreed((v) => !v)}
+          style={{ flexDirection: 'row', gap: spacing.m, alignItems: 'flex-start' }}
+        >
+          <View
+            style={{
+              width: 22,
+              height: 22,
+              borderRadius: 6,
+              borderWidth: 1.5,
+              borderColor: agreed ? t.accent : t.muted,
+              backgroundColor: agreed ? t.accent : 'transparent',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginTop: 1,
+            }}
+          >
+            {agreed ? <Text style={{ color: t.onAccent, fontSize: 13, fontWeight: '800' }}>✓</Text> : null}
+          </View>
+          <Text style={{ flex: 1, fontSize: 13, color: t.sub, lineHeight: 19 }}>
+            I agree to the Terms of Service and acknowledge the Privacy Policy.
+          </Text>
+        </Pressable>
         <OrDivider />
         <SocialAuth
           onContinue={() => {

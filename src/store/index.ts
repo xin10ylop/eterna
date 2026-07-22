@@ -232,7 +232,7 @@ export const useEterna = create<EternaState>((set, get) => ({
     const clinic: Clinic = {
       id: `c-own-${Date.now()}`,
       name: name.trim(),
-      category: 'Spa',
+      services: ['Spa'],
       rating: 0,
       distanceKm: 0,
       slots: [],

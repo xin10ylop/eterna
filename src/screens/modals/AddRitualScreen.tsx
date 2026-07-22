@@ -10,7 +10,7 @@ import { PRACTITIONERS } from '../../data/seed';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import type { RootStackParamList } from '../../navigation/types';
-import type { Clinic, Treatment, ZoneId } from '../../types';
+import type { ClinicService, Treatment, ZoneId } from '../../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddRitual'>;
 
@@ -65,9 +65,9 @@ const LAST_OPTS = ['Today', '2 weeks ago', '1 month ago'];
 const UNITS = ['Days', 'Weeks', 'Months'];
 const UNIT_MAP: Record<string, 'day' | 'week' | 'month'> = { Days: 'day', Weeks: 'week', Months: 'month' };
 
-/** Which kind of salon a zone's rituals belong to, so a new ritual defaults to a
- *  sensible clinic instead of whatever happens to be first. */
-const ZONE_CATEGORY: Record<ZoneId, Clinic['category']> = {
+/** Which kind of service a zone's rituals need, so a new ritual defaults to a
+ *  clinic that actually offers it instead of whatever happens to be first. */
+const ZONE_CATEGORY: Record<ZoneId, ClinicService> = {
   hair: 'Hair',
   face: 'Skin',
   lips: 'Skin',
@@ -94,7 +94,7 @@ export function AddRitualScreen({ navigation }: Props) {
   const [unit, setUnit] = useState('Weeks');
   const matchClinic = (zone: ZoneId): string => {
     const sc = clinics.filter((c) => savedIds.includes(c.id));
-    return sc.find((c) => c.category === ZONE_CATEGORY[zone])?.id ?? sc[0]?.id ?? '';
+    return sc.find((c) => c.services.includes(ZONE_CATEGORY[zone]))?.id ?? sc[0]?.id ?? '';
   };
   const [clinicId, setClinicId] = useState<string>(matchClinic(CATALOG[0]!.zone));
   const [ownName, setOwnName] = useState('');
@@ -245,7 +245,7 @@ export function AddRitualScreen({ navigation }: Props) {
           />
           {oneOff ? (
             <Text style={{ fontSize: 13, color: t.sub, paddingHorizontal: 4, lineHeight: 19 }}>
-              A one-off — it won't repeat on your avatar, it only shows when you're prepping for an event.
+              A one-off. It won't repeat on your avatar, it only shows when you're prepping for an event.
             </Text>
           ) : (
             <>
