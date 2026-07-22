@@ -31,7 +31,6 @@ export function DiscoverScreen({ navigation }: Props) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('All');
   const [homeOnly, setHomeOnly] = useState(false);
-  const [expanded, setExpanded] = useState<string | null>(null);
   // Skeleton pass on first open, becomes the real fetch state with Supabase.
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -128,13 +127,10 @@ export function DiscoverScreen({ navigation }: Props) {
         ) : (
           list.map((c) => {
             const saved = savedIds.includes(c.id);
-            const open = expanded === c.id;
             return (
               <Card
                 key={c.id}
-                onPress={() => {
-                  setExpanded(open ? null : c.id);
-                }}
+                onPress={() => navigation.navigate('ClinicProfile', { clinicId: c.id })}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
                   <View
@@ -201,51 +197,6 @@ export function DiscoverScreen({ navigation }: Props) {
                     />
                   </Pressable>
                 </View>
-                {/* clinic profile: their services with price and time, and one
-                    clear action — add it to My clinics. Browsing only. */}
-                {open ? (
-                  <View style={{ marginTop: spacing.m, borderTopWidth: 1, borderTopColor: t.separator, paddingTop: spacing.s }}>
-                    {c.offerings.map((o) => (
-                      <View
-                        key={o.name}
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          gap: spacing.m,
-                          paddingVertical: 9,
-                        }}
-                      >
-                        <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: t.accent }} />
-                        <Text numberOfLines={1} style={{ flex: 1, fontSize: 14, fontWeight: '600', color: t.text }}>
-                          {o.name}
-                        </Text>
-                        <Text style={{ fontSize: 12.5, color: t.sub }}>
-                          {formatAED(o.price)} · {o.mins} {tr('clinics.min')}
-                        </Text>
-                      </View>
-                    ))}
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={() => {
-                        if (!saved) toggleSaved(c.id);
-                        showToast(saved ? c.name : `${c.name} ✓`);
-                        if (!saved) setExpanded(null);
-                      }}
-                      style={({ pressed }) => ({
-                        marginTop: spacing.s,
-                        paddingVertical: 13,
-                        borderRadius: radii.l,
-                        alignItems: 'center',
-                        backgroundColor: saved ? t.faint : t.accent,
-                        transform: [{ scale: pressed ? 0.98 : 1 }],
-                      })}
-                    >
-                      <Text style={{ color: saved ? t.sub : t.onAccent, fontSize: 15, fontWeight: '700' }}>
-                        {saved ? tr('discover.inMyClinics') : tr('discover.addToMyClinics')}
-                      </Text>
-                    </Pressable>
-                  </View>
-                ) : null}
               </Card>
             );
           })

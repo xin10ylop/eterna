@@ -53,6 +53,10 @@ export interface Clinic {
   /** The menu: what this clinic does, each with price and average time. */
   offerings: ClinicOffering[];
   rating: number;
+  /** Google review count shown next to the rating. */
+  reviews?: number;
+  /** Street / area line, and what the Google Maps link opens. */
+  address?: string;
   distanceKm: number;
   /** Next open slots, newest first. Mocked; will come from booking API later. */
   slots: string[];

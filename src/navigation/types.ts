@@ -25,6 +25,7 @@ export type RootStackParamList = {
   TreatmentDetail: { treatmentId: string };
   EventPrep: { add?: boolean } | undefined;
   MyClinics: undefined;
+  ClinicProfile: { clinicId: string };
   Book: { treatmentId: string };
   AddRitual: undefined;
   Profile: undefined;
