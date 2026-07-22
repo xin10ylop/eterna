@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from 'react';
-import { Linking, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import React, { useState } from 'react';
+import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { IconButton, Screen } from '../../components/ui';
-import { formatAED } from '../../lib/money';
+import { ServiceMenu } from '../../components/ServiceMenu';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import { useT } from '../../i18n';
@@ -11,11 +11,48 @@ import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ClinicProfile'>;
 
+/** A round quick-action, Square Go style: icon in a circle, tiny label under. */
+function ActionCircle({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  onPress: () => void;
+}) {
+  const t = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={({ pressed }) => ({ alignItems: 'center', gap: 5, opacity: pressed ? 0.6 : 1 })}
+    >
+      <View
+        style={{
+          width: 52,
+          height: 52,
+          borderRadius: 26,
+          backgroundColor: t.surfaceAlt,
+          borderWidth: 1,
+          borderColor: t.border,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Ionicons name={icon} size={20} color={t.accent} />
+      </View>
+      <Text style={{ fontSize: 11.5, fontWeight: '600', color: t.sub }}>{label}</Text>
+    </Pressable>
+  );
+}
+
 /**
- * A clinic's profile, like she'd expect from Maps or Instagram: logo, name,
- * Google rating, what kind of place it is, where it is (one tap to Maps) —
- * and the services behind a "check them" interaction with search, because a
- * real clinic can list 10 or 100.
+ * A clinic profile the way places look in Square Go / Google Maps: identity,
+ * rating, open hours + address, quick actions (Directions, Call), a short
+ * About, and the services behind one row — searchable, in a fixed box she
+ * scrolls, because a clinic can list 10 or 100.
  */
 export function ClinicProfileScreen({ navigation, route }: Props) {
   const t = useTheme();
@@ -25,13 +62,6 @@ export function ClinicProfileScreen({ navigation, route }: Props) {
   const toggleSaved = useEterna((s) => s.toggleSavedClinic);
   const showToast = useEterna((s) => s.showToast);
   const [showServices, setShowServices] = useState(false);
-  const [query, setQuery] = useState('');
-
-  const results = useMemo(() => {
-    if (!clinic) return [];
-    const q = query.trim().toLowerCase();
-    return q ? clinic.offerings.filter((o) => o.name.toLowerCase().includes(q)) : clinic.offerings;
-  }, [clinic, query]);
 
   if (!clinic) {
     return (
@@ -45,6 +75,9 @@ export function ClinicProfileScreen({ navigation, route }: Props) {
   const openMaps = () => {
     const q = encodeURIComponent(`${clinic.name}, ${clinic.address ?? 'Dubai'}`);
     Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${q}`);
+  };
+  const call = () => {
+    if (clinic.phone) Linking.openURL(`tel:${clinic.phone.replace(/\s/g, '')}`);
   };
 
   return (
@@ -75,7 +108,6 @@ export function ClinicProfileScreen({ navigation, route }: Props) {
             <Text style={{ fontSize: 34, fontWeight: '700', color: t.accent }}>{clinic.name[0]}</Text>
           </View>
           <Text style={[type.title, { color: t.text, textAlign: 'center' }]}>{clinic.name}</Text>
-          {/* Google rating line */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
             <Ionicons name="star" size={14} color="#E8A33D" />
             <Text style={{ fontSize: 14.5, fontWeight: '700', color: t.text }}>
@@ -85,7 +117,10 @@ export function ClinicProfileScreen({ navigation, route }: Props) {
               · {tr('discover.googleReviews', { n: clinic.reviews ?? 0 })}
             </Text>
           </View>
-          {/* what kind of place */}
+          {/* open hours + area, one quiet line (Square Go) */}
+          <Text numberOfLines={1} style={{ fontSize: 13, color: t.sub }}>
+            {[clinic.hours, clinic.address].filter(Boolean).join(' · ')}
+          </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
             {clinic.services.map((s) => (
               <View
@@ -99,9 +134,7 @@ export function ClinicProfileScreen({ navigation, route }: Props) {
                   paddingVertical: 4,
                 }}
               >
-                <Text style={{ fontSize: 12.5, fontWeight: '600', color: t.sub }}>
-                  {tr('filter.' + s)}
-                </Text>
+                <Text style={{ fontSize: 12.5, fontWeight: '600', color: t.sub }}>{tr('filter.' + s)}</Text>
               </View>
             ))}
             {clinic.homeService ? (
@@ -121,7 +154,30 @@ export function ClinicProfileScreen({ navigation, route }: Props) {
           </View>
         </View>
 
-        {/* location — one tap to Google Maps */}
+        {/* quick actions */}
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.xl }}>
+          <ActionCircle icon="navigate" label={tr('discover.directions')} onPress={openMaps} />
+          {clinic.phone ? (
+            <ActionCircle icon="call" label={tr('discover.call')} onPress={call} />
+          ) : null}
+          <ActionCircle
+            icon={saved ? 'bookmark' : 'bookmark-outline'}
+            label={saved ? tr('discover.savedShort') : tr('discover.saveShort')}
+            onPress={() => {
+              toggleSaved(clinic.id);
+              showToast(saved ? clinic.name : `${clinic.name} ✓`);
+            }}
+          />
+        </View>
+
+        {/* about */}
+        {clinic.about ? (
+          <Text style={{ fontSize: 14, color: t.sub, lineHeight: 21, textAlign: 'center', paddingHorizontal: spacing.s }}>
+            {clinic.about}
+          </Text>
+        ) : null}
+
+        {/* location card — full address, one tap to Google Maps */}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={tr('discover.openMaps')}
@@ -162,7 +218,7 @@ export function ClinicProfileScreen({ navigation, route }: Props) {
           <Ionicons name="open-outline" size={17} color={t.accent} />
         </Pressable>
 
-        {/* services — behind a tap, searchable: could be 10, could be 100 */}
+        {/* services — one row; opens the searchable fixed box */}
         <Pressable
           accessibilityRole="button"
           accessibilityState={{ expanded: showServices }}
@@ -201,69 +257,9 @@ export function ClinicProfileScreen({ navigation, route }: Props) {
           </View>
           <Ionicons name={showServices ? 'chevron-up' : 'chevron-down'} size={17} color={t.muted} />
         </Pressable>
-
         {showServices ? (
-          <View style={{ gap: spacing.s, marginTop: -spacing.s }}>
-            {clinic.offerings.length > 6 ? (
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: spacing.s,
-                  backgroundColor: t.surface,
-                  borderRadius: radii.m,
-                  borderWidth: 1,
-                  borderColor: t.border,
-                  paddingHorizontal: 12,
-                }}
-              >
-                <Ionicons name="search" size={15} color={t.muted} />
-                <TextInput
-                  value={query}
-                  onChangeText={setQuery}
-                  placeholder={tr('discover.searchServices')}
-                  placeholderTextColor={t.muted}
-                  accessibilityLabel={tr('discover.searchServices')}
-                  style={{ flex: 1, paddingVertical: 10, fontSize: 14.5, color: t.text }}
-                />
-              </View>
-            ) : null}
-            <View
-              style={{
-                borderRadius: radii.card,
-                borderWidth: 1,
-                borderColor: t.border,
-                overflow: 'hidden',
-              }}
-            >
-              {results.map((o, i) => (
-                <View
-                  key={o.name}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: spacing.m,
-                    paddingVertical: 12,
-                    paddingHorizontal: spacing.m,
-                    backgroundColor: t.bg,
-                    borderTopWidth: i === 0 ? 0 : 1,
-                    borderTopColor: t.separator,
-                  }}
-                >
-                  <Text numberOfLines={1} style={{ flex: 1, fontSize: 14.5, fontWeight: '600', color: t.text }}>
-                    {o.name}
-                  </Text>
-                  <Text style={{ fontSize: 12.5, color: t.sub }}>
-                    {formatAED(o.price)} · {o.mins} {tr('clinics.min')}
-                  </Text>
-                </View>
-              ))}
-              {results.length === 0 ? (
-                <Text style={{ fontSize: 13.5, color: t.sub, padding: spacing.m }}>
-                  {tr('discover.none')}
-                </Text>
-              ) : null}
-            </View>
+          <View style={{ marginTop: -spacing.s }}>
+            <ServiceMenu mode="read" offerings={clinic.offerings} maxHeight={320} />
           </View>
         ) : null}
       </ScrollView>

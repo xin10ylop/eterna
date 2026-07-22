@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { GhostButton } from '../../components/ui';
 import { OnboardingShell } from './OnboardingShell';
+import { ServiceMenu } from '../../components/ServiceMenu';
 import { formatAED } from '../../lib/money';
 import { radii, spacing } from '../../theme';
 import { useEterna, useTheme } from '../../store';
@@ -116,49 +117,17 @@ export function ClinicsScreen({ navigation }: NativeStackScreenProps<RootStackPa
                 </View>
                 <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={17} color={t.muted} />
               </Pressable>
-              {isOpen
-                ? c.offerings.map((o) => {
-                    const on = mine.includes(o.name);
-                    return (
-                      <Pressable
-                        key={o.name}
-                        accessibilityRole="checkbox"
-                        accessibilityState={{ checked: on }}
-                        onPress={() => toggleMyService(c.id, o.name)}
-                        style={({ pressed }) => ({
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          gap: spacing.m,
-                          paddingVertical: 11,
-                          paddingHorizontal: spacing.m,
-                          backgroundColor: on ? t.accentSoft : 'transparent',
-                          opacity: pressed ? 0.7 : 1,
-                        })}
-                      >
-                        <View
-                          style={{
-                            width: 22,
-                            height: 22,
-                            borderRadius: 11,
-                            borderWidth: 1.5,
-                            borderColor: on ? t.accent : t.muted,
-                            backgroundColor: on ? t.accent : 'transparent',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          {on ? <Ionicons name="checkmark" size={14} color={t.onAccent} /> : null}
-                        </View>
-                        <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: t.text }}>
-                          {o.name}
-                        </Text>
-                        <Text style={{ fontSize: 12.5, color: t.sub }}>
-                          {formatAED(o.price)} · {o.mins} min
-                        </Text>
-                      </Pressable>
-                    );
-                  })
-                : null}
+              {isOpen ? (
+                <View style={{ padding: spacing.s }}>
+                  <ServiceMenu
+                    mode="tick"
+                    offerings={c.offerings}
+                    tickedNames={mine}
+                    onToggle={(n) => toggleMyService(c.id, n)}
+                    maxHeight={260}
+                  />
+                </View>
+              ) : null}
             </View>
           );
         })}

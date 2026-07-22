@@ -57,6 +57,12 @@ export interface Clinic {
   reviews?: number;
   /** Street / area line, and what the Google Maps link opens. */
   address?: string;
+  /** Opening hours line, clinic-entered. */
+  hours?: string;
+  /** Phone for the Call action, clinic-entered. */
+  phone?: string;
+  /** A short clinic-written introduction. */
+  about?: string;
   distanceKm: number;
   /** Next open slots, newest first. Mocked; will come from booking API later. */
   slots: string[];

@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { IconButton, Screen } from '../../components/ui';
+import { ServiceMenu } from '../../components/ServiceMenu';
 import { formatAED } from '../../lib/money';
 import { cardShadow, radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
@@ -163,48 +164,15 @@ export function MyClinicsScreen({ navigation }: Props) {
                     </Text>
                   </Pressable>
                 ) : null}
-                {isEditing
-                  ? c.offerings.map((o) => {
-                      const on = mine.includes(o.name);
-                      return (
-                        <Pressable
-                          key={o.name}
-                          accessibilityRole="checkbox"
-                          accessibilityState={{ checked: on }}
-                          onPress={() => toggleMyService(c.id, o.name)}
-                          style={({ pressed }) => ({
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: spacing.m,
-                            paddingVertical: 10,
-                            paddingHorizontal: spacing.s,
-                            borderRadius: radii.m,
-                            backgroundColor: on ? t.accentSoft : 'transparent',
-                            opacity: pressed ? 0.7 : 1,
-                          })}
-                        >
-                          <View
-                            style={{
-                              width: 22,
-                              height: 22,
-                              borderRadius: 11,
-                              borderWidth: 1.5,
-                              borderColor: on ? t.accent : t.muted,
-                              backgroundColor: on ? t.accent : 'transparent',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            {on ? <Ionicons name="checkmark" size={14} color={t.onAccent} /> : null}
-                          </View>
-                          <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: t.text }}>{o.name}</Text>
-                          <Text style={{ fontSize: 12.5, color: t.sub }}>
-                            {formatAED(o.price)} · {o.mins} {tr('clinics.min')}
-                          </Text>
-                        </Pressable>
-                      );
-                    })
-                  : null}
+                {isEditing ? (
+                  <ServiceMenu
+                    mode="tick"
+                    offerings={c.offerings}
+                    tickedNames={mine}
+                    onToggle={(n) => toggleMyService(c.id, n)}
+                    maxHeight={280}
+                  />
+                ) : null}
               </View>
             );
           })

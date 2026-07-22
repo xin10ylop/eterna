@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { IOSSwitch, IconButton, PrimaryButton, Screen, SectionLabel, Segmented } from '../../components/ui';
 import { CalendarPicker } from '../../components/ui/CalendarPicker';
+import { ServiceMenu } from '../../components/ServiceMenu';
 import { addWeeks, todayISO } from '../../lib/dates';
 import { formatAED } from '../../lib/money';
 import { PRACTITIONERS } from '../../data/seed';
@@ -168,46 +169,12 @@ export function AddRitualScreen({ navigation }: Props) {
         {clinic ? (
           <View style={{ gap: spacing.s }}>
             <SectionLabel>What do you get done at {clinic.name}?</SectionLabel>
-            <View
-              style={{
-                borderRadius: radii.card,
-                borderWidth: 1,
-                borderColor: t.border,
-                overflow: 'hidden',
-              }}
-            >
-              {clinic.offerings.map((o, i) => {
-                const sel = serviceName === o.name;
-                return (
-                  <Pressable
-                    key={o.name}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: sel }}
-                    onPress={() => setServiceName(o.name)}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: spacing.m,
-                      paddingVertical: 12,
-                      paddingHorizontal: spacing.m,
-                      backgroundColor: sel ? t.accentSoft : t.bg,
-                      borderTopWidth: i === 0 ? 0 : 1,
-                      borderTopColor: t.separator,
-                    }}
-                  >
-                    <View style={{ flex: 1, minWidth: 0 }}>
-                      <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
-                        {o.name}
-                      </Text>
-                      <Text style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
-                        {formatAED(o.price)} · {o.mins} min
-                      </Text>
-                    </View>
-                    {sel ? <Ionicons name="checkmark-circle" size={20} color={t.accent} /> : null}
-                  </Pressable>
-                );
-              })}
-            </View>
+            <ServiceMenu
+              mode="pick"
+              offerings={clinic.offerings}
+              pickedName={serviceName}
+              onPick={setServiceName}
+            />
           </View>
         ) : null}
 
