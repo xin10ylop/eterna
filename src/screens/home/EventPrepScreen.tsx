@@ -2,25 +2,29 @@ import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { IconButton, PrimaryButton, ProgressBar, Screen } from '../../components/ui';
+import { IconButton, PrimaryButton, Screen } from '../../components/ui';
 import { CalendarPicker } from '../../components/ui/CalendarPicker';
-import { eventItems, eventProgress, unplannedUpcoming, type EventItem } from '../../services/logic';
+import { eventItems, eventProgress } from '../../services/logic';
 import { addDays, diffDays, formatMedium, todayISO } from '../../lib/dates';
-import { cardShadow, radii, spacing, type } from '../../theme';
+import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import { countdownLabel, useT } from '../../i18n';
+import type { Appointment, SalonEvent } from '../../types';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EventPrep'>;
 
 const RED = '#C83A2C';
 
+type TimelineEntry =
+  | { kind: 'appt'; dateISO: string; appt: Appointment }
+  | { kind: 'event'; dateISO: string; event: SalonEvent };
+
 /**
- * Events built around HER choices. Setting an event asks what she wants ready
- * for it; each event then shows those picks and where each stands (booked / still
- * to book / already fresh). If a pick is also chosen for another event it's
- * flagged — never silently merged — so she coordinates herself. A final section
- * shows her other (non-event) bookings so she manages everything together.
+ * One simple map of the road ahead: a vertical timeline from today, with every
+ * booked visit (green) and every event (milestone) in date order — so she sees
+ * all her bookings and events together at a glance. Each event carries her own
+ * picks and what's still to book; adding an event is just a name and a date.
  */
 export function EventPrepScreen({ navigation, route }: Props) {
   const t = useTheme();
@@ -35,87 +39,72 @@ export function EventPrepScreen({ navigation, route }: Props) {
   const showPast = useEterna((s) => s.showPastEvents);
   const setShowPast = useEterna((s) => s.setShowPastEvents);
 
+  const today = todayISO();
   const upcoming = useMemo(
     () =>
       events
-        .filter((e) => diffDays(todayISO(), e.dateISO) >= 0)
+        .filter((e) => diffDays(today, e.dateISO) >= 0)
         .sort((a, b) => a.dateISO.localeCompare(b.dateISO)),
-    [events],
+    [events, today],
   );
   const past = useMemo(
     () =>
       events
-        .filter((e) => diffDays(todayISO(), e.dateISO) < 0)
+        .filter((e) => diffDays(today, e.dateISO) < 0)
         .sort((a, b) => b.dateISO.localeCompare(a.dateISO)),
-    [events],
+    [events, today],
   );
-  const other = useMemo(
-    () => unplannedUpcoming(events, treatments, appointments),
-    [events, treatments, appointments],
-  );
+
+  // Everything ahead, in one order: every upcoming booking + every event.
+  const timeline = useMemo<TimelineEntry[]>(() => {
+    const appts: TimelineEntry[] = appointments
+      .filter((a) => a.dateISO >= today)
+      .map((a) => ({ kind: 'appt', dateISO: a.dateISO, appt: a }));
+    const evs: TimelineEntry[] = upcoming.map((e) => ({ kind: 'event', dateISO: e.dateISO, event: e }));
+    return [...appts, ...evs].sort((x, y) =>
+      x.dateISO === y.dateISO ? (x.kind === 'appt' ? -1 : 1) : x.dateISO < y.dateISO ? -1 : 1,
+    );
+  }, [appointments, upcoming, today]);
 
   const [adding, setAdding] = useState(events.length === 0 || !!route.params?.add);
   const [name, setName] = useState('');
-  const [dateISO, setDateISO] = useState(addDays(todayISO(), 28));
-  const [picks, setPicks] = useState<string[]>([]);
-  const [editing, setEditing] = useState<string | null>(null); // event id whose picker is open
+  const [dateISO, setDateISO] = useState(addDays(today, 28));
+  const [openPicker, setOpenPicker] = useState<string | null>(null);
 
   const save = () => {
-    addEvent(name.trim() || 'My event', dateISO, picks);
+    addEvent(name.trim() || 'My event', dateISO, []);
     setName('');
-    setDateISO(addDays(todayISO(), 28));
-    setPicks([]);
+    setDateISO(addDays(today, 28));
     setAdding(false);
   };
 
   const clinicName = (id: string) => clinics.find((c) => c.id === id)?.name ?? '';
 
-  /** Selectable list of her rituals — used to choose picks (new or existing). */
-  const RitualChecklist = ({
-    selected,
-    onToggle,
+  /** One row of the timeline: the rail on the left, content on the right. */
+  const Row = ({
+    node,
+    last,
+    children,
   }: {
-    selected: string[];
-    onToggle: (id: string) => void;
+    node: React.ReactNode;
+    last?: boolean;
+    children: React.ReactNode;
   }) => (
-    <View style={{ gap: 6 }}>
-      {treatments.map((tr) => {
-        const on = selected.includes(tr.id);
-        return (
-          <Pressable
-            key={tr.id}
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: on }}
-            onPress={() => onToggle(tr.id)}
-            style={({ pressed }) => ({
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: spacing.m,
-              paddingVertical: 10,
-              paddingHorizontal: spacing.m,
-              borderRadius: radii.m,
-              backgroundColor: on ? t.accentSoft : t.surfaceAlt,
-              opacity: pressed ? 0.7 : 1,
-            })}
-          >
-            <View
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: 11,
-                borderWidth: 1.5,
-                borderColor: on ? t.accent : t.muted,
-                backgroundColor: on ? t.accent : 'transparent',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {on ? <Ionicons name="checkmark" size={14} color={t.onAccent} /> : null}
-            </View>
-            <Text style={{ flex: 1, fontSize: 15, fontWeight: '600', color: t.text }}>{tr.name}</Text>
-          </Pressable>
-        );
-      })}
+    <View style={{ flexDirection: 'row' }}>
+      <View style={{ width: 36, alignItems: 'center' }}>
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            bottom: last ? undefined : 0,
+            height: last ? 14 : undefined,
+            width: 2,
+            backgroundColor: t.border,
+          }}
+        />
+        <View style={{ marginTop: 1 }}>{node}</View>
+      </View>
+      <View style={{ flex: 1, minWidth: 0, paddingBottom: spacing.l }}>{children}</View>
     </View>
   );
 
@@ -136,11 +125,11 @@ export function EventPrepScreen({ navigation, route }: Props) {
 
       <ScrollView
         style={{ marginTop: spacing.l }}
-        contentContainerStyle={{ gap: spacing.s, paddingBottom: spacing.xxl }}
+        contentContainerStyle={{ paddingBottom: spacing.xxl }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* add-event editor — name, date, and what she wants ready */}
+        {/* add an event — just a name and a date */}
         {adding ? (
           <View
             style={{
@@ -150,39 +139,26 @@ export function EventPrepScreen({ navigation, route }: Props) {
               borderWidth: 1,
               borderColor: t.border,
               padding: spacing.l,
-              marginBottom: spacing.s,
+              marginBottom: spacing.l,
             }}
           >
-            <View style={{ gap: spacing.s }}>
-              <Text style={[type.label, { color: t.muted }]}>{tx('event.name')}</Text>
-              <TextInput
-                value={name}
-                onChangeText={setName}
-                placeholder={tx('event.namePlaceholder')}
-                placeholderTextColor={t.muted}
-                style={{
-                  backgroundColor: t.surface,
-                  borderRadius: radii.m,
-                  borderWidth: 1,
-                  borderColor: t.border,
-                  paddingHorizontal: 14,
-                  paddingVertical: 12,
-                  fontSize: 15,
-                  color: t.text,
-                }}
-              />
-            </View>
-            <View style={{ gap: spacing.s }}>
-              <Text style={[type.label, { color: t.muted }]}>{tx('event.when')}</Text>
-              <CalendarPicker value={dateISO} onSelect={setDateISO} minISO={addDays(todayISO(), 1)} />
-            </View>
-            <View style={{ gap: spacing.s }}>
-              <Text style={[type.label, { color: t.muted }]}>{tx('event.want')}</Text>
-              <RitualChecklist
-                selected={picks}
-                onToggle={(id) => setPicks((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]))}
-              />
-            </View>
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              placeholder={tx('event.namePlaceholder')}
+              placeholderTextColor={t.muted}
+              style={{
+                backgroundColor: t.surface,
+                borderRadius: radii.m,
+                borderWidth: 1,
+                borderColor: t.border,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                fontSize: 15,
+                color: t.text,
+              }}
+            />
+            <CalendarPicker value={dateISO} onSelect={setDateISO} minISO={addDays(today, 1)} />
             <View style={{ flexDirection: 'row', gap: spacing.s }}>
               {events.length > 0 ? (
                 <Pressable
@@ -214,141 +190,224 @@ export function EventPrepScreen({ navigation, route }: Props) {
           </Text>
         ) : null}
 
-        {/* one card per event, built from her picks */}
-        {upcoming.map((ev) => {
-          const d = diffDays(todayISO(), ev.dateISO);
-          const items = eventItems(ev, treatments, appointments, events);
-          const prog = eventProgress(items);
-          const isEditing = editing === ev.id;
-          return (
-            <View
-              key={ev.id}
-              style={{
-                backgroundColor: t.bg,
-                borderRadius: radii.card,
-                borderWidth: 1,
-                borderColor: t.border,
-                padding: spacing.m,
-                gap: spacing.s,
-                ...cardShadow,
-              }}
-            >
-              {/* header */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
+        {/* the map: today → bookings → events, in order */}
+        {upcoming.length > 0 ? (
+          <View>
+            {/* today marker */}
+            <Row
+              node={
                 <View
                   style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: 12,
-                    backgroundColor: t.accentSoft,
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    width: 10,
+                    height: 10,
+                    borderRadius: 5,
+                    backgroundColor: t.muted,
+                    marginTop: 4,
                   }}
-                >
-                  <Ionicons name="sparkles" size={18} color={t.accent} />
-                </View>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: '700', color: t.text }}>
-                    {ev.name}
-                  </Text>
-                  <Text style={{ fontSize: 12.5, color: t.accent, marginTop: 1 }}>
-                    {countdownLabel(tx, d)} · {formatMedium(ev.dateISO)}
-                  </Text>
-                </View>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={tx('common.remove')}
-                  onPress={() => removeEvent(ev.id)}
-                  hitSlop={8}
-                  style={({ pressed }) => ({ padding: 6, opacity: pressed ? 0.5 : 1 })}
-                >
-                  <Ionicons name="close" size={18} color={t.muted} />
-                </Pressable>
-              </View>
-
-              {items.length > 0 ? (
-                <View style={{ gap: 4 }}>
-                  <ProgressBar value={prog.total ? prog.done / prog.total : 0} />
-                  <Text style={{ fontSize: 11.5, color: t.sub }}>
-                    {tx('event.ready', { done: prog.done, total: prog.total })}
-                  </Text>
-                </View>
-              ) : null}
-
-              {/* her chosen rituals */}
-              {items.map((it) => (
-                <EventItemRow key={it.treatment.id} it={it} tx={tx} t={t} clinicName={clinicName} navigation={navigation} />
-              ))}
-
-              {/* edit picks */}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ expanded: isEditing }}
-                onPress={() => setEditing(isEditing ? null : ev.id)}
-                style={({ pressed }) => ({
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 6,
-                  paddingVertical: spacing.s,
-                  opacity: pressed ? 0.6 : 1,
-                })}
-              >
-                <Ionicons name={isEditing ? 'chevron-up' : 'add'} size={16} color={t.accent} />
-                <Text style={{ fontSize: 13.5, fontWeight: '600', color: t.accent }}>
-                  {tx('event.editPicks')}
-                </Text>
-              </Pressable>
-              {isEditing ? (
-                <RitualChecklist
-                  selected={ev.treatmentIds}
-                  onToggle={(id) => toggleEventTreatment(ev.id, id)}
                 />
-              ) : null}
-            </View>
-          );
-        })}
+              }
+            >
+              <Text style={[type.label, { color: t.muted, marginTop: 1 }]}>{tx('common.today')}</Text>
+            </Row>
 
-        {/* her other bookings, not tied to an event — so she manages it all */}
-        {other.length > 0 ? (
-          <>
-            <Text style={[type.label, { color: t.muted, marginTop: spacing.l, marginBottom: spacing.xs }]}>
-              {tx('event.otherCalendar')}
-            </Text>
-            {other.map(({ appt, treatment }) => {
-              const [mon, day] = formatMedium(appt.dateISO).split(' ');
+            {timeline.map((entry, i) => {
+              const last = i === timeline.length - 1;
+              if (entry.kind === 'appt') {
+                const tr = treatments.find((x) => x.id === entry.appt.treatmentId);
+                return (
+                  <Row
+                    key={`a-${entry.appt.id}`}
+                    last={last}
+                    node={<Ionicons name="checkmark-circle" size={22} color={t.positive} />}
+                  >
+                    <Text numberOfLines={1} style={{ fontSize: 14.5, fontWeight: '600', color: t.text }}>
+                      {tr?.name ?? 'Appointment'}
+                    </Text>
+                    <Text numberOfLines={1} style={{ fontSize: 12, color: t.sub, marginTop: 1 }}>
+                      {formatMedium(entry.dateISO)} · {entry.appt.timeLabel} · {clinicName(entry.appt.clinicId)}
+                    </Text>
+                  </Row>
+                );
+              }
+
+              const ev = entry.event;
+              const items = eventItems(ev, treatments, appointments, events);
+              const prog = eventProgress(items);
+              const isOpen = openPicker === ev.id;
               return (
-                <View
-                  key={appt.id}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: spacing.m,
-                    backgroundColor: t.surfaceAlt,
-                    borderRadius: radii.card,
-                    borderWidth: 1,
-                    borderColor: t.border,
-                    padding: spacing.m,
-                  }}
+                <Row
+                  key={`e-${ev.id}`}
+                  last={last}
+                  node={
+                    <View
+                      style={{
+                        width: 26,
+                        height: 26,
+                        borderRadius: 13,
+                        backgroundColor: t.accent,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Ionicons name="sparkles" size={13} color={t.onAccent} />
+                    </View>
+                  }
                 >
-                  <View style={{ alignItems: 'center', width: 44 }}>
-                    <Text style={{ fontSize: 11, fontWeight: '700', color: t.sub }}>{mon.toUpperCase()}</Text>
-                    <Text style={{ fontSize: 18, fontWeight: '800', color: t.text }}>{day}</Text>
+                  <View
+                    style={{
+                      backgroundColor: t.accentSoft,
+                      borderRadius: radii.card,
+                      padding: spacing.m,
+                      gap: spacing.s,
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s }}>
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: '700', color: t.text }}>
+                          {ev.name}
+                        </Text>
+                        <Text style={{ fontSize: 12.5, color: t.accent, marginTop: 1 }}>
+                          {countdownLabel(tx, diffDays(today, ev.dateISO))} · {formatMedium(ev.dateISO)}
+                          {items.length > 0 ? ` · ${tx('event.ready', { done: prog.done, total: prog.total })}` : ''}
+                        </Text>
+                      </View>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={tx('common.remove')}
+                        onPress={() => removeEvent(ev.id)}
+                        hitSlop={8}
+                        style={({ pressed }) => ({ padding: 4, opacity: pressed ? 0.5 : 1 })}
+                      >
+                        <Ionicons name="close" size={17} color={t.muted} />
+                      </Pressable>
+                    </View>
+
+                    {/* her picks for this event */}
+                    {items.map((it) => {
+                      const urgent = it.dueISO < today;
+                      const handled = it.status !== 'toBook';
+                      const also =
+                        it.alsoFor.length > 0
+                          ? ` · ${tx('event.also', { names: it.alsoFor.map((e) => e.name).join(', ') })}`
+                          : '';
+                      return (
+                        <View
+                          key={it.treatment.id}
+                          style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s }}
+                        >
+                          <Ionicons
+                            name={handled ? 'checkmark-circle' : 'ellipse-outline'}
+                            size={18}
+                            color={handled ? t.positive : RED}
+                          />
+                          <View style={{ flex: 1, minWidth: 0 }}>
+                            <Text numberOfLines={1} style={{ fontSize: 14, fontWeight: '600', color: t.text }}>
+                              {it.treatment.name}
+                            </Text>
+                            <Text
+                              numberOfLines={1}
+                              style={{ fontSize: 11.5, color: handled ? t.sub : RED, marginTop: 1 }}
+                            >
+                              {it.status === 'booked'
+                                ? tx('event.bookedOn', { date: formatMedium(it.apptDateISO ?? '') })
+                                : it.status === 'fresh'
+                                  ? tx('event.setFresh')
+                                  : urgent
+                                    ? tx('event.asap')
+                                    : tx('event.bookBy', { date: formatMedium(it.dueISO) })}
+                              {also}
+                            </Text>
+                          </View>
+                          {!handled ? (
+                            <Pressable
+                              accessibilityRole="button"
+                              accessibilityLabel={`Book ${it.treatment.name}`}
+                              onPress={() => navigation.navigate('Book', { treatmentId: it.treatment.id })}
+                              style={({ pressed }) => ({
+                                paddingVertical: 6,
+                                paddingHorizontal: 13,
+                                borderRadius: radii.pill,
+                                backgroundColor: t.accent,
+                                transform: [{ scale: pressed ? 0.94 : 1 }],
+                              })}
+                            >
+                              <Text style={{ color: t.onAccent, fontSize: 12.5, fontWeight: '700' }}>
+                                {tx('common.book')}
+                              </Text>
+                            </Pressable>
+                          ) : null}
+                        </View>
+                      );
+                    })}
+
+                    {/* choose / edit what she wants ready */}
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityState={{ expanded: isOpen }}
+                      onPress={() => setOpenPicker(isOpen ? null : ev.id)}
+                      style={({ pressed }) => ({
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 5,
+                        opacity: pressed ? 0.6 : 1,
+                      })}
+                    >
+                      <Ionicons name={isOpen ? 'chevron-up' : 'add'} size={15} color={t.accent} />
+                      <Text style={{ fontSize: 13, fontWeight: '700', color: t.accent }}>
+                        {items.length > 0 ? tx('event.editPicks') : tx('event.choose')}
+                      </Text>
+                    </Pressable>
+                    {isOpen ? (
+                      <View style={{ gap: 5 }}>
+                        {treatments.map((tr) => {
+                          const on = ev.treatmentIds.includes(tr.id);
+                          return (
+                            <Pressable
+                              key={tr.id}
+                              accessibilityRole="checkbox"
+                              accessibilityState={{ checked: on }}
+                              onPress={() => toggleEventTreatment(ev.id, tr.id)}
+                              style={({ pressed }) => ({
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: spacing.s,
+                                paddingVertical: 8,
+                                paddingHorizontal: spacing.s,
+                                borderRadius: radii.m,
+                                backgroundColor: on ? t.bg : 'transparent',
+                                opacity: pressed ? 0.7 : 1,
+                              })}
+                            >
+                              <View
+                                style={{
+                                  width: 20,
+                                  height: 20,
+                                  borderRadius: 10,
+                                  borderWidth: 1.5,
+                                  borderColor: on ? t.accent : t.muted,
+                                  backgroundColor: on ? t.accent : 'transparent',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                {on ? <Ionicons name="checkmark" size={13} color={t.onAccent} /> : null}
+                              </View>
+                              <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: t.text }}>
+                                {tr.name}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </View>
+                    ) : null}
                   </View>
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
-                      {treatment?.name ?? 'Appointment'}
-                    </Text>
-                    <Text numberOfLines={1} style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
-                      {[appt.timeLabel, clinicName(appt.clinicId)].filter(Boolean).join(' · ')}
-                    </Text>
-                  </View>
-                </View>
+                </Row>
               );
             })}
-          </>
+          </View>
         ) : null}
 
-        {/* PAST — her choice whether to see them; nothing is auto-deleted */}
+        {/* past events — her choice to see them */}
         {past.length > 0 ? (
           <View style={{ marginTop: spacing.l }}>
             <Pressable
@@ -407,79 +466,5 @@ export function EventPrepScreen({ navigation, route }: Props) {
         ) : null}
       </ScrollView>
     </Screen>
-  );
-}
-
-/** One chosen ritual and where it stands for this event. */
-function EventItemRow({
-  it,
-  tx,
-  t,
-  clinicName,
-  navigation,
-}: {
-  it: EventItem;
-  tx: (k: string, v?: Record<string, string | number>) => string;
-  t: ReturnType<typeof useTheme>;
-  clinicName: (id: string) => string;
-  navigation: Props['navigation'];
-}) {
-  const handled = it.status !== 'toBook';
-  const statusLine =
-    it.status === 'booked'
-      ? tx('event.bookedOn', { date: formatMedium(it.apptDateISO ?? '') })
-      : it.status === 'fresh'
-        ? tx('event.setFresh')
-        : tx('event.bookBy', { date: formatMedium(it.dueISO) });
-  return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.m,
-        paddingVertical: spacing.s,
-        borderTopWidth: 1,
-        borderTopColor: t.border,
-      }}
-    >
-      <Ionicons
-        name={handled ? 'checkmark-circle' : 'ellipse-outline'}
-        size={22}
-        color={handled ? t.positive : RED}
-      />
-      <View style={{ flex: 1, minWidth: 0 }}>
-        <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
-          {it.treatment.name}
-        </Text>
-        <Text numberOfLines={1} style={{ fontSize: 12.5, color: it.status === 'toBook' ? RED : t.sub, marginTop: 1 }}>
-          {statusLine}
-          {it.treatment.atHome ? ` · ${tx('common.atHome')}` : ''}
-        </Text>
-        {it.alsoFor.length > 0 ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 3, flexWrap: 'wrap' }}>
-            <Ionicons name="link" size={12} color={t.accent} />
-            <Text style={{ fontSize: 11, color: t.accent }}>
-              {tx('event.alsoFor', { names: it.alsoFor.map((e) => e.name).join(', ') })}
-            </Text>
-          </View>
-        ) : null}
-      </View>
-      {it.status === 'toBook' ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`Book ${it.treatment.name}`}
-          onPress={() => navigation.navigate('Book', { treatmentId: it.treatment.id })}
-          style={({ pressed }) => ({
-            paddingVertical: 7,
-            paddingHorizontal: 15,
-            borderRadius: radii.pill,
-            backgroundColor: t.accent,
-            transform: [{ scale: pressed ? 0.94 : 1 }],
-          })}
-        >
-          <Text style={{ color: t.onAccent, fontSize: 13, fontWeight: '700' }}>{tx('common.book')}</Text>
-        </Pressable>
-      ) : null}
-    </View>
   );
 }

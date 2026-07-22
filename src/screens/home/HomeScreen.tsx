@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -10,7 +10,7 @@ import { AvatarFigure } from '../../components/avatar/AvatarFigure';
 import { ZoneMarkers } from '../../components/avatar/ZoneMarkers';
 import { ZONES } from '../../data/seed';
 import { needsAttention, treatmentStatus, zoneGlow, type GlowStatus } from '../../services/logic';
-import { diffDays, todayISO } from '../../lib/dates';
+import { diffDays, formatMedium, todayISO } from '../../lib/dates';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import { countdownLabel, useT } from '../../i18n';
@@ -57,8 +57,6 @@ export function HomeScreen({ navigation }: Props) {
     return m;
   }, [treatments, appointments]);
 
-  const nextEvent = upcomingEvents[0] ?? null;
-  const nextCountdown = nextEvent ? countdownLabel(tx, diffDays(todayISO(), nextEvent.dateISO)) : '';
   const hour = new Date().getHours();
   const dayPart = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
   const greeting = tx('greeting.' + dayPart);
@@ -112,41 +110,106 @@ export function HomeScreen({ navigation }: Props) {
           </Pressable>
         </View>
 
-        {/* small event chip — auto-width, not a full-width bar */}
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => navigation.navigate('EventPrep', nextEvent ? undefined : { add: true })}
-          style={({ pressed }) => ({
-            marginHorizontal: spacing.xl,
-            marginTop: spacing.m,
-            alignSelf: 'flex-start',
-            maxWidth: '100%',
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 7,
-            paddingVertical: 8,
-            paddingHorizontal: 13,
-            borderRadius: radii.pill,
-            backgroundColor: nextEvent ? t.accentSoft : t.surfaceAlt,
-            borderWidth: nextEvent ? 0 : 1,
-            borderColor: t.border,
-            opacity: pressed ? 0.7 : 1,
-          })}
-        >
-          <Ionicons
-            name={nextEvent ? 'calendar-clear-outline' : 'add-circle-outline'}
-            size={14}
-            color={t.accent}
-          />
-          {nextEvent ? (
-            <Text numberOfLines={1} style={{ fontSize: 13, color: t.accent, maxWidth: 240 }}>
-              <Text style={{ fontWeight: '700' }}>{nextCountdown}</Text>
-              {`  ·  ${nextEvent.name}`}
-            </Text>
-          ) : (
-            <Text style={{ fontSize: 13, fontWeight: '600', color: t.sub }}>{tx('event.add')}</Text>
-          )}
-        </Pressable>
+        {/* events — every upcoming one as a small date card, add always visible */}
+        {upcomingEvents.length === 0 ? (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => navigation.navigate('EventPrep', { add: true })}
+            style={({ pressed }) => ({
+              marginHorizontal: spacing.xl,
+              marginTop: spacing.m,
+              alignSelf: 'flex-start',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 7,
+              paddingVertical: 9,
+              paddingHorizontal: 14,
+              borderRadius: radii.pill,
+              backgroundColor: t.surfaceAlt,
+              borderWidth: 1,
+              borderColor: t.border,
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <Ionicons name="add-circle-outline" size={15} color={t.accent} />
+            <Text style={{ fontSize: 13.5, fontWeight: '600', color: t.sub }}>{tx('event.add')}</Text>
+          </Pressable>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ flexGrow: 0, marginTop: spacing.m }}
+            contentContainerStyle={{ paddingHorizontal: spacing.xl, gap: spacing.s, alignItems: 'center' }}
+          >
+            {upcomingEvents.map((ev) => {
+              const [mon, day] = formatMedium(ev.dateISO).split(' ');
+              return (
+                <Pressable
+                  key={ev.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={ev.name}
+                  onPress={() => navigation.navigate('EventPrep')}
+                  style={({ pressed }) => ({
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.s,
+                    paddingVertical: 7,
+                    paddingLeft: 7,
+                    paddingRight: 13,
+                    borderRadius: radii.l,
+                    backgroundColor: t.bg,
+                    borderWidth: 1,
+                    borderColor: t.border,
+                    opacity: pressed ? 0.7 : 1,
+                  })}
+                >
+                  <View
+                    style={{
+                      width: 38,
+                      borderRadius: radii.m,
+                      backgroundColor: t.accentSoft,
+                      alignItems: 'center',
+                      paddingVertical: 4,
+                    }}
+                  >
+                    <Text style={{ fontSize: 9, fontWeight: '800', color: t.accent }}>
+                      {mon?.toUpperCase()}
+                    </Text>
+                    <Text style={{ fontSize: 16, fontWeight: '800', color: t.text, marginTop: -1 }}>
+                      {day}
+                    </Text>
+                  </View>
+                  <View style={{ minWidth: 0 }}>
+                    <Text numberOfLines={1} style={{ fontSize: 13.5, fontWeight: '700', color: t.text, maxWidth: 130 }}>
+                      {ev.name}
+                    </Text>
+                    <Text style={{ fontSize: 11.5, color: t.accent, marginTop: 1 }}>
+                      {countdownLabel(tx, diffDays(todayISO(), ev.dateISO))}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={tx('event.add')}
+              onPress={() => navigation.navigate('EventPrep', { add: true })}
+              style={({ pressed }) => ({
+                width: 34,
+                height: 34,
+                borderRadius: 17,
+                borderWidth: 1,
+                borderColor: t.border,
+                backgroundColor: t.surfaceAlt,
+                alignItems: 'center',
+                justifyContent: 'center',
+                transform: [{ scale: pressed ? 0.9 : 1 }],
+              })}
+            >
+              <Ionicons name="add" size={18} color={t.accent} />
+            </Pressable>
+          </ScrollView>
+        )}
 
         {/* figure — sized to the measured stage so it can't overlap anything */}
         <View
