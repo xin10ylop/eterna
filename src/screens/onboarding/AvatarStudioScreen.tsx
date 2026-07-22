@@ -97,7 +97,7 @@ export function AvatarStudioScreen({
           ) : null}
           {!signedIn ? (
             <View style={{ flex: 1 }}>
-              <StepDots total={OB_STEPS} index={5} />
+              <StepDots total={OB_STEPS} index={4} />
             </View>
           ) : null}
         </View>

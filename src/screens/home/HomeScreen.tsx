@@ -101,7 +101,7 @@ export function HomeScreen({ navigation }: Props) {
           <View style={{ flex: 1 }}>
             {name ? (
               <>
-                <Text style={{ fontSize: 17, fontWeight: '600', color: t.sub }}>{greeting},</Text>
+                <Text style={{ fontSize: 17, fontWeight: '600', color: t.text }}>{greeting},</Text>
                 <Text
                   style={{ fontSize: 27, fontWeight: '700', color: t.text, letterSpacing: -0.4, marginTop: 1 }}
                   numberOfLines={1}

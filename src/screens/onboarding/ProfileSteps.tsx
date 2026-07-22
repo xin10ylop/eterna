@@ -91,11 +91,11 @@ export function BirthdayScreen({ navigation }: NativeStackScreenProps<RootStackP
     <OnboardingShell
       step={1}
       title="What year were you born?"
-      subtitle="Used only to tailor treatment cadences to you."
+      subtitle="Used only to tailor suggestions to you."
       cta="Continue"
       onNext={() => {
         setDraft({ birthdayISO: `${years[yearIdx]}-01-01` });
-        navigation.navigate('Routine');
+        navigation.navigate('Clinics');
       }}
     >
       <View style={{ gap: spacing.xl, paddingTop: spacing.s, alignItems: 'center' }}>

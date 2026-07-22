@@ -16,7 +16,7 @@ import type { RootStackParamList } from '../../navigation/types';
  * avatar studio asks for anything more.
  */
 
-const STEPS = ['Mapping your zones', 'Setting your cadences', 'Fitting your budget'];
+const STEPS = ['Mapping your zones', 'Learning your rhythm', 'Fitting your budget'];
 const STEP_MS = 900;
 
 function ChecklistRow({ state, label }: { state: 'done' | 'busy' | 'todo'; label: string }) {
@@ -45,7 +45,7 @@ function ChecklistRow({ state, label }: { state: 'done' | 'busy' | 'todo'; label
 
 export function PlanScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Plan'>) {
   const t = useTheme();
-  const routine = useEterna((s) => s.draft.routine);
+  const myServices = useEterna((s) => s.myServices);
   const firstName = useEterna((s) => s.draft.firstName);
   const [phase, setPhase] = useState(0); // 0..STEPS.length building, then reveal
   const fade = useRef(new Animated.Value(0)).current;
@@ -60,28 +60,25 @@ export function PlanScreen({ navigation }: NativeStackScreenProps<RootStackParam
     return () => clearTimeout(id);
   }, [phase, ready, fade]);
 
-  const zoneCount = useMemo(() => {
-    const zones = new Set<string>();
-    for (const r of routine) {
-      if (/roots|cut|keratin|extension/i.test(r)) zones.add('hair');
-      else if (/lip/i.test(r)) zones.add('lips');
-      else if (/botox|facial|brows|skin/i.test(r)) zones.add('face');
-      else if (/manicure/i.test(r)) zones.add('hands');
-      else zones.add('body');
-    }
-    return Math.max(1, zones.size);
-  }, [routine]);
+  const picked = useMemo(
+    () => Object.values(myServices).reduce((n, list) => n + list.length, 0),
+    [myServices],
+  );
+  const places = useMemo(
+    () => Object.values(myServices).filter((list) => list.length > 0).length,
+    [myServices],
+  );
 
   const rows = [
     {
       icon: 'body-outline' as const,
-      title: `${routine.length} rituals on your avatar`,
-      body: `Across ${zoneCount} ${zoneCount === 1 ? 'zone' : 'zones'}, each one glows softly when it needs attention.`,
+      title: picked > 0 ? `${picked} services at ${places} ${places === 1 ? 'place' : 'places'}` : 'Your clinics, your services',
+      body: 'Each ritual lives on your avatar and glows softly when it needs attention.',
     },
     {
       icon: 'time-outline' as const,
-      title: 'Cadences tuned to you',
-      body: 'Roots, filler, lashes, each on its own rhythm, remembered with every session.',
+      title: 'A rhythm you set yourself',
+      body: 'You choose how often, ritual by ritual. Eterna just remembers with you.',
     },
     {
       icon: 'wallet-outline' as const,

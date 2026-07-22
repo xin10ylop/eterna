@@ -107,6 +107,13 @@ function ScheduleView({ nav, focusDate }: { nav: Props['navigation']; focusDate?
   /** The clinic's own duration for this visit, when it's on their menu. */
   const minsOf = (apptClinicId: string, name?: string): number =>
     clinics.find((c) => c.id === apptClinicId)?.offerings.find((o) => o.name === name)?.mins ?? 60;
+  /** "15:30" + 45 min → "16:15". */
+  const endLabel = (timeLabel: string, mins: number): string => {
+    const m = timeLabel.match(/^(\d{1,2}):(\d{2})$/);
+    if (!m) return '';
+    const total = Number(m[1]) * 60 + Number(m[2]) + mins;
+    return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+  };
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: spacing.l, paddingBottom: 120 }}>
@@ -229,25 +236,29 @@ function ScheduleView({ nav, focusDate }: { nav: Props['navigation']; focusDate?
         </Pressable>
       ))}
 
-      {/* the day, hour by hour (iPhone calendar) */}
-      <View style={{ height: (DAY_END - DAY_START) * HOUR_H + 20 }}>
+      {/* the day, hour by hour (iPhone calendar). The rail's origin is exact:
+          the LINE for hour i sits at i*HOUR_H, labels centred on their line,
+          blocks positioned and sized purely by time so 15:30 lands halfway
+          between 15:00 and 16:00. */}
+      <View style={{ height: (DAY_END - DAY_START) * HOUR_H + 20, marginTop: spacing.s }}>
         {Array.from({ length: DAY_END - DAY_START + 1 }).map((_, i) => (
-          <View
-            key={i}
-            style={{
-              position: 'absolute',
-              top: i * HOUR_H,
-              left: 0,
-              right: 0,
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: spacing.s,
-            }}
-          >
-            <Text style={{ width: 44, fontSize: 11, color: t.muted, textAlign: 'right' }}>
+          <View key={i} style={{ position: 'absolute', top: i * HOUR_H, left: 0, right: 0 }}>
+            <View
+              style={{ position: 'absolute', top: 0, left: 52, right: 0, height: 1, backgroundColor: t.separator }}
+            />
+            <Text
+              style={{
+                position: 'absolute',
+                top: -7,
+                left: 0,
+                width: 44,
+                fontSize: 11,
+                color: t.muted,
+                textAlign: 'right',
+              }}
+            >
               {`${DAY_START + i}:00`}
             </Text>
-            <View style={{ flex: 1, height: 1, backgroundColor: t.separator }} />
           </View>
         ))}
 
@@ -257,16 +268,18 @@ function ScheduleView({ nav, focusDate }: { nav: Props['navigation']; focusDate?
           const start = hourOf(a.timeLabel);
           if (start === null || start < 0) return null;
           const mins = minsOf(a.clinicId, tr?.name);
-          const height = Math.max(44, (mins / 60) * HOUR_H - 4);
+          const height = Math.max(30, (mins / 60) * HOUR_H - 2);
+          const compact = height < 48;
+          const range = `${a.timeLabel} – ${endLabel(a.timeLabel, mins)}`;
           return (
             <Pressable
               key={a.id}
               accessibilityRole="button"
-              accessibilityLabel={`${tr?.name ?? 'Appointment'} ${a.timeLabel}`}
+              accessibilityLabel={`${tr?.name ?? 'Appointment'} ${range}`}
               onPress={() => tr && nav.navigate('TreatmentDetail', { treatmentId: tr.id })}
               style={({ pressed }) => ({
                 position: 'absolute',
-                top: start * HOUR_H + 8,
+                top: start * HOUR_H + 1,
                 left: 56,
                 right: 0,
                 height,
@@ -275,17 +288,25 @@ function ScheduleView({ nav, focusDate }: { nav: Props['navigation']; focusDate?
                 borderLeftWidth: 3,
                 borderLeftColor: t.accent,
                 paddingHorizontal: spacing.m,
-                paddingVertical: 7,
                 justifyContent: 'center',
                 opacity: pressed ? 0.8 : 1,
               })}
             >
-              <Text numberOfLines={1} style={{ fontSize: 14, fontWeight: '700', color: t.text }}>
-                {tr?.name ?? 'Appointment'}
-              </Text>
-              <Text numberOfLines={1} style={{ fontSize: 12, color: t.sub, marginTop: 1 }}>
-                {a.timeLabel} · {clinic?.name} · {formatAED(a.price)}
-              </Text>
+              {compact ? (
+                <Text numberOfLines={1} style={{ fontSize: 12.5, fontWeight: '700', color: t.text }}>
+                  {tr?.name ?? 'Appointment'}
+                  <Text style={{ fontWeight: '500', color: t.sub }}>{`  ${range}`}</Text>
+                </Text>
+              ) : (
+                <>
+                  <Text numberOfLines={1} style={{ fontSize: 14, fontWeight: '700', color: t.text }}>
+                    {tr?.name ?? 'Appointment'}
+                  </Text>
+                  <Text numberOfLines={1} style={{ fontSize: 12, color: t.sub, marginTop: 1 }}>
+                    {range} · {clinic?.name}
+                  </Text>
+                </>
+              )}
             </Pressable>
           );
         })}

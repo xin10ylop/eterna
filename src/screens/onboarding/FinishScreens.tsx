@@ -33,7 +33,7 @@ export function NotificationsScreen({
 
   return (
     <OnboardingShell
-      step={6}
+      step={5}
       title="Your quiet reminders"
       subtitle="One gentle nudge per ritual, never a daily buzz."
       cta="Set reminders"

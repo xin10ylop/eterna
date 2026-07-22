@@ -6,7 +6,7 @@ import { spacing, type } from '../../theme';
 import { useTheme } from '../../store';
 
 /** Total questionnaire steps shown in the progress bar (post-auth). */
-export const OB_STEPS = 7;
+export const OB_STEPS = 6;
 
 /**
  * Shared onboarding scaffold: back button, thin step progress, one big

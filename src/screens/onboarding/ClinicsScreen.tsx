@@ -29,7 +29,7 @@ export function ClinicsScreen({ navigation }: NativeStackScreenProps<RootStackPa
 
   return (
     <OnboardingShell
-      step={3}
+      step={2}
       alignTop
       title="Where do you go?"
       subtitle="Search your places, then tick what you do at each. Change it any time."
