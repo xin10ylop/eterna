@@ -31,7 +31,12 @@ export function addWeeks(iso: string, weeks: number): string {
 
 export function addMonths(iso: string, months: number): string {
   const d = fromISO(iso);
+  const day = d.getDate();
+  // clamp to the target month's length so Jan 31 + 1mo is Feb 28, not Mar 3
+  d.setDate(1);
   d.setMonth(d.getMonth() + months);
+  const daysInTarget = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(day, daysInTarget));
   return toISO(d);
 }
 
@@ -107,6 +112,7 @@ export function weekdayShort(iso: string): string {
 /** "3 days overdue", "due tomorrow", "due in 5 weeks"… */
 export function humanizeDue(nextDueISO: string): string {
   const days = diffDays(todayISO(), nextDueISO);
+  if (days <= -14) return `${Math.round(-days / 7)} weeks overdue`;
   if (days < -1) return `${-days} days overdue`;
   if (days === -1) return '1 day overdue';
   if (days === 0) return 'due today';

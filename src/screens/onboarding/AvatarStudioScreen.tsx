@@ -1,8 +1,9 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { IconButton, PrimaryButton, Screen } from '../../components/ui';
+import { IconButton, PrimaryButton, Screen, StepDots } from '../../components/ui';
 import { AvatarFigure } from '../../components/avatar/AvatarFigure';
+import { OB_STEPS } from './OnboardingShell';
 import { HAIR_COLORS, SKIN_TONES } from '../../data/seed';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
@@ -94,7 +95,11 @@ export function AvatarStudioScreen({
               accessibilityLabel="Back"
             />
           ) : null}
-          {!signedIn ? <Text style={[type.label, { color: t.muted }]}>Step 5 of 6</Text> : null}
+          {!signedIn ? (
+            <View style={{ flex: 1 }}>
+              <StepDots total={OB_STEPS} index={4} />
+            </View>
+          ) : null}
         </View>
         <Text style={[type.display, { color: t.text }]}>Make her yours</Text>
       </View>

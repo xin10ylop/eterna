@@ -38,7 +38,8 @@ export function NameScreen({ navigation }: NativeStackScreenProps<RootStackParam
       cta="Continue"
       onNext={() => {
         const a = validateName(first, 'first name');
-        const b = validateName(last, 'last name');
+        // last name is optional — mononyms are common in the Gulf
+        const b = last.trim() ? validateName(last, 'last name') : null;
         setE1(a);
         setE2(b);
         if (a || b) return;
@@ -61,7 +62,7 @@ export function NameScreen({ navigation }: NativeStackScreenProps<RootStackParam
           autoFocus
         />
         <Field
-          label="Last name"
+          label="Last name (optional)"
           value={last}
           onChangeText={(v) => {
             setLast(v);
