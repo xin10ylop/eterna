@@ -170,14 +170,26 @@ export interface EventRef {
   dateISO: string;
 }
 
-/** Where one of an event's chosen rituals stands. */
-export type EventItemStatus = 'booked' | 'toBook' | 'fresh';
+/** Where one of an event's chosen rituals stands — the five real situations:
+ *  booked   — an appointment lands where it will actually be fresh at the event
+ *  fresh    — recently done, still fresh on the day; nothing needed
+ *  move     — she HAS a booking, but it's after the event or too early to last
+ *             (her usual Friday nails vs. a Wednesday event) — shift it
+ *  toBook   — comes due before the event and nothing is booked
+ *  later    — the event is further away than this ritual lasts; her normal
+ *             routine covers her for now, we'll surface it closer */
+export type EventItemStatus = 'booked' | 'fresh' | 'move' | 'toBook' | 'later';
 
 export interface EventItem {
   treatment: Treatment;
   status: EventItemStatus;
-  /** The date it's booked for, if booked before the event. */
+  /** The covering appointment's date, when booked. */
   apptDateISO?: string;
+  /** The misplaced appointment's date, when status is `move`. */
+  moveDateISO?: string;
+  /** Best date to book by — the sooner of "when it comes due" and "the ideal
+   *  window before the event" (filler needs time to settle; nails go last-minute). */
+  bookByISO: string;
   /** When it next comes due. */
   dueISO: string;
   /** Other upcoming events that ALSO chose this ritual — shown so she can
@@ -187,10 +199,9 @@ export interface EventItem {
 
 /**
  * The status of each ritual she chose for one event — nothing inferred beyond
- * her own picks. `booked` = she has an appointment for it before the event;
- * `fresh` = it stays fresh through the event, so it needs nothing; `toBook` =
- * she wants it and it isn't handled yet. `alsoFor` flags picks shared with
- * another event so she decides how to coordinate.
+ * her own picks. An appointment only counts as covering the event when it lands
+ * inside the window where the ritual will still be fresh on the day; a booking
+ * outside that window (after the event, or too early to last) becomes `move`.
  */
 export function eventItems(
   event: SalonEvent,
@@ -203,22 +214,50 @@ export function eventItems(
     .map((id): EventItem | null => {
       const tr = treatments.find((t) => t.id === id);
       if (!tr) return null;
-      const appt = appointments
-        .filter((a) => a.treatmentId === id && a.dateISO >= today && a.dateISO <= event.dateISO)
-        .sort((a, b) => a.dateISO.localeCompare(b.dateISO))[0];
+      const fresh = cadenceDays(tr.cadence);
+      const lead = EVENT_LEAD[tr.zone] ?? 3;
+      // done inside [event - fresh, event] → still fresh on the day
+      const windowStart = addDays(event.dateISO, -fresh);
+      const future = appointments
+        .filter((a) => a.treatmentId === id && a.dateISO >= today)
+        .sort((a, b) => a.dateISO.localeCompare(b.dateISO));
+      const covering = future.find((a) => a.dateISO >= windowStart && a.dateISO <= event.dateISO);
+      const misplaced = future[0];
       const due = nextDueISO(tr);
-      const status: EventItemStatus = appt ? 'booked' : due > event.dateISO ? 'fresh' : 'toBook';
+      const idealBy = addDays(event.dateISO, -lead);
+      const bookByISO = due < idealBy ? due : idealBy;
       const alsoFor: EventRef[] = allEvents
         .filter((e) => e.id !== event.id && e.dateISO >= today && e.treatmentIds.includes(id))
         .map((e) => ({ id: e.id, name: e.name, dateISO: e.dateISO }));
-      return { treatment: tr, status, apptDateISO: appt?.dateISO, dueISO: due, alsoFor };
+
+      let status: EventItemStatus;
+      if (covering) status = 'booked';
+      else if (due > event.dateISO) status = 'fresh';
+      else if (!tr.oneOff && diffDays(today, event.dateISO) > fresh) status = 'later';
+      else if (misplaced) status = 'move';
+      else status = 'toBook';
+
+      return {
+        treatment: tr,
+        status,
+        apptDateISO: covering?.dateISO,
+        moveDateISO: status === 'move' ? misplaced?.dateISO : undefined,
+        bookByISO,
+        dueISO: due,
+        alsoFor,
+      };
     })
     .filter((x): x is EventItem => x !== null);
 }
 
-/** Ready when every ritual she chose is booked or still fresh. */
+/** Progress over what's actionable now — `later` items aren't counted, so a far
+ *  event doesn't read as unready when there's nothing to do yet. */
 export function eventProgress(items: EventItem[]): { done: number; total: number } {
-  return { total: items.length, done: items.filter((i) => i.status !== 'toBook').length };
+  const actionable = items.filter((i) => i.status !== 'later');
+  return {
+    total: actionable.length,
+    done: actionable.filter((i) => i.status === 'booked' || i.status === 'fresh').length,
+  };
 }
 
 /** Upcoming appointments she has that no upcoming event claimed — her routine /

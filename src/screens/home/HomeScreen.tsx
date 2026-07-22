@@ -116,9 +116,8 @@ export function HomeScreen({ navigation }: Props) {
             accessibilityRole="button"
             onPress={() => navigation.navigate('EventPrep', { add: true })}
             style={({ pressed }) => ({
-              marginHorizontal: spacing.xl,
               marginTop: spacing.m,
-              alignSelf: 'flex-start',
+              alignSelf: 'center',
               flexDirection: 'row',
               alignItems: 'center',
               gap: 7,
@@ -139,7 +138,13 @@ export function HomeScreen({ navigation }: Props) {
             horizontal
             showsHorizontalScrollIndicator={false}
             style={{ flexGrow: 0, marginTop: spacing.m }}
-            contentContainerStyle={{ paddingHorizontal: spacing.xl, gap: spacing.s, alignItems: 'center' }}
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: 'center',
+              paddingHorizontal: spacing.xl,
+              gap: spacing.s,
+              alignItems: 'center',
+            }}
           >
             {upcomingEvents.map((ev) => {
               const [mon, day] = formatMedium(ev.dateISO).split(' ');

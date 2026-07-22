@@ -282,46 +282,70 @@ export function EventPrepScreen({ navigation, route }: Props) {
                       </Pressable>
                     </View>
 
-                    {/* her picks for this event */}
+                    {/* her picks for this event — one plain sentence each */}
                     {items.map((it) => {
-                      const urgent = it.dueISO < today;
-                      const handled = it.status !== 'toBook';
+                      const done = it.status === 'booked' || it.status === 'fresh';
+                      const needsAction = it.status === 'toBook' || it.status === 'move';
+                      const urgent = it.status === 'toBook' && it.bookByISO <= today;
                       const also =
                         it.alsoFor.length > 0
                           ? ` · ${tx('event.also', { names: it.alsoFor.map((e) => e.name).join(', ') })}`
                           : '';
+                      const line =
+                        it.status === 'booked'
+                          ? tx('event.bookedOn', { date: formatMedium(it.apptDateISO ?? '') })
+                          : it.status === 'fresh'
+                            ? tx('event.setFresh')
+                            : it.status === 'later'
+                              ? tx('event.laterLine')
+                              : it.status === 'move'
+                                ? tx('event.moveLine', { date: formatMedium(it.moveDateISO ?? '') })
+                                : urgent
+                                  ? tx('event.asap')
+                                  : tx('event.bookBy', { date: formatMedium(it.bookByISO) });
                       return (
                         <View
                           key={it.treatment.id}
                           style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s }}
                         >
                           <Ionicons
-                            name={handled ? 'checkmark-circle' : 'ellipse-outline'}
+                            name={
+                              done
+                                ? 'checkmark-circle'
+                                : it.status === 'move'
+                                  ? 'time-outline'
+                                  : 'ellipse-outline'
+                            }
                             size={18}
-                            color={handled ? t.positive : RED}
+                            color={done ? t.positive : it.status === 'later' ? t.muted : RED}
                           />
                           <View style={{ flex: 1, minWidth: 0 }}>
-                            <Text numberOfLines={1} style={{ fontSize: 14, fontWeight: '600', color: t.text }}>
+                            <Text
+                              numberOfLines={1}
+                              style={{
+                                fontSize: 14,
+                                fontWeight: '600',
+                                color: it.status === 'later' ? t.sub : t.text,
+                              }}
+                            >
                               {it.treatment.name}
                             </Text>
                             <Text
                               numberOfLines={1}
-                              style={{ fontSize: 11.5, color: handled ? t.sub : RED, marginTop: 1 }}
+                              style={{
+                                fontSize: 11.5,
+                                color: needsAction ? RED : it.status === 'later' ? t.muted : t.sub,
+                                marginTop: 1,
+                              }}
                             >
-                              {it.status === 'booked'
-                                ? tx('event.bookedOn', { date: formatMedium(it.apptDateISO ?? '') })
-                                : it.status === 'fresh'
-                                  ? tx('event.setFresh')
-                                  : urgent
-                                    ? tx('event.asap')
-                                    : tx('event.bookBy', { date: formatMedium(it.dueISO) })}
+                              {line}
                               {also}
                             </Text>
                           </View>
-                          {!handled ? (
+                          {needsAction ? (
                             <Pressable
                               accessibilityRole="button"
-                              accessibilityLabel={`Book ${it.treatment.name}`}
+                              accessibilityLabel={`${it.status === 'move' ? tx('event.moveCta') : tx('common.book')} ${it.treatment.name}`}
                               onPress={() => navigation.navigate('Book', { treatmentId: it.treatment.id })}
                               style={({ pressed }) => ({
                                 paddingVertical: 6,
@@ -332,7 +356,7 @@ export function EventPrepScreen({ navigation, route }: Props) {
                               })}
                             >
                               <Text style={{ color: t.onAccent, fontSize: 12.5, fontWeight: '700' }}>
-                                {tx('common.book')}
+                                {it.status === 'move' ? tx('event.moveCta') : tx('common.book')}
                               </Text>
                             </Pressable>
                           ) : null}
