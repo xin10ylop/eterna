@@ -13,6 +13,7 @@ import { LanguageScreen } from '../screens/onboarding/LanguageScreen';
 import { FeaturesScreen } from '../screens/onboarding/FeaturesScreen';
 import { SignInScreen, SignUpScreen, VerifyScreen } from '../screens/onboarding/AuthScreens';
 import { BirthdayScreen, NameScreen, RoutineScreen } from '../screens/onboarding/ProfileSteps';
+import { ClinicsScreen } from '../screens/onboarding/ClinicsScreen';
 import { PlanScreen } from '../screens/onboarding/PlanScreen';
 import { AvatarStudioScreen } from '../screens/onboarding/AvatarStudioScreen';
 import { NotificationsScreen, ReadyScreen } from '../screens/onboarding/FinishScreens';
@@ -164,6 +165,7 @@ export function RootNavigator() {
             <Stack.Screen name="Name" component={NameScreen} />
             <Stack.Screen name="Birthday" component={BirthdayScreen} />
             <Stack.Screen name="Routine" component={RoutineScreen} />
+            <Stack.Screen name="Clinics" component={ClinicsScreen} />
             <Stack.Screen name="Plan" component={PlanScreen} />
             <Stack.Screen name="AvatarStudio" component={AvatarStudioScreen} />
             <Stack.Screen name="Notifications" component={NotificationsScreen} />

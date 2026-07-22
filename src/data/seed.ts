@@ -61,14 +61,68 @@ export const PRACTITIONERS: Practitioner[] = [
 ];
 
 export const CLINICS: Clinic[] = [
-  { id: 'c1', name: 'Amwaj Hair Lounge', services: ['Hair', 'Lashes & Brows'], rating: 4.9, distanceKm: 0.8, slots: ['Tomorrow 14:30', 'Fri 10:00', 'Fri 16:15'], sponsored: true },
-  { id: 'c2', name: 'Jamila Skin Clinic', services: ['Skin', 'Lashes & Brows'], rating: 4.8, distanceKm: 1.4, slots: ['Thu 11:00', 'Fri 15:30', 'Sat 09:45'] },
-  { id: 'c3', name: 'Kohl Lash Bar', services: ['Lashes & Brows', 'Nails'], rating: 4.7, distanceKm: 1.2, slots: ['Today 17:00', 'Tomorrow 12:15', 'Wed 18:30'] },
-  { id: 'c4', name: 'Layali Nail Studio', services: ['Nails', 'Spa'], rating: 4.9, distanceKm: 2.1, slots: ['Tomorrow 10:30', 'Thu 13:00', 'Sat 16:00'], homeService: true },
-  { id: 'c5', name: 'Noor Aesthetics', services: ['Skin', 'Hair'], rating: 4.8, distanceKm: 1.9, slots: ['Fri 09:30', 'Mon 14:00', 'Tue 17:15'], sponsored: true },
-  { id: 'c6', name: 'The Brow Room', services: ['Lashes & Brows'], rating: 4.6, distanceKm: 0.6, slots: ['Today 16:15', 'Thu 11:30', 'Fri 10:45'] },
-  { id: 'c7', name: 'Rose Hammam & Spa', services: ['Spa', 'Nails'], rating: 4.7, distanceKm: 2.4, slots: ['Sat 11:00', 'Sun 15:00', 'Mon 10:30'], homeService: true },
+  { id: 'c1', name: 'Amwaj Hair Lounge', services: ['Hair', 'Lashes & Brows'], rating: 4.9, distanceKm: 0.8, slots: ['Tomorrow 14:30', 'Fri 10:00', 'Fri 16:15'], sponsored: true,
+    offerings: [
+      { name: 'Roots touch-up', service: 'Hair', price: 380, mins: 90 },
+      { name: 'Cut & style', service: 'Hair', price: 280, mins: 60 },
+      { name: 'Blow-dry', service: 'Hair', price: 120, mins: 40 },
+      { name: 'Keratin treatment', service: 'Hair', price: 700, mins: 150 },
+      { name: 'Brow shaping', service: 'Lashes & Brows', price: 140, mins: 30 },
+    ] },
+  { id: 'c2', name: 'Jamila Skin Clinic', services: ['Skin', 'Lashes & Brows'], rating: 4.8, distanceKm: 1.4, slots: ['Thu 11:00', 'Fri 15:30', 'Sat 09:45'],
+    offerings: [
+      { name: 'Botox', service: 'Skin', price: 960, mins: 30 },
+      { name: 'Lip filler', service: 'Skin', price: 1120, mins: 45 },
+      { name: 'Hydrafacial', service: 'Skin', price: 440, mins: 60 },
+      { name: 'Chemical peel', service: 'Skin', price: 500, mins: 45 },
+      { name: 'Leg wax', service: 'Skin', price: 220, mins: 30 },
+    ] },
+  { id: 'c3', name: 'Kohl Lash Bar', services: ['Lashes & Brows', 'Nails'], rating: 4.7, distanceKm: 1.2, slots: ['Today 17:00', 'Tomorrow 12:15', 'Wed 18:30'],
+    offerings: [
+      { name: 'Lash extensions', service: 'Lashes & Brows', price: 400, mins: 90 },
+      { name: 'Lash lift', service: 'Lashes & Brows', price: 320, mins: 60 },
+      { name: 'Brow lamination', service: 'Lashes & Brows', price: 300, mins: 45 },
+      { name: 'Gel manicure', service: 'Nails', price: 170, mins: 45 },
+    ] },
+  { id: 'c4', name: 'Layali Nail Studio', services: ['Nails', 'Spa'], rating: 4.9, distanceKm: 2.1, slots: ['Tomorrow 10:30', 'Thu 13:00', 'Sat 16:00'], homeService: true,
+    offerings: [
+      { name: 'Gel manicure', service: 'Nails', price: 180, mins: 45 },
+      { name: 'Acrylic nails', service: 'Nails', price: 250, mins: 75 },
+      { name: 'Pedicure', service: 'Nails', price: 220, mins: 60 },
+      { name: 'Hammam', service: 'Spa', price: 300, mins: 60 },
+    ] },
+  { id: 'c5', name: 'Noor Aesthetics', services: ['Skin', 'Hair'], rating: 4.8, distanceKm: 1.9, slots: ['Fri 09:30', 'Mon 14:00', 'Tue 17:15'], sponsored: true,
+    offerings: [
+      { name: 'Hydrafacial', service: 'Skin', price: 460, mins: 60 },
+      { name: 'Skin booster', service: 'Skin', price: 900, mins: 40 },
+      { name: 'Laser hair removal', service: 'Skin', price: 480, mins: 45 },
+      { name: 'Hair color', service: 'Hair', price: 450, mins: 120 },
+    ] },
+  { id: 'c6', name: 'The Brow Room', services: ['Lashes & Brows'], rating: 4.6, distanceKm: 0.6, slots: ['Today 16:15', 'Thu 11:30', 'Fri 10:45'],
+    offerings: [
+      { name: 'Brow shaping', service: 'Lashes & Brows', price: 130, mins: 25 },
+      { name: 'Brow lamination', service: 'Lashes & Brows', price: 290, mins: 45 },
+      { name: 'Threading', service: 'Lashes & Brows', price: 60, mins: 15 },
+      { name: 'Lash lift', service: 'Lashes & Brows', price: 330, mins: 60 },
+    ] },
+  { id: 'c7', name: 'Rose Hammam & Spa', services: ['Spa', 'Nails'], rating: 4.7, distanceKm: 2.4, slots: ['Sat 11:00', 'Sun 15:00', 'Mon 10:30'], homeService: true,
+    offerings: [
+      { name: 'Hammam', service: 'Spa', price: 300, mins: 75 },
+      { name: 'Deep tissue massage', service: 'Spa', price: 340, mins: 60 },
+      { name: 'Body scrub', service: 'Spa', price: 280, mins: 45 },
+      { name: 'Pedicure', service: 'Nails', price: 210, mins: 60 },
+    ] },
 ];
+
+/** Which services she uses at each of her clinics: "nails here, hair there."
+ *  Seeded to match the demo treatments; she edits it in My Clinics. */
+export const MY_SERVICES: Record<string, string[]> = {
+  c1: ['Roots touch-up', 'Cut & style'],
+  c2: ['Botox', 'Lip filler', 'Hydrafacial'],
+  c4: ['Gel manicure', 'Pedicure'],
+  c5: ['Laser hair removal'],
+  c7: ['Deep tissue massage'],
+};
 
 const T = todayISO();
 

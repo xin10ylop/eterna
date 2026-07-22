@@ -168,13 +168,11 @@ export function BudgetScreen({ navigation }: Props) {
                   style={{ flex: 1, alignItems: 'center', gap: 4 }}
                 >
                   {/* the amount appears only for the tapped month (Apple Health) */}
-                  <View style={{ height: 18, justifyContent: 'flex-end' }}>
+                  <View style={{ height: 18, justifyContent: 'flex-end', overflow: 'visible' }}>
                     {picked ? (
-                      <Text
-                        numberOfLines={1}
-                        style={{ fontSize: 10.5, fontWeight: '700', color: t.accent }}
-                      >
-                        {formatAED(total)}
+                      // number only — "AED 2,660" ellipsized inside the narrow column
+                      <Text style={{ fontSize: 11, fontWeight: '700', color: t.accent }}>
+                        {Math.round(total).toLocaleString('en-US')}
                       </Text>
                     ) : null}
                   </View>
@@ -202,9 +200,6 @@ export function BudgetScreen({ navigation }: Props) {
               );
             })}
           </View>
-          <Text style={{ fontSize: 12, color: t.muted, marginTop: spacing.s }}>
-            Outlined bar = booked and projected, not yet spent.
-          </Text>
         </Card>
 
         {/* zone breakdown */}

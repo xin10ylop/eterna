@@ -34,6 +34,7 @@ export function NameScreen({ navigation }: NativeStackScreenProps<RootStackParam
   return (
     <OnboardingShell
       step={0}
+      alignTop
       title="What should we call you?"
       cta="Continue"
       onNext={() => {
@@ -243,7 +244,7 @@ export function RoutineScreen({ navigation }: NativeStackScreenProps<RootStackPa
       ctaDisabled={picked.length === 0}
       onNext={() => {
         setDraft({ routine: picked });
-        navigation.navigate('Plan');
+        navigation.navigate('Clinics');
       }}
     >
       <View style={{ gap: spacing.xl, paddingTop: spacing.s }}>

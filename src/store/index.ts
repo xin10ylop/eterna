@@ -11,7 +11,7 @@ import type {
   Treatment,
 } from '../types';
 import type { Lang } from '../i18n';
-import { APPOINTMENTS, CLINICS, SEED_EVENTS, SESSIONS, TREATMENTS, treatmentsForRoutine } from '../data/seed';
+import { APPOINTMENTS, CLINICS, MY_SERVICES, SEED_EVENTS, SESSIONS, TREATMENTS, treatmentsForRoutine } from '../data/seed';
 import type { AccentName } from '../theme';
 import { todayISO } from '../lib/dates';
 import { setLocale } from '../lib/locale';
@@ -63,6 +63,8 @@ interface EternaState {
   appointments: Appointment[];
   clinics: Clinic[];
   savedClinicIds: string[];
+  /** Chosen services per clinic id: what she does at each place. */
+  myServices: Record<string, string[]>;
   events: SalonEvent[];
   showPastEvents: boolean;
 
@@ -83,6 +85,7 @@ interface EternaState {
   cancelAppointment(appointmentId: string): void;
   addTreatment(t: Treatment): void;
   toggleSavedClinic(clinicId: string): void;
+  toggleMyService(clinicId: string, offeringName: string): void;
   addOwnClinic(name: string): Clinic;
   setAvatar(patch: Partial<AvatarConfig>): void;
   addEvent(name: string, dateISO: string, treatmentIds: string[]): void;
@@ -108,7 +111,8 @@ export const useEterna = create<EternaState>((set, get) => ({
   sessions: SESSIONS,
   appointments: APPOINTMENTS,
   clinics: CLINICS,
-  savedClinicIds: ['c1', 'c2', 'c3', 'c4'],
+  savedClinicIds: ['c1', 'c2', 'c4', 'c5', 'c7'],
+  myServices: MY_SERVICES,
   events: SEED_EVENTS,
   showPastEvents: false,
 
@@ -228,11 +232,28 @@ export const useEterna = create<EternaState>((set, get) => ({
         : [...s.savedClinicIds, clinicId],
     })),
 
+  toggleMyService: (clinicId, offeringName) =>
+    set((s) => {
+      const cur = s.myServices[clinicId] ?? [];
+      const next = cur.includes(offeringName)
+        ? cur.filter((n) => n !== offeringName)
+        : [...cur, offeringName];
+      return {
+        myServices: { ...s.myServices, [clinicId]: next },
+        // choosing a service at a place makes it one of her clinics
+        savedClinicIds:
+          next.length > 0 && !s.savedClinicIds.includes(clinicId)
+            ? [...s.savedClinicIds, clinicId]
+            : s.savedClinicIds,
+      };
+    }),
+
   addOwnClinic: (name) => {
     const clinic: Clinic = {
       id: `c-own-${Date.now()}`,
       name: name.trim(),
       services: ['Spa'],
+      offerings: [],
       rating: 0,
       distanceKm: 0,
       slots: [],

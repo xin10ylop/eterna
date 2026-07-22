@@ -139,6 +139,7 @@ export function SignUpScreen({ navigation }: NativeStackScreenProps<RootStackPar
   return (
     <OnboardingShell
       step={null}
+      alignTop
       title="Create your account"
       subtitle="Your rituals stay private to you."
       cta="Continue"
@@ -242,6 +243,7 @@ export function SignInScreen({ navigation }: NativeStackScreenProps<RootStackPar
   return (
     <OnboardingShell
       step={null}
+      alignTop
       title="Welcome back"
       cta="Sign in"
       onNext={() => {
@@ -304,6 +306,7 @@ export function VerifyScreen({ navigation }: NativeStackScreenProps<RootStackPar
   return (
     <OnboardingShell
       step={null}
+      alignTop
       title="Check your inbox"
       subtitle={`Enter the 6-digit code we sent to ${email || 'your email'}. Demo preview: continue any time.`}
       cta="Verify"

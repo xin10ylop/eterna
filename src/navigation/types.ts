@@ -13,6 +13,7 @@ export type RootStackParamList = {
   Birthday: undefined;
   Metrics: undefined;
   Routine: undefined;
+  Clinics: undefined;
   Plan: undefined;
   AvatarStudio: { fromProfile?: boolean } | undefined;
   AvatarEdit: undefined;

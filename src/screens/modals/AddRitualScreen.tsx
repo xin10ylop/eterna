@@ -10,7 +10,7 @@ import { PRACTITIONERS } from '../../data/seed';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import type { RootStackParamList } from '../../navigation/types';
-import type { ClinicService, Treatment, ZoneId } from '../../types';
+import type { Clinic, ClinicService, Treatment, ZoneId } from '../../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddRitual'>;
 
@@ -92,16 +92,26 @@ export function AddRitualScreen({ navigation }: Props) {
   const [lastDoneISO, setLastDoneISO] = useState(addWeeks(todayISO(), -2));
   const [cadence, setCadence] = useState(pick.cadence);
   const [unit, setUnit] = useState('Weeks');
-  const matchClinic = (zone: ZoneId): string => {
+  const matchClinic = (zone: ZoneId, treatmentName?: string): string => {
     const sc = clinics.filter((c) => savedIds.includes(c.id));
-    return sc.find((c) => c.services.includes(ZONE_CATEGORY[zone]))?.id ?? sc[0]?.id ?? '';
+    return (
+      // first: a clinic that actually has this treatment on its menu
+      (treatmentName
+        ? sc.find((c) => c.offerings.some((o) => o.name === treatmentName))?.id
+        : undefined) ??
+      sc.find((c) => c.services.includes(ZONE_CATEGORY[zone]))?.id ??
+      sc[0]?.id ??
+      ''
+    );
   };
-  const [clinicId, setClinicId] = useState<string>(matchClinic(CATALOG[0]!.zone));
+  const [clinicId, setClinicId] = useState<string>(matchClinic(CATALOG[0]!.zone, CATALOG[0]!.name));
   const [ownName, setOwnName] = useState('');
   const [oneOff, setOneOff] = useState(false);
   const [atHome, setAtHome] = useState(false);
 
   const saved = useMemo(() => clinics.filter((c) => savedIds.includes(c.id)), [clinics, savedIds]);
+  /** This clinic's own menu entry for the picked ritual, with its price and time. */
+  const offeringAt = (c: Clinic) => c.offerings.find((o) => o.name === pick.name);
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     return q ? CATALOG.filter((c) => c.name.toLowerCase().includes(q)) : CATALOG;
@@ -109,6 +119,9 @@ export function AddRitualScreen({ navigation }: Props) {
 
   const submit = () => {
     if (!clinicId) return;
+    // the chosen clinic's own price for this ritual, when it's on their menu
+    const chosenClinic = clinics.find((c) => c.id === clinicId);
+    const offering = chosenClinic?.offerings.find((o) => o.name === pick.name);
     const practitioner = PRACTITIONERS[5]!;
     const treatment: Treatment = {
       id: `t-add-${Date.now()}`,
@@ -119,7 +132,7 @@ export function AddRitualScreen({ navigation }: Props) {
       cadence: oneOff ? { every: 1, unit: 'month' } : { every: cadence, unit: UNIT_MAP[unit] ?? 'week' },
       clinicId,
       practitionerId: practitioner.id,
-      price: pick.price,
+      price: offering?.price ?? pick.price,
       lastDoneISO: oneOff ? addWeeks(todayISO(), -520) : lastDoneISO,
       reminderOn: true,
       atHome: atHome || undefined,
@@ -196,8 +209,8 @@ export function AddRitualScreen({ navigation }: Props) {
                       setCadence(c.cadence);
                       // catalogue intervals are in weeks; keep the unit in sync
                       setUnit('Weeks');
-                      // default to a clinic that actually does this kind of ritual
-                      setClinicId(matchClinic(c.zone));
+                      // default to a clinic that actually does this ritual
+                      setClinicId(matchClinic(c.zone, c.name));
                     }}
                     style={{
                       flexDirection: 'row',
@@ -310,47 +323,60 @@ export function AddRitualScreen({ navigation }: Props) {
           <IOSSwitch on={atHome} onToggle={() => setAtHome((v) => !v)} />
         </View>
 
-        {/* where */}
+        {/* where — her clinics; the ones that do this ritual come first, showing
+            THEIR price and time for it */}
         <View style={{ gap: spacing.s }}>
           <SectionLabel>Where do you get it done?</SectionLabel>
           <View style={{ gap: spacing.s }}>
-            {saved.map((c) => {
-              const sel = clinicId === c.id;
-              return (
-                <Pressable
-                  key={c.id}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: sel }}
-                  onPress={() => setClinicId(c.id)}
-                  style={({ pressed }) => ({
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: spacing.m,
-                    backgroundColor: t.surface,
-                    borderRadius: radii.l,
-                    borderWidth: sel ? 1.5 : 1,
-                    borderColor: sel ? t.accent : t.border,
-                    padding: spacing.m,
-                    transform: [{ scale: pressed ? 0.98 : 1 }],
-                  })}
-                >
-                  <View
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: radii.s,
-                      backgroundColor: t.accentSoft,
+            {[...saved]
+              .sort((a, b) => (offeringAt(b) ? 1 : 0) - (offeringAt(a) ? 1 : 0))
+              .map((c) => {
+                const sel = clinicId === c.id;
+                const o = offeringAt(c);
+                return (
+                  <Pressable
+                    key={c.id}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: sel }}
+                    onPress={() => setClinicId(c.id)}
+                    style={({ pressed }) => ({
+                      flexDirection: 'row',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
+                      gap: spacing.m,
+                      backgroundColor: t.surface,
+                      borderRadius: radii.l,
+                      borderWidth: sel ? 1.5 : 1,
+                      borderColor: sel ? t.accent : t.border,
+                      padding: spacing.m,
+                      transform: [{ scale: pressed ? 0.98 : 1 }],
+                    })}
                   >
-                    <Text style={{ fontWeight: '700', color: t.accent }}>{c.name[0]}</Text>
-                  </View>
-                  <Text style={{ flex: 1, fontSize: 15, fontWeight: '600', color: t.text }}>{c.name}</Text>
-                  {sel ? <Ionicons name="checkmark-circle" size={22} color={t.accent} /> : null}
-                </Pressable>
-              );
-            })}
+                    <View
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: radii.s,
+                        backgroundColor: t.accentSoft,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Text style={{ fontWeight: '700', color: t.accent }}>{c.name[0]}</Text>
+                    </View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
+                        {c.name}
+                      </Text>
+                      {o ? (
+                        <Text style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
+                          {formatAED(o.price)} · {o.mins} min
+                        </Text>
+                      ) : null}
+                    </View>
+                    {sel ? <Ionicons name="checkmark-circle" size={22} color={t.accent} /> : null}
+                  </Pressable>
+                );
+              })}
 
             {/* browse in Discover */}
             <Pressable

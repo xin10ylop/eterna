@@ -92,7 +92,7 @@ export function PlanScreen({ navigation }: NativeStackScreenProps<RootStackParam
 
   return (
     <OnboardingShell
-      step={3}
+      step={4}
       title={ready ? (firstName ? `${firstName}, here's your plan` : "Here's your plan") : 'One moment…'}
       subtitle={ready ? 'Built from your answers, refine it any time.' : 'Eterna is preparing your space.'}
       cta="Continue"

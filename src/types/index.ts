@@ -37,11 +37,21 @@ export interface Practitioner {
 
 export type ClinicService = 'Hair' | 'Skin' | 'Nails' | 'Lashes & Brows' | 'Spa';
 
+/** One thing a clinic does, with its own price and typical duration. */
+export interface ClinicOffering {
+  name: string;
+  service: ClinicService;
+  price: number;
+  mins: number;
+}
+
 export interface Clinic {
   id: string;
   name: string;
   /** Every clinic offers its own mix of services; most offer several. */
   services: ClinicService[];
+  /** The menu: what this clinic does, each with price and average time. */
+  offerings: ClinicOffering[];
   rating: number;
   distanceKm: number;
   /** Next open slots, newest first. Mocked; will come from booking API later. */

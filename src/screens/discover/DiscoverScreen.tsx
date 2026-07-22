@@ -6,6 +6,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Chip, IconButton, Screen } from '../../components/ui';
 import { ClinicCardSkeleton } from '../../components/anim/Shimmer';
+import { formatAED } from '../../lib/money';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import { useT } from '../../i18n';
@@ -26,6 +27,8 @@ export function DiscoverScreen({ navigation }: Props) {
   const clinics = useEterna((s) => s.clinics);
   const savedIds = useEterna((s) => s.savedClinicIds);
   const toggleSaved = useEterna((s) => s.toggleSavedClinic);
+  const myServices = useEterna((s) => s.myServices);
+  const toggleMyService = useEterna((s) => s.toggleMyService);
   const showToast = useEterna((s) => s.showToast);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('All');
@@ -203,6 +206,55 @@ export function DiscoverScreen({ navigation }: Props) {
                     />
                   </Pressable>
                 </View>
+                {/* the clinic's menu: what they do, price and time, and one tap
+                    to say "I do this here" — that's how it joins My clinics */}
+                {open && c.offerings.length > 0 ? (
+                  <View style={{ marginTop: spacing.m, borderTopWidth: 1, borderTopColor: t.separator, paddingTop: spacing.m, gap: 4 }}>
+                    {c.offerings.map((o) => {
+                      const on = (myServices[c.id] ?? []).includes(o.name);
+                      return (
+                        <Pressable
+                          key={o.name}
+                          accessibilityRole="checkbox"
+                          accessibilityState={{ checked: on }}
+                          onPress={() => toggleMyService(c.id, o.name)}
+                          style={({ pressed }) => ({
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: spacing.m,
+                            paddingVertical: 10,
+                            paddingHorizontal: spacing.s,
+                            borderRadius: radii.m,
+                            backgroundColor: on ? t.accentSoft : 'transparent',
+                            opacity: pressed ? 0.7 : 1,
+                          })}
+                        >
+                          <View
+                            style={{
+                              width: 22,
+                              height: 22,
+                              borderRadius: 11,
+                              borderWidth: 1.5,
+                              borderColor: on ? t.accent : t.muted,
+                              backgroundColor: on ? t.accent : 'transparent',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {on ? <Ionicons name="checkmark" size={14} color={t.onAccent} /> : null}
+                          </View>
+                          <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: t.text }}>{o.name}</Text>
+                          <Text style={{ fontSize: 12.5, color: t.sub }}>
+                            {formatAED(o.price)} · {o.mins} {tr('clinics.min')}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                    <Text style={{ fontSize: 11.5, color: t.muted, paddingHorizontal: spacing.s }}>
+                      {tr('clinics.useHere')}
+                    </Text>
+                  </View>
+                ) : null}
                 {open && c.slots.length > 0 ? (
                   <View style={{ marginTop: spacing.m, borderTopWidth: 1, borderTopColor: t.separator, paddingTop: spacing.m, gap: spacing.s }}>
                     <Text style={[type.label, { color: t.muted }]}>Next available</Text>

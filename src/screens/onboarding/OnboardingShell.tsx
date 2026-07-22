@@ -6,7 +6,7 @@ import { spacing, type } from '../../theme';
 import { useTheme } from '../../store';
 
 /** Total questionnaire steps shown in the progress bar (post-auth). */
-export const OB_STEPS = 6;
+export const OB_STEPS = 7;
 
 /**
  * Shared onboarding scaffold: back button, thin step progress, one big
@@ -23,6 +23,7 @@ export function OnboardingShell({
   ctaDisabled,
   ctaLoading,
   footer,
+  alignTop,
 }: {
   step: number | null;
   title: string;
@@ -33,6 +34,8 @@ export function OnboardingShell({
   ctaDisabled?: boolean;
   ctaLoading?: boolean;
   footer?: React.ReactNode;
+  /** Text-input steps top-align: centring + keyboard = the layout jumps. */
+  alignTop?: boolean;
 }) {
   const t = useTheme();
   const nav = useNavigation();
@@ -58,7 +61,13 @@ export function OnboardingShell({
 
           <ScrollView
             style={{ flex: 1 }}
-            contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', gap: spacing.l, paddingBottom: spacing.xl }}
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: alignTop ? 'flex-start' : 'center',
+              gap: spacing.l,
+              paddingTop: alignTop ? spacing.l : 0,
+              paddingBottom: spacing.xl,
+            }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
