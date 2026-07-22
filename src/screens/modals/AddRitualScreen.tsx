@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { IconButton, PrimaryButton, Screen, SectionLabel, Segmented } from '../../components/ui';
+import { IOSSwitch, IconButton, PrimaryButton, Screen, SectionLabel, Segmented } from '../../components/ui';
 import { addWeeks, todayISO } from '../../lib/dates';
 import { formatAED } from '../../lib/money';
 import { PRACTITIONERS } from '../../data/seed';
@@ -97,6 +97,8 @@ export function AddRitualScreen({ navigation }: Props) {
   };
   const [clinicId, setClinicId] = useState<string>(matchClinic(CATALOG[0]!.zone));
   const [ownName, setOwnName] = useState('');
+  const [oneOff, setOneOff] = useState(false);
+  const [atHome, setAtHome] = useState(false);
 
   const saved = useMemo(() => clinics.filter((c) => savedIds.includes(c.id)), [clinics, savedIds]);
   const results = useMemo(() => {
@@ -114,12 +116,16 @@ export function AddRitualScreen({ navigation }: Props) {
       id: `t-add-${Date.now()}`,
       name: pick.name,
       zone: pick.zone,
-      cadence: { every: cadence, unit: UNIT_MAP[unit] ?? 'week' },
+      // a one-off doesn't repeat; a far-past "last done" keeps it showing as
+      // still-to-do in event prep until it's booked
+      cadence: oneOff ? { every: 1, unit: 'month' } : { every: cadence, unit: UNIT_MAP[unit] ?? 'week' },
       clinicId,
       practitionerId: practitioner.id,
       price: pick.price,
-      lastDoneISO: lastISO,
+      lastDoneISO: oneOff ? addWeeks(todayISO(), -520) : lastISO,
       reminderOn: true,
+      atHome: atHome || undefined,
+      oneOff: oneOff || undefined,
     };
     addTreatment(treatment);
     showToast('Added to your rituals');
@@ -229,55 +235,79 @@ export function AddRitualScreen({ navigation }: Props) {
           <Segmented options={LAST_OPTS} value={last} onChange={setLast} />
         </View>
 
-        {/* cadence */}
+        {/* how often — repeats on a cadence, or a one-off for an event */}
         <View style={{ gap: spacing.s }}>
-          <SectionLabel>Repeat every</SectionLabel>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: spacing.xl,
-              backgroundColor: t.surface,
-              borderRadius: radii.card,
-              paddingVertical: spacing.l,
-            }}
-          >
-            <Pressable
-              accessibilityLabel="Less often"
-              onPress={() => setCadence((c) => Math.max(1, c - 1))}
-              style={({ pressed }) => ({
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                backgroundColor: t.surfaceAlt,
-                alignItems: 'center',
-                justifyContent: 'center',
-                transform: [{ scale: pressed ? 0.9 : 1 }],
-              })}
-            >
-              <Ionicons name="remove" size={18} color={t.accent} />
-            </Pressable>
-            <Text style={{ fontSize: 17, fontWeight: '700', color: t.text, minWidth: 96, textAlign: 'center' }}>
-              {cadence} {unit.toLowerCase()}
+          <SectionLabel>How often?</SectionLabel>
+          <Segmented
+            options={['Repeats', 'Just once']}
+            value={oneOff ? 'Just once' : 'Repeats'}
+            onChange={(v) => setOneOff(v === 'Just once')}
+          />
+          {oneOff ? (
+            <Text style={{ fontSize: 13, color: t.sub, paddingHorizontal: 4, lineHeight: 19 }}>
+              A one-off — it won't repeat on your avatar, it only shows when you're prepping for an event.
             </Text>
-            <Pressable
-              accessibilityLabel="More often"
-              onPress={() => setCadence((c) => Math.min(365, c + 1))}
-              style={({ pressed }) => ({
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                backgroundColor: t.surfaceAlt,
-                alignItems: 'center',
-                justifyContent: 'center',
-                transform: [{ scale: pressed ? 0.9 : 1 }],
-              })}
-            >
-              <Ionicons name="add" size={18} color={t.accent} />
-            </Pressable>
+          ) : (
+            <>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: spacing.xl,
+                  backgroundColor: t.surface,
+                  borderRadius: radii.card,
+                  paddingVertical: spacing.l,
+                }}
+              >
+                <Pressable
+                  accessibilityLabel="Less often"
+                  onPress={() => setCadence((c) => Math.max(1, c - 1))}
+                  style={({ pressed }) => ({
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: t.surfaceAlt,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transform: [{ scale: pressed ? 0.9 : 1 }],
+                  })}
+                >
+                  <Ionicons name="remove" size={18} color={t.accent} />
+                </Pressable>
+                <Text style={{ fontSize: 17, fontWeight: '700', color: t.text, minWidth: 96, textAlign: 'center' }}>
+                  {cadence} {unit.toLowerCase()}
+                </Text>
+                <Pressable
+                  accessibilityLabel="More often"
+                  onPress={() => setCadence((c) => Math.min(365, c + 1))}
+                  style={({ pressed }) => ({
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: t.surfaceAlt,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transform: [{ scale: pressed ? 0.9 : 1 }],
+                  })}
+                >
+                  <Ionicons name="add" size={18} color={t.accent} />
+                </Pressable>
+              </View>
+              <Segmented options={UNITS} value={unit} onChange={setUnit} />
+            </>
+          )}
+        </View>
+
+        {/* at home */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>At home</Text>
+            <Text style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
+              A home-visit beautician instead of the salon.
+            </Text>
           </View>
-          <Segmented options={UNITS} value={unit} onChange={setUnit} />
+          <IOSSwitch on={atHome} onToggle={() => setAtHome((v) => !v)} />
         </View>
 
         {/* where */}

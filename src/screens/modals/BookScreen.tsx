@@ -188,12 +188,29 @@ export function BookScreen({ navigation, route }: Props) {
               paddingHorizontal: spacing.l,
             }}
           >
-            <LedgerRow label={`${tr.name} × 1`} value={formatAED(tr.price)} />
-            <LedgerRow label={tx('book.fee')} value={tx('book.free')} muted />
-            <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: t.separator, marginVertical: 4 }} />
-            <LedgerRow label={tx('book.total')} value={formatAED(tr.price)} bold />
-            <Text style={{ fontSize: 12, color: t.muted, paddingBottom: 4 }}>{tx('book.paidAtClinic')}</Text>
-            {tr.price >= 400 ? (
+            {tr.pkg ? (
+              <>
+                <LedgerRow
+                  label={`${tr.name} · ${tr.pkg.done + 1}/${tr.pkg.total}`}
+                  value={tx('book.free')}
+                  muted
+                />
+                <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: t.separator, marginVertical: 4 }} />
+                <LedgerRow label={tx('book.total')} value={formatAED(0)} bold />
+                <Text style={{ fontSize: 12, color: t.muted, paddingBottom: 4 }}>{tx('book.packagePrepaid')}</Text>
+              </>
+            ) : (
+              <>
+                <LedgerRow label={`${tr.name} × 1`} value={formatAED(tr.price)} />
+                <LedgerRow label={tx('book.fee')} value={tx('book.free')} muted />
+                <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: t.separator, marginVertical: 4 }} />
+                <LedgerRow label={tx('book.total')} value={formatAED(tr.price)} bold />
+                <Text style={{ fontSize: 12, color: t.muted, paddingBottom: 4 }}>
+                  {tr.atHome ? tx('book.paidAtHome') : tx('book.paidAtClinic')}
+                </Text>
+              </>
+            )}
+            {tr.price >= 400 && !tr.pkg ? (
               <View style={{ paddingTop: 6, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.separator }}>
                 <Text style={{ fontSize: 12, color: t.sub }}>
                   {tx('book.bnpl', { amount: formatAED(Math.round(tr.price / 4)) })}

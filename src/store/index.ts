@@ -11,7 +11,7 @@ import type {
   Treatment,
 } from '../types';
 import type { Lang } from '../i18n';
-import { APPOINTMENTS, CLINICS, SEED_EVENTS, SESSIONS, TREATMENTS } from '../data/seed';
+import { APPOINTMENTS, CLINICS, SEED_EVENTS, SESSIONS, TREATMENTS, treatmentsForRoutine } from '../data/seed';
 import type { AccentName } from '../theme';
 import { todayISO } from '../lib/dates';
 
@@ -116,8 +116,10 @@ export const useEterna = create<EternaState>((set, get) => ({
 
   completeOnboarding: () => {
     const d = get().draft;
+    const extra = treatmentsForRoutine(d.routine, TREATMENTS);
     set({
       isSignedIn: true,
+      treatments: extra.length ? [...TREATMENTS, ...extra] : TREATMENTS,
       profile: {
         firstName: d.firstName || 'Lina',
         lastName: d.lastName || '',

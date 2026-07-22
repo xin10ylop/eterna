@@ -86,6 +86,9 @@ export interface Treatment {
   /** Progress when sold as a multi-session package (laser, etc.). Each clinic
    *  runs its own package logic; we only track her progress against it. */
   pkg?: { total: number; done: number };
+  /** A one-off (a treatment added just for an event, e.g. bridal makeup). It
+   *  never nags on the avatar; it only shows in the prep for events. */
+  oneOff?: boolean;
 }
 
 /** One completed visit. The clinical detail lives here: what exactly was

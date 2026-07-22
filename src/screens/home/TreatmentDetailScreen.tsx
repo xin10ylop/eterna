@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Card, GhostButton, IOSSwitch, IconButton, PrimaryButton, Row, Screen, SectionLabel } from '../../components/ui';
+import { Card, GhostButton, IOSSwitch, IconButton, PrimaryButton, ProgressBar, Row, Screen, SectionLabel } from '../../components/ui';
 import { needsAttention, nextDueISO, treatmentStatus } from '../../services/logic';
 import { formatLong, formatMedium, humanizeDue, todayISO } from '../../lib/dates';
 import { formatAED } from '../../lib/money';
@@ -32,6 +32,7 @@ export function TreatmentDetailScreen({ navigation, route }: Props) {
   const clinics = useEterna((s) => s.clinics);
   const toggleReminder = useEterna((s) => s.toggleReminder);
   const logDone = useEterna((s) => s.logDone);
+  const cancelAppointment = useEterna((s) => s.cancelAppointment);
   const showToast = useEterna((s) => s.showToast);
 
   if (!tr) {
@@ -109,7 +110,28 @@ export function TreatmentDetailScreen({ navigation, route }: Props) {
               <Text style={{ fontSize: 11, color: t.muted, marginTop: 1 }}>sessions</Text>
             </View>
           </View>
-          <Text style={{ fontSize: 13, color: t.sub }}>{clinic?.name}</Text>
+          <Text style={{ fontSize: 13, color: t.sub }}>
+            {clinic?.name ?? 'Not set'}
+            {tr.atHome ? ' · At home' : ''}
+          </Text>
+          {tr.pkg ? (
+            <View style={{ gap: 5, marginTop: spacing.m }}>
+              <ProgressBar value={tr.pkg.done / tr.pkg.total} />
+              <Text style={{ fontSize: 12, color: t.sub }}>
+                Package · {tr.pkg.done}/{tr.pkg.total} sessions done
+              </Text>
+            </View>
+          ) : null}
+          {appt ? (
+            <GhostButton
+              title="Cancel booking"
+              onPress={() => {
+                cancelAppointment(appt.id);
+                showToast('Booking cancelled.');
+              }}
+              style={{ marginTop: spacing.m }}
+            />
+          ) : null}
           <View style={{ flexDirection: 'row', gap: spacing.s, marginTop: spacing.l }}>
             <View style={{ flex: 1 }}>
               <PrimaryButton

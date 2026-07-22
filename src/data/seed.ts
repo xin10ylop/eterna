@@ -1,5 +1,6 @@
 import type {
   Appointment,
+  Cadence,
   Clinic,
   Practitioner,
   SalonEvent,
@@ -91,6 +92,42 @@ export const TREATMENTS: Treatment[] = [
   { id: 't-pedi', name: 'Pedicure', zone: 'legs', cadence: { every: 4, unit: 'week' }, clinicId: 'c4', practitionerId: 'pr5', price: 220, lastDoneISO: addWeeks(T, -2), reminderOn: false, atHome: true },
   { id: 't-waxlegs', name: 'Leg wax', zone: 'legs', cadence: { every: 4, unit: 'week' }, clinicId: 'c2', practitionerId: 'pr6', price: 220, lastDoneISO: addWeeks(T, -5), reminderOn: true },
 ];
+
+/** Specs for onboarding routine picks not already in the seed set, so a new
+ *  user's own choices become tracked rituals (appended, not replacing the demo
+ *  data). Names mirror the onboarding RoutineScreen options. */
+const ROUTINE_SPECS: Record<string, { zone: ZoneId; price: number; cadence: Cadence; clinicId: string }> = {
+  Keratin: { zone: 'hair', price: 700, cadence: { every: 16, unit: 'week' }, clinicId: 'c1' },
+  Extensions: { zone: 'hair', price: 1200, cadence: { every: 8, unit: 'week' }, clinicId: 'c1' },
+  'Brows & lashes': { zone: 'face', price: 300, cadence: { every: 3, unit: 'week' }, clinicId: 'c6' },
+  'Skin boosters': { zone: 'face', price: 900, cadence: { every: 3, unit: 'month' }, clinicId: 'c2' },
+  Waxing: { zone: 'legs', price: 200, cadence: { every: 4, unit: 'week' }, clinicId: 'c2' },
+  Massage: { zone: 'torso', price: 340, cadence: { every: 4, unit: 'week' }, clinicId: 'c7' },
+  'Body contouring': { zone: 'hips', price: 800, cadence: { every: 4, unit: 'week' }, clinicId: 'c5' },
+};
+
+/** Tracked rituals for onboarding picks the seed doesn't already cover. */
+export function treatmentsForRoutine(picks: string[], existing: Treatment[]): Treatment[] {
+  const have = new Set(existing.map((t) => t.name.toLowerCase()));
+  const out: Treatment[] = [];
+  picks.forEach((name, i) => {
+    if (have.has(name.toLowerCase())) return;
+    const spec = ROUTINE_SPECS[name];
+    if (!spec) return;
+    out.push({
+      id: `t-ob-${i}-${name.replace(/[^a-z]/gi, '').toLowerCase()}`,
+      name,
+      zone: spec.zone,
+      cadence: spec.cadence,
+      clinicId: spec.clinicId,
+      practitionerId: 'pr6',
+      price: spec.price,
+      lastDoneISO: addWeeks(T, -3),
+      reminderOn: true,
+    });
+  });
+  return out;
+}
 
 const pr = (id: string): Practitioner => PRACTITIONERS.find((p) => p.id === id) as Practitioner;
 

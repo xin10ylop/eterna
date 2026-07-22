@@ -15,9 +15,12 @@ export function nextDueISO(t: Treatment): string {
  */
 export function treatmentStatus(t: Treatment, appointments: Appointment[]): TreatmentStatus {
   const today = todayISO();
+  const hasPending = appointments.some((a) => a.treatmentId === t.id && a.dateISO >= today);
+  // A one-off (an event add-on) never nags on the avatar — it lives in event prep.
+  if (t.oneOff) return hasPending ? 'booked' : 'onTrack';
   // Only a *pending* booking counts. A date that has already passed without
   // being logged shouldn't keep the ritual reading as sorted forever.
-  if (appointments.some((a) => a.treatmentId === t.id && a.dateISO >= today)) return 'booked';
+  if (hasPending) return 'booked';
   const days = diffDays(today, nextDueISO(t));
   if (days < 0) return 'bookNow';
   // Lead scales with the interval: a 10-day window is right for a monthly ritual
