@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { IconButton, PrimaryButton, Screen } from '../../components/ui';
@@ -261,25 +261,16 @@ export function EventPrepScreen({ navigation, route }: Props) {
                       gap: spacing.s,
                     }}
                   >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s }}>
-                      <View style={{ flex: 1, minWidth: 0 }}>
-                        <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: '700', color: t.text }}>
-                          {ev.name}
-                        </Text>
-                        <Text style={{ fontSize: 12.5, color: t.accent, marginTop: 1 }}>
-                          {countdownLabel(tx, diffDays(today, ev.dateISO))} · {formatMedium(ev.dateISO)}
-                          {items.length > 0 ? ` · ${tx('event.ready', { done: prog.done, total: prog.total })}` : ''}
-                        </Text>
-                      </View>
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={tx('common.remove')}
-                        onPress={() => removeEvent(ev.id)}
-                        hitSlop={8}
-                        style={({ pressed }) => ({ padding: 4, opacity: pressed ? 0.5 : 1 })}
-                      >
-                        <Ionicons name="close" size={17} color={t.muted} />
-                      </Pressable>
+                    {/* no delete here — a stray tap must never kill an event;
+                        removing lives behind Edit rituals, with a confirm */}
+                    <View style={{ minWidth: 0 }}>
+                      <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: '700', color: t.text }}>
+                        {ev.name}
+                      </Text>
+                      <Text style={{ fontSize: 12.5, color: t.accent, marginTop: 1 }}>
+                        {countdownLabel(tx, diffDays(today, ev.dateISO))} · {formatMedium(ev.dateISO)}
+                        {prog.total > 0 ? ` · ${tx('event.ready', { done: prog.done, total: prog.total })}` : ''}
+                      </Text>
                     </View>
 
                     {/* her picks for this event — one plain sentence each */}
@@ -342,7 +333,7 @@ export function EventPrepScreen({ navigation, route }: Props) {
                               {also}
                             </Text>
                           </View>
-                          {needsAction ? (
+                          {needsAction || it.status === 'later' ? (
                             <Pressable
                               accessibilityRole="button"
                               accessibilityLabel={`${it.status === 'move' ? tx('event.moveCta') : tx('common.book')} ${it.treatment.name}`}
@@ -351,11 +342,21 @@ export function EventPrepScreen({ navigation, route }: Props) {
                                 paddingVertical: 6,
                                 paddingHorizontal: 13,
                                 borderRadius: radii.pill,
-                                backgroundColor: t.accent,
+                                // solid when action is needed; quiet outline for the
+                                // optional "book it closer to the day anyway"
+                                backgroundColor: needsAction ? t.accent : 'transparent',
+                                borderWidth: needsAction ? 0 : 1,
+                                borderColor: t.accent,
                                 transform: [{ scale: pressed ? 0.94 : 1 }],
                               })}
                             >
-                              <Text style={{ color: t.onAccent, fontSize: 12.5, fontWeight: '700' }}>
+                              <Text
+                                style={{
+                                  color: needsAction ? t.onAccent : t.accent,
+                                  fontSize: 12.5,
+                                  fontWeight: '700',
+                                }}
+                              >
                                 {it.status === 'move' ? tx('event.moveCta') : tx('common.book')}
                               </Text>
                             </Pressable>
@@ -364,20 +365,25 @@ export function EventPrepScreen({ navigation, route }: Props) {
                       );
                     })}
 
-                    {/* choose / edit what she wants ready */}
+                    {/* choose / edit what she wants ready — a full-width, comfortable row */}
                     <Pressable
                       accessibilityRole="button"
                       accessibilityState={{ expanded: isOpen }}
                       onPress={() => setOpenPicker(isOpen ? null : ev.id)}
+                      hitSlop={6}
                       style={({ pressed }) => ({
                         flexDirection: 'row',
                         alignItems: 'center',
-                        gap: 5,
+                        gap: 7,
+                        paddingVertical: 11,
+                        marginTop: 2,
+                        borderTopWidth: 1,
+                        borderTopColor: 'rgba(0,0,0,0.06)',
                         opacity: pressed ? 0.6 : 1,
                       })}
                     >
-                      <Ionicons name={isOpen ? 'chevron-up' : 'add'} size={15} color={t.accent} />
-                      <Text style={{ fontSize: 13, fontWeight: '700', color: t.accent }}>
+                      <Ionicons name={isOpen ? 'chevron-up' : 'add'} size={18} color={t.accent} />
+                      <Text style={{ flex: 1, fontSize: 14, fontWeight: '700', color: t.accent }}>
                         {items.length > 0 ? tx('event.editPicks') : tx('event.choose')}
                       </Text>
                     </Pressable>
@@ -422,6 +428,45 @@ export function EventPrepScreen({ navigation, route }: Props) {
                             </Pressable>
                           );
                         })}
+                        {/* Done + a deliberate, confirmed remove — tucked away here
+                            so a stray tap can never delete an event */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.s }}>
+                          <Pressable
+                            accessibilityRole="button"
+                            onPress={() =>
+                              Alert.alert(ev.name, tx('event.removeQ'), [
+                                { text: tx('common.cancel'), style: 'cancel' },
+                                {
+                                  text: tx('common.remove'),
+                                  style: 'destructive',
+                                  onPress: () => removeEvent(ev.id),
+                                },
+                              ])
+                            }
+                            hitSlop={6}
+                            style={({ pressed }) => ({ paddingVertical: 10, opacity: pressed ? 0.6 : 1 })}
+                          >
+                            <Text style={{ fontSize: 13, fontWeight: '600', color: RED }}>
+                              {tx('event.removeEvent')}
+                            </Text>
+                          </Pressable>
+                          <View style={{ flex: 1 }} />
+                          <Pressable
+                            accessibilityRole="button"
+                            onPress={() => setOpenPicker(null)}
+                            style={({ pressed }) => ({
+                              paddingVertical: 9,
+                              paddingHorizontal: 22,
+                              borderRadius: radii.pill,
+                              backgroundColor: t.accent,
+                              transform: [{ scale: pressed ? 0.95 : 1 }],
+                            })}
+                          >
+                            <Text style={{ color: t.onAccent, fontSize: 13.5, fontWeight: '700' }}>
+                              {tx('event.done')}
+                            </Text>
+                          </Pressable>
+                        </View>
                       </View>
                     ) : null}
                   </View>

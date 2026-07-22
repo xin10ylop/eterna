@@ -9,11 +9,12 @@ import type { GlowStatus } from '../../services/logic';
  * Status glow on the avatar — hair, face, body, hands, feet.
  *
  * No dot, no object: the body part itself glows, and colour + rhythm carry the
- * One warm hue, density + speed carry the status (no traffic-light palette). All
- * good = a soft, low terracotta light, slow. Coming up = the same warm tone but
- * denser and brighter, medium. Book now = shifts to red and breathes fast. So it
- * reads as one calm glow that intensifies, turning red only when it needs
- * booking. A marker's status is the most urgent among the zones it covers.
+ * Three states, one warm family (no traffic-light palette):
+ *   all good  — a fine luminous ring, barely breathing. Form (a ring, not a
+ *               filled orb) is what makes it read on cream and every skin tone.
+ *   coming up — a dense deep-espresso orb, medium breath.
+ *   book now  — a red orb, fast breath.
+ * A marker's status is the most urgent among the zones it covers.
  */
 
 const CANVAS = 74;
@@ -26,8 +27,8 @@ const STYLE: Record<
   GlowStatus,
   { rgb: string; core: number; period: number; oMin: number; oMax: number; sMin: number; sMax: number; r: number }
 > = {
-  calm: { rgb: '172,88,54', core: 0.2, period: 4200, oMin: 0.46, oMax: 0.68, sMin: 0.92, sMax: 1.04, r: 20 },
-  soon: { rgb: '146,60,36', core: 0.18, period: 3000, oMin: 0.8, oMax: 1.0, sMin: 0.9, sMax: 1.15, r: 22 },
+  calm: { rgb: '255,255,255', core: 0, period: 4200, oMin: 0.7, oMax: 1.0, sMin: 0.96, sMax: 1.03, r: 12 },
+  soon: { rgb: '112,50,28', core: 0.14, period: 3000, oMin: 0.85, oMax: 1.0, sMin: 0.9, sMax: 1.15, r: 22 },
   due: { rgb: '188,34,24', core: 0.3, period: 1100, oMin: 0.88, oMax: 1.0, sMin: 0.9, sMax: 1.2, r: 23 },
 };
 
@@ -81,14 +82,33 @@ function Glow({
           ],
         }}
       >
-        <Defs>
-          <RadialGradient id={`glow-${label}`} cx="50%" cy="50%" r="50%">
-            <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={s.core} />
-            <Stop offset="42%" stopColor={`rgb(${s.rgb})`} stopOpacity={0.74} />
-            <Stop offset="100%" stopColor={`rgb(${s.rgb})`} stopOpacity={0} />
-          </RadialGradient>
-        </Defs>
-        <Circle cx={C} cy={C} r={s.r} fill={`url(#glow-${label})`} />
+        {status === 'calm' ? (
+          <>
+            {/* a fine ring of light: soft halo underneath for lift, a warm shadow
+                stroke for contrast on pale skin, then the bright ring itself */}
+            <Defs>
+              <RadialGradient id={`halo-${label}`} cx="50%" cy="50%" r="50%">
+                <Stop offset="55%" stopColor="#FFFFFF" stopOpacity={0} />
+                <Stop offset="78%" stopColor="#FFFFFF" stopOpacity={0.5} />
+                <Stop offset="100%" stopColor="#FFFFFF" stopOpacity={0} />
+              </RadialGradient>
+            </Defs>
+            <Circle cx={C} cy={C} r={s.r + 5} fill={`url(#halo-${label})`} />
+            <Circle cx={C} cy={C} r={s.r} stroke="rgba(112,74,50,0.4)" strokeWidth={4.5} fill="none" />
+            <Circle cx={C} cy={C} r={s.r} stroke="rgba(255,253,248,0.98)" strokeWidth={2.4} fill="none" />
+          </>
+        ) : (
+          <>
+            <Defs>
+              <RadialGradient id={`glow-${label}`} cx="50%" cy="50%" r="50%">
+                <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={s.core} />
+                <Stop offset="42%" stopColor={`rgb(${s.rgb})`} stopOpacity={0.74} />
+                <Stop offset="100%" stopColor={`rgb(${s.rgb})`} stopOpacity={0} />
+              </RadialGradient>
+            </Defs>
+            <Circle cx={C} cy={C} r={s.r} fill={`url(#glow-${label})`} />
+          </>
+        )}
       </AnimatedSvg>
     </Pressable>
   );

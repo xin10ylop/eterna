@@ -42,11 +42,13 @@ export const AVATAR_MARKERS: {
   zones: ZoneId[];
   marker: { xPct: number; yPct: number };
 }[] = [
-  { id: 'hair', label: 'Hair', icon: 'sparkles-outline', zones: ['hair'], marker: { xPct: 50, yPct: 6 } },
+  // on the falling hair beside the face — at the crown it read as a second
+  // face glow, two lights stacked on the head
+  { id: 'hair', label: 'Hair', icon: 'sparkles-outline', zones: ['hair'], marker: { xPct: 32, yPct: 17 } },
   { id: 'face', label: 'Face', icon: 'happy-outline', zones: ['face', 'lips'], marker: { xPct: 50, yPct: 13 } },
   { id: 'torso', label: 'Body', icon: 'body-outline', zones: ['torso', 'hips'], marker: { xPct: 50, yPct: 28 } },
   { id: 'hands', label: 'Hands', icon: 'hand-left-outline', zones: ['hands'], marker: { xPct: 13, yPct: 54 } },
-  { id: 'legs', label: 'Feet', icon: 'footsteps-outline', zones: ['legs'], marker: { xPct: 56, yPct: 95 } },
+  { id: 'legs', label: 'Feet', icon: 'footsteps-outline', zones: ['legs'], marker: { xPct: 54, yPct: 96 } },
 ];
 
 export const PRACTITIONERS: Practitioner[] = [

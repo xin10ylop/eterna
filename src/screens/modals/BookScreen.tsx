@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import { IconButton, LedgerRow, Screen, SectionLabel } from '../../components/ui';
+import { CalendarPicker } from '../../components/ui/CalendarPicker';
 import { AnimatedCheck } from '../../components/anim/AnimatedCheck';
 import { Confetti } from '../../components/anim/Lottie';
 import { Entrance } from '../../components/anim/Entrance';
@@ -27,10 +29,13 @@ export function BookScreen({ navigation, route }: Props) {
   const book = useEterna((s) => s.book);
   const showToast = useEterna((s) => s.showToast);
 
-  const days = useMemo(() => Array.from({ length: 10 }, (_, i) => addDays(todayISO(), i + 1)), []);
+  // same-day booking allowed; the strip covers the next stretch, the calendar
+  // opens any date at all (a day earlier or later, or when a clinic day is full)
+  const days = useMemo(() => Array.from({ length: 10 }, (_, i) => addDays(todayISO(), i)), []);
   const times = ['09:30', '11:00', '13:15', '14:30', '16:15', '18:00'];
   const [day, setDay] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>(null);
+  const [showCal, setShowCal] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
 
   if (!tr) {
@@ -142,6 +147,35 @@ export function BookScreen({ navigation, route }: Props) {
               );
             })}
           </ScrollView>
+          {/* any other date — a day earlier, a day later, or further out */}
+          <View style={{ paddingHorizontal: spacing.xl, gap: spacing.s }}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ expanded: showCal }}
+              onPress={() => setShowCal((v) => !v)}
+              hitSlop={6}
+              style={({ pressed }) => ({
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                paddingVertical: 8,
+                opacity: pressed ? 0.6 : 1,
+              })}
+            >
+              <Ionicons name="calendar-outline" size={15} color={t.accent} />
+              <Text style={{ fontSize: 13.5, fontWeight: '700', color: t.accent }}>
+                {tx('book.moreDates')}
+              </Text>
+              <Ionicons name={showCal ? 'chevron-up' : 'chevron-down'} size={14} color={t.accent} />
+            </Pressable>
+            {showCal ? (
+              <CalendarPicker
+                value={day ?? todayISO()}
+                onSelect={(iso) => setDay(iso)}
+                minISO={todayISO()}
+              />
+            ) : null}
+          </View>
         </View>
 
         {/* time grid */}
