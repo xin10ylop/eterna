@@ -91,6 +91,7 @@ export function ClinicProfileScreen({ navigation, route }: Props) {
         contentContainerStyle={{ gap: spacing.l, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
         {/* identity */}
         <View style={{ alignItems: 'center', gap: spacing.s }}>

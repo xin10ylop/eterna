@@ -1,5 +1,5 @@
-import React from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { IconButton, PrimaryButton, Screen, StepDots } from '../../components/ui';
 import { spacing, type } from '../../theme';
@@ -7,6 +7,23 @@ import { useTheme } from '../../store';
 
 /** Total questionnaire steps shown in the progress bar (post-auth). */
 export const OB_STEPS = 6;
+
+/** True while the keyboard is up ("will" events on iOS so the layout moves
+ *  with the keyboard animation, not after it). */
+export function useKeyboardOpen(): boolean {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const showEv = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEv = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const s = Keyboard.addListener(showEv, () => setOpen(true));
+    const h = Keyboard.addListener(hideEv, () => setOpen(false));
+    return () => {
+      s.remove();
+      h.remove();
+    };
+  }, []);
+  return open;
+}
 
 /**
  * Shared onboarding scaffold: back button, thin step progress, one big
@@ -39,6 +56,9 @@ export function OnboardingShell({
 }) {
   const t = useTheme();
   const nav = useNavigation();
+  // With the keyboard up, the fixed bottom padding becomes a dead cream band
+  // floating above it — collapse it so the CTA hugs the keyboard cleanly.
+  const kbOpen = useKeyboardOpen();
   return (
     <Screen>
       <KeyboardAvoidingView
@@ -63,12 +83,14 @@ export function OnboardingShell({
             style={{ flex: 1 }}
             contentContainerStyle={{
               flexGrow: 1,
-              justifyContent: alignTop ? 'flex-start' : 'center',
+              // never re-centre while typing — that's the "jump"
+              justifyContent: alignTop || kbOpen ? 'flex-start' : 'center',
               gap: spacing.l,
               paddingTop: alignTop ? spacing.l : 0,
               paddingBottom: spacing.xl,
             }}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
             showsVerticalScrollIndicator={false}
           >
             <View style={{ gap: 6 }}>
@@ -78,9 +100,9 @@ export function OnboardingShell({
             {children}
           </ScrollView>
 
-          <View style={{ paddingBottom: spacing.xl, gap: spacing.s }}>
+          <View style={{ paddingBottom: kbOpen ? spacing.s : spacing.xl, gap: spacing.s }}>
             <PrimaryButton title={cta} onPress={onNext} disabled={ctaDisabled} loading={ctaLoading} />
-            {footer}
+            {kbOpen ? null : footer}
           </View>
         </View>
       </KeyboardAvoidingView>

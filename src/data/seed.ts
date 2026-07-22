@@ -112,6 +112,25 @@ export const CLINICS: Clinic[] = [
       { name: 'Body scrub', service: 'Spa', price: 280, mins: 45 },
       { name: 'Pedicure', service: 'Nails', price: 210, mins: 60 },
     ] },
+  // a big everything-under-one-roof salon: its long menu is what the fixed
+  // scrollable service box with search is FOR
+  { id: 'c8', name: 'Maison Lumière', services: ['Hair', 'Skin', 'Nails', 'Lashes & Brows', 'Spa'], reviews: 529, address: 'Downtown, Boulevard Plaza Tower 1', hours: '9:00 – 22:00', phone: '+971 4 420 5566', about: 'A full house: hair, skin, nails, lashes and spa under one roof in Downtown.', rating: 4.8, distanceKm: 3.1, slots: ['Tomorrow 11:00', 'Thu 15:30', 'Sat 10:15'],
+    offerings: [
+      { name: 'Roots touch-up', service: 'Hair', price: 420, mins: 90 },
+      { name: 'Balayage', service: 'Hair', price: 850, mins: 180 },
+      { name: 'Cut & style', service: 'Hair', price: 300, mins: 60 },
+      { name: 'Blow-dry', service: 'Hair', price: 130, mins: 40 },
+      { name: 'Olaplex treatment', service: 'Hair', price: 350, mins: 60 },
+      { name: 'Hydrafacial', service: 'Skin', price: 480, mins: 60 },
+      { name: 'LED facial', service: 'Skin', price: 380, mins: 45 },
+      { name: 'Microneedling', service: 'Skin', price: 750, mins: 60 },
+      { name: 'Gel manicure', service: 'Nails', price: 190, mins: 45 },
+      { name: 'Classic pedicure', service: 'Nails', price: 200, mins: 60 },
+      { name: 'Lash lift', service: 'Lashes & Brows', price: 330, mins: 60 },
+      { name: 'Brow lamination', service: 'Lashes & Brows', price: 310, mins: 45 },
+      { name: 'Swedish massage', service: 'Spa', price: 360, mins: 60 },
+      { name: 'Moroccan bath', service: 'Spa', price: 320, mins: 75 },
+    ] },
 ];
 
 /** Which services she uses at each of her clinics: "nails here, hair there."

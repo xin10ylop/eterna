@@ -59,6 +59,8 @@ export function ClinicsScreen({ navigation }: NativeStackScreenProps<RootStackPa
             placeholder="Search your clinic"
             placeholderTextColor={t.muted}
             accessibilityLabel="Search your clinic"
+            returnKeyType="search"
+            autoCorrect={false}
             style={{ flex: 1, paddingVertical: 11, fontSize: 15, color: t.text }}
           />
         </View>

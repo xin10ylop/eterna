@@ -129,6 +129,7 @@ export function EventPrepScreen({ navigation, route }: Props) {
         contentContainerStyle={{ paddingBottom: spacing.xxl }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
         {/* add an event — just a name and a date */}
         {adding ? (
@@ -148,6 +149,7 @@ export function EventPrepScreen({ navigation, route }: Props) {
               onChangeText={setName}
               placeholder={tx('event.namePlaceholder')}
               placeholderTextColor={t.muted}
+              returnKeyType="done"
               style={{
                 backgroundColor: t.surface,
                 borderRadius: radii.m,
@@ -414,6 +416,8 @@ export function EventPrepScreen({ navigation, route }: Props) {
                             placeholder={tx('discover.searchServices')}
                             placeholderTextColor={t.muted}
                             accessibilityLabel={tx('discover.searchServices')}
+                            returnKeyType="search"
+                            autoCorrect={false}
                             style={{ flex: 1, paddingVertical: 9, fontSize: 14, color: t.text }}
                           />
                         </View>

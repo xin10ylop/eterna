@@ -112,6 +112,7 @@ export function DiscoverScreen({ navigation }: Props) {
             placeholderTextColor={t.muted}
             style={{ flex: 1, paddingVertical: 12, fontSize: 16, color: t.text }}
             autoCorrect={false}
+            returnKeyType="search"
             accessibilityLabel="Search places"
           />
           {query ? (
@@ -134,6 +135,8 @@ export function DiscoverScreen({ navigation }: Props) {
         style={{ marginTop: spacing.l }}
         contentContainerStyle={{ gap: spacing.m, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
         {loading ? (
           <>

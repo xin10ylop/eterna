@@ -97,6 +97,7 @@ export function AddRitualScreen({ navigation }: Props) {
         contentContainerStyle={{ gap: spacing.xl, paddingBottom: 140 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
         {/* 1 · where — her clinics first */}
         <View style={{ gap: spacing.s }}>

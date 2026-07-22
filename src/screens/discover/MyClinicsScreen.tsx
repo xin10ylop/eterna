@@ -55,6 +55,7 @@ export function MyClinicsScreen({ navigation }: Props) {
         contentContainerStyle={{ gap: spacing.m, paddingBottom: spacing.xxl }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
         {saved.length === 0 ? (
           <View

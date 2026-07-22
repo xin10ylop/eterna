@@ -63,6 +63,8 @@ export function ServiceMenu({
           placeholder={tr('discover.searchServices')}
           placeholderTextColor={t.muted}
           accessibilityLabel={tr('discover.searchServices')}
+          returnKeyType="search"
+          autoCorrect={false}
           style={{ flex: 1, paddingVertical: 10, fontSize: 14.5, color: t.text }}
         />
       </View>
@@ -76,7 +78,14 @@ export function ServiceMenu({
           maxHeight,
         }}
       >
-        <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
+        {/* with the keyboard up, one tap still ticks a row and a scroll
+            gesture puts the keyboard away — no dead first tap */}
+        <ScrollView
+          nestedScrollEnabled
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
           {results.map((o, i) => {
             const picked = mode === 'pick' && pickedName === o.name;
             const ticked = mode === 'tick' && (tickedNames ?? []).includes(o.name);
