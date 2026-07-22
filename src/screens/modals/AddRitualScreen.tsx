@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { IOSSwitch, IconButton, PrimaryButton, Screen, SectionLabel, Segmented } from '../../components/ui';
@@ -44,35 +44,29 @@ export function AddRitualScreen({ navigation }: Props) {
   const clinics = useEterna((s) => s.clinics);
   const savedIds = useEterna((s) => s.savedClinicIds);
   const addTreatment = useEterna((s) => s.addTreatment);
-  const addOwnClinic = useEterna((s) => s.addOwnClinic);
   const showToast = useEterna((s) => s.showToast);
 
   const [clinicId, setClinicId] = useState<string>('');
   const [serviceName, setServiceName] = useState<string>('');
-  const [customName, setCustomName] = useState('');
-  const [customPrice, setCustomPrice] = useState('');
   const [oneOff, setOneOff] = useState(false);
   const [atHome, setAtHome] = useState(false);
   const [cadence, setCadence] = useState(0); // 0 = not chosen yet — her call
   const [unit, setUnit] = useState('Weeks');
   const [lastDoneISO, setLastDoneISO] = useState(addWeeks(todayISO(), -2));
-  const [ownName, setOwnName] = useState('');
 
   const saved = useMemo(() => clinics.filter((c) => savedIds.includes(c.id)), [clinics, savedIds]);
   const clinic = clinics.find((c) => c.id === clinicId);
   const offering = clinic?.offerings.find((o) => o.name === serviceName);
-  const finalName = serviceName === '__custom__' ? customName.trim() : serviceName;
-  const canSubmit = !!clinicId && !!finalName && (oneOff || cadence > 0);
+  const canSubmit = !!clinicId && !!offering && (oneOff || cadence > 0);
 
   const submit = () => {
     if (!canSubmit) return;
-    const zone =
-      ZONE_HINTS[finalName] ??
-      (offering ? SERVICE_ZONE[offering.service] : clinic?.services[0] ? SERVICE_ZONE[clinic.services[0]] : 'torso');
-    const price = offering?.price ?? (Number(customPrice.replace(/[^0-9]/g, '')) || 0);
+    if (!offering) return;
+    const zone = ZONE_HINTS[offering.name] ?? SERVICE_ZONE[offering.service];
+    const price = offering.price;
     const treatment: Treatment = {
       id: `t-add-${Date.now()}`,
-      name: finalName,
+      name: offering.name,
       zone,
       // a one-off doesn't repeat; the far-past "last done" keeps it visible in
       // event prep until she books it
@@ -86,7 +80,7 @@ export function AddRitualScreen({ navigation }: Props) {
       oneOff: oneOff || undefined,
     };
     addTreatment(treatment);
-    showToast(`Added ${finalName}`);
+    showToast(`Added ${offering.name}`);
     navigation.goBack();
   };
 
@@ -167,49 +161,6 @@ export function AddRitualScreen({ navigation }: Props) {
               <Text style={{ fontSize: 14, fontWeight: '700', color: t.accent }}>Browse clinics</Text>
             </Pressable>
 
-            <View style={{ flexDirection: 'row', gap: spacing.s }}>
-              <TextInput
-                value={ownName}
-                onChangeText={setOwnName}
-                placeholder="Add your own clinic"
-                placeholderTextColor={t.muted}
-                accessibilityLabel="Add your own clinic"
-                style={{
-                  flex: 1,
-                  backgroundColor: t.surface,
-                  borderRadius: radii.m,
-                  borderWidth: 1,
-                  borderColor: t.border,
-                  paddingHorizontal: 14,
-                  paddingVertical: 12,
-                  fontSize: 15,
-                  color: t.text,
-                }}
-              />
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Add clinic"
-                onPress={() => {
-                  const name = ownName.trim();
-                  if (!name) return;
-                  const c = addOwnClinic(name);
-                  setClinicId(c.id);
-                  setServiceName('');
-                  setOwnName('');
-                  showToast(`Added ${name}`);
-                }}
-                style={({ pressed }) => ({
-                  paddingHorizontal: 18,
-                  borderRadius: radii.m,
-                  backgroundColor: ownName.trim() ? t.accent : t.faint,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transform: [{ scale: pressed ? 0.96 : 1 }],
-                })}
-              >
-                <Text style={{ color: ownName.trim() ? t.onAccent : t.sub, fontWeight: '600' }}>Add</Text>
-              </Pressable>
-            </View>
           </View>
         </View>
 
@@ -256,77 +207,12 @@ export function AddRitualScreen({ navigation }: Props) {
                   </Pressable>
                 );
               })}
-              {/* something not on the menu */}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ selected: serviceName === '__custom__' }}
-                onPress={() => setServiceName('__custom__')}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: spacing.s,
-                  paddingVertical: 12,
-                  paddingHorizontal: spacing.m,
-                  backgroundColor: serviceName === '__custom__' ? t.accentSoft : t.bg,
-                  borderTopWidth: clinic.offerings.length === 0 ? 0 : 1,
-                  borderTopColor: t.separator,
-                }}
-              >
-                <Ionicons name="add" size={16} color={t.accent} />
-                <Text style={{ flex: 1, fontSize: 15, fontWeight: '600', color: t.accent }}>
-                  Something else
-                </Text>
-                {serviceName === '__custom__' ? (
-                  <Ionicons name="checkmark-circle" size={20} color={t.accent} />
-                ) : null}
-              </Pressable>
             </View>
-            {serviceName === '__custom__' ? (
-              <View style={{ flexDirection: 'row', gap: spacing.s }}>
-                <TextInput
-                  value={customName}
-                  onChangeText={setCustomName}
-                  placeholder="Service name"
-                  placeholderTextColor={t.muted}
-                  accessibilityLabel="Service name"
-                  style={{
-                    flex: 2,
-                    backgroundColor: t.surface,
-                    borderRadius: radii.m,
-                    borderWidth: 1,
-                    borderColor: t.border,
-                    paddingHorizontal: 14,
-                    paddingVertical: 12,
-                    fontSize: 15,
-                    color: t.text,
-                  }}
-                />
-                <TextInput
-                  value={customPrice}
-                  onChangeText={setCustomPrice}
-                  placeholder="AED"
-                  placeholderTextColor={t.muted}
-                  keyboardType="number-pad"
-                  accessibilityLabel="Price"
-                  style={{
-                    flex: 1,
-                    backgroundColor: t.surface,
-                    borderRadius: radii.m,
-                    borderWidth: 1,
-                    borderColor: t.border,
-                    paddingHorizontal: 14,
-                    paddingVertical: 12,
-                    fontSize: 15,
-                    color: t.text,
-                  }}
-                />
-              </View>
-            ) : null}
           </View>
         ) : null}
 
         {/* 3 · how often — entirely her choice, nothing pre-filled */}
-        {clinic && finalName ? (
+        {clinic && offering ? (
           <>
             <View style={{ gap: spacing.s }}>
               <SectionLabel>How often?</SectionLabel>
