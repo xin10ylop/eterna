@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { IconButton, Screen } from '../../components/ui';
 import { ServiceMenu } from '../../components/ServiceMenu';
+import { useKeyboardScroll } from '../../lib/keyboardScroll';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import { useT } from '../../i18n';
@@ -57,6 +58,7 @@ function ActionCircle({
 export function ClinicProfileScreen({ navigation, route }: Props) {
   const t = useTheme();
   const tr = useT();
+  const { scrollRef, scrollFocusedIntoView } = useKeyboardScroll();
   const clinic = useEterna((s) => s.clinics.find((c) => c.id === route.params.clinicId));
   const savedIds = useEterna((s) => s.savedClinicIds);
   const toggleSaved = useEterna((s) => s.toggleSavedClinic);
@@ -87,11 +89,13 @@ export function ClinicProfileScreen({ navigation, route }: Props) {
       </View>
 
       <ScrollView
+        ref={scrollRef}
         style={{ marginTop: spacing.s }}
         contentContainerStyle={{ gap: spacing.l, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
       >
         {/* identity */}
         <View style={{ alignItems: 'center', gap: spacing.s }}>
@@ -260,7 +264,12 @@ export function ClinicProfileScreen({ navigation, route }: Props) {
         </Pressable>
         {showServices ? (
           <View style={{ marginTop: -spacing.s }}>
-            <ServiceMenu mode="read" offerings={clinic.offerings} maxHeight={320} />
+            <ServiceMenu
+              mode="read"
+              offerings={clinic.offerings}
+              maxHeight={320}
+              onSearchFocus={scrollFocusedIntoView}
+            />
           </View>
         ) : null}
       </ScrollView>

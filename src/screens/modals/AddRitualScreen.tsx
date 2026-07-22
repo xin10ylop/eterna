@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { IOSSwitch, IconButton, PrimaryButton, Screen, SectionLabel, Segmented } from '../../components/ui';
 import { CalendarPicker } from '../../components/ui/CalendarPicker';
 import { ServiceMenu } from '../../components/ServiceMenu';
+import { useKeyboardScroll } from '../../lib/keyboardScroll';
 import { addWeeks, todayISO } from '../../lib/dates';
 import { formatAED } from '../../lib/money';
 import { PRACTITIONERS } from '../../data/seed';
@@ -42,6 +43,7 @@ const UNIT_MAP: Record<string, 'day' | 'week' | 'month'> = { Days: 'day', Weeks:
  */
 export function AddRitualScreen({ navigation }: Props) {
   const t = useTheme();
+  const { scrollRef, scrollFocusedIntoView } = useKeyboardScroll();
   const clinics = useEterna((s) => s.clinics);
   const savedIds = useEterna((s) => s.savedClinicIds);
   const addTreatment = useEterna((s) => s.addTreatment);
@@ -93,11 +95,13 @@ export function AddRitualScreen({ navigation }: Props) {
       </View>
 
       <ScrollView
+        ref={scrollRef}
         style={{ marginTop: spacing.l }}
         contentContainerStyle={{ gap: spacing.xl, paddingBottom: 140 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
       >
         {/* 1 · where — her clinics first */}
         <View style={{ gap: spacing.s }}>
@@ -175,6 +179,7 @@ export function AddRitualScreen({ navigation }: Props) {
               offerings={clinic.offerings}
               pickedName={serviceName}
               onPick={setServiceName}
+              onSearchFocus={scrollFocusedIntoView}
             />
           </View>
         ) : null}

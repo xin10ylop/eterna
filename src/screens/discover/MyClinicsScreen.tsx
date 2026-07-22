@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { IconButton, Screen } from '../../components/ui';
 import { ServiceMenu } from '../../components/ServiceMenu';
+import { useKeyboardScroll } from '../../lib/keyboardScroll';
 import { formatAED } from '../../lib/money';
 import { cardShadow, radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
@@ -20,6 +21,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'MyClinics'>;
 export function MyClinicsScreen({ navigation }: Props) {
   const t = useTheme();
   const tr = useT();
+  const { scrollRef, scrollFocusedIntoView } = useKeyboardScroll();
   const clinics = useEterna((s) => s.clinics);
   const savedIds = useEterna((s) => s.savedClinicIds);
   const myServices = useEterna((s) => s.myServices);
@@ -51,11 +53,13 @@ export function MyClinicsScreen({ navigation }: Props) {
       </View>
 
       <ScrollView
+        ref={scrollRef}
         style={{ marginTop: spacing.l }}
         contentContainerStyle={{ gap: spacing.m, paddingBottom: spacing.xxl }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
       >
         {saved.length === 0 ? (
           <View
@@ -172,6 +176,7 @@ export function MyClinicsScreen({ navigation }: Props) {
                     tickedNames={mine}
                     onToggle={(n) => toggleMyService(c.id, n)}
                     maxHeight={280}
+                    onSearchFocus={scrollFocusedIntoView}
                   />
                 ) : null}
               </View>

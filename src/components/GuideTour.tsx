@@ -98,6 +98,7 @@ export function useGuideRects(
 }
 
 function GlowLegend() {
+  const t = useTheme();
   const tx = useT();
   const items = [
     { status: 'calm' as const, urgency: 0, label: tx('guide.legend.calm'), sub: tx('guide.legend.calmSub') },
@@ -105,13 +106,11 @@ function GlowLegend() {
     { status: 'due' as const, urgency: 1, label: tx('guide.legend.due'), sub: tx('guide.legend.dueSub') },
   ];
   return (
-    // dark backdrop on purpose: the light "all good" glow is invisible on a
-    // light card, and all three read best the way they do on the figure
     <View
       style={{
         flexDirection: 'row',
         marginTop: spacing.s,
-        backgroundColor: '#2B1B14',
+        backgroundColor: t.surfaceAlt,
         borderRadius: radii.m,
         paddingVertical: spacing.m,
         paddingHorizontal: 4,
@@ -120,13 +119,13 @@ function GlowLegend() {
       {items.map((it) => (
         <View key={it.status} style={{ flex: 1, alignItems: 'center', gap: 2 }}>
           <GlowSwatch status={it.status} urgency={it.urgency} size={44} />
-          <Text style={{ fontSize: 12, fontWeight: '700', color: '#FFFFFF', textAlign: 'center' }}>
+          <Text style={{ fontSize: 12, fontWeight: '700', color: t.text, textAlign: 'center' }}>
             {it.label}
           </Text>
           <Text
             style={{
               fontSize: 10.5,
-              color: 'rgba(255,255,255,0.65)',
+              color: t.muted,
               textAlign: 'center',
               paddingHorizontal: 2,
             }}

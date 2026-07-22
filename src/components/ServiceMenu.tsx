@@ -23,6 +23,7 @@ export function ServiceMenu({
   tickedNames,
   onToggle,
   maxHeight = 300,
+  onSearchFocus,
 }: {
   offerings: ClinicOffering[];
   mode?: 'read' | 'pick' | 'tick';
@@ -31,6 +32,9 @@ export function ServiceMenu({
   tickedNames?: string[];
   onToggle?: (name: string) => void;
   maxHeight?: number;
+  /** Called when the search field focuses — the host screen scrolls this menu
+   *  above the keyboard so the results stay visible while typing. */
+  onSearchFocus?: () => void;
 }) {
   const t = useTheme();
   const tr = useT();
@@ -65,6 +69,7 @@ export function ServiceMenu({
           accessibilityLabel={tr('discover.searchServices')}
           returnKeyType="search"
           autoCorrect={false}
+          onFocus={onSearchFocus}
           style={{ flex: 1, paddingVertical: 10, fontSize: 14.5, color: t.text }}
         />
       </View>

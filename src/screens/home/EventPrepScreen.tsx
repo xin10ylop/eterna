@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { IconButton, PrimaryButton, Screen } from '../../components/ui';
 import { CalendarPicker } from '../../components/ui/CalendarPicker';
 import { eventItems, eventProgress } from '../../services/logic';
+import { useKeyboardScroll } from '../../lib/keyboardScroll';
 import { addDays, diffDays, formatMedium, todayISO } from '../../lib/dates';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
@@ -29,6 +30,7 @@ type TimelineEntry =
 export function EventPrepScreen({ navigation, route }: Props) {
   const t = useTheme();
   const tx = useT();
+  const { scrollRef, scrollFocusedIntoView } = useKeyboardScroll();
   const events = useEterna((s) => s.events);
   const treatments = useEterna((s) => s.treatments);
   const appointments = useEterna((s) => s.appointments);
@@ -125,11 +127,13 @@ export function EventPrepScreen({ navigation, route }: Props) {
       </View>
 
       <ScrollView
+        ref={scrollRef}
         style={{ marginTop: spacing.l }}
         contentContainerStyle={{ paddingBottom: spacing.xxl }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
       >
         {/* add an event — just a name and a date */}
         {adding ? (
@@ -418,6 +422,7 @@ export function EventPrepScreen({ navigation, route }: Props) {
                             accessibilityLabel={tx('discover.searchServices')}
                             returnKeyType="search"
                             autoCorrect={false}
+                            onFocus={scrollFocusedIntoView}
                             style={{ flex: 1, paddingVertical: 9, fontSize: 14, color: t.text }}
                           />
                         </View>
