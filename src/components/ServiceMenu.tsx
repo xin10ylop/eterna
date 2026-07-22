@@ -43,30 +43,29 @@ export function ServiceMenu({
 
   return (
     <View style={{ gap: spacing.s }}>
-      {offerings.length > 6 ? (
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: spacing.s,
-            backgroundColor: t.surface,
-            borderRadius: radii.m,
-            borderWidth: 1,
-            borderColor: t.border,
-            paddingHorizontal: 12,
-          }}
-        >
-          <Ionicons name="search" size={15} color={t.muted} />
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder={tr('discover.searchServices')}
-            placeholderTextColor={t.muted}
-            accessibilityLabel={tr('discover.searchServices')}
-            style={{ flex: 1, paddingVertical: 10, fontSize: 14.5, color: t.text }}
-          />
-        </View>
-      ) : null}
+      {/* always searchable — real clinics list dozens of services */}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.s,
+          backgroundColor: t.surface,
+          borderRadius: radii.m,
+          borderWidth: 1,
+          borderColor: t.border,
+          paddingHorizontal: 12,
+        }}
+      >
+        <Ionicons name="search" size={15} color={t.muted} />
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder={tr('discover.searchServices')}
+          placeholderTextColor={t.muted}
+          accessibilityLabel={tr('discover.searchServices')}
+          style={{ flex: 1, paddingVertical: 10, fontSize: 14.5, color: t.text }}
+        />
+      </View>
 
       <View
         style={{

@@ -70,6 +70,7 @@ export function EventPrepScreen({ navigation, route }: Props) {
   const [name, setName] = useState('');
   const [dateISO, setDateISO] = useState(addDays(today, 28));
   const [openPicker, setOpenPicker] = useState<string | null>(null);
+  const [pickQuery, setPickQuery] = useState('');
 
   const save = () => {
     addEvent(name.trim() || 'My event', dateISO, []);
@@ -369,7 +370,10 @@ export function EventPrepScreen({ navigation, route }: Props) {
                     <Pressable
                       accessibilityRole="button"
                       accessibilityState={{ expanded: isOpen }}
-                      onPress={() => setOpenPicker(isOpen ? null : ev.id)}
+                      onPress={() => {
+                        setOpenPicker(isOpen ? null : ev.id);
+                        setPickQuery('');
+                      }}
                       hitSlop={6}
                       style={({ pressed }) => ({
                         flexDirection: 'row',
@@ -389,7 +393,37 @@ export function EventPrepScreen({ navigation, route }: Props) {
                     </Pressable>
                     {isOpen ? (
                       <View style={{ gap: 5 }}>
-                        {treatments.map((tr) => {
+                        {/* searchable, like every service list in the app */}
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: spacing.s,
+                            backgroundColor: t.bg,
+                            borderRadius: radii.m,
+                            borderWidth: 1,
+                            borderColor: t.border,
+                            paddingHorizontal: 12,
+                            marginBottom: 3,
+                          }}
+                        >
+                          <Ionicons name="search" size={14} color={t.muted} />
+                          <TextInput
+                            value={pickQuery}
+                            onChangeText={setPickQuery}
+                            placeholder={tx('discover.searchServices')}
+                            placeholderTextColor={t.muted}
+                            accessibilityLabel={tx('discover.searchServices')}
+                            style={{ flex: 1, paddingVertical: 9, fontSize: 14, color: t.text }}
+                          />
+                        </View>
+                        {treatments
+                          .filter((tr) =>
+                            pickQuery.trim()
+                              ? tr.name.toLowerCase().includes(pickQuery.trim().toLowerCase())
+                              : true,
+                          )
+                          .map((tr) => {
                           const on = ev.treatmentIds.includes(tr.id);
                           return (
                             <Pressable
