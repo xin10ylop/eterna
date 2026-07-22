@@ -17,7 +17,7 @@ import {
   weekdayShort,
 } from '../../lib/dates';
 import { formatAED } from '../../lib/money';
-import { nextDueISO, treatmentStatus } from '../../services/logic';
+import { treatmentStatus } from '../../services/logic';
 import { ZONES } from '../../data/seed';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
@@ -79,10 +79,6 @@ function ScheduleView({ nav, focusDate }: { nav: Props['navigation']; focusDate?
 
   const apptsOn = (iso: string) => appointments.filter((a) => a.dateISO === iso);
   const eventOn = (iso: string) => salonEvents.filter((e) => e.dateISO === iso);
-  const predicted = useMemo(() => {
-    const booked = new Set(appointments.map((a) => a.treatmentId));
-    return new Set(treatments.filter((tr) => !booked.has(tr.id)).map((tr) => nextDueISO(tr)));
-  }, [appointments, treatments]);
 
   const shiftWeek = (dir: number) => {
     const next = addDays(weekStart, dir * 7);
@@ -154,7 +150,6 @@ function ScheduleView({ nav, focusDate }: { nav: Props['navigation']; focusDate?
             const today = iso === todayISO();
             const hasAppt = apptsOn(iso).length > 0;
             const hasEvent = eventOn(iso).length > 0;
-            const isDue = predicted.has(iso);
             return (
               <Pressable
                 key={iso}
@@ -190,8 +185,6 @@ function ScheduleView({ nav, focusDate }: { nav: Props['navigation']; focusDate?
                 </Text>
                 {hasAppt ? (
                   <View style={{ width: 5, height: 5, borderRadius: 3, marginTop: 4, backgroundColor: sel ? t.onAccent : t.accent }} />
-                ) : isDue ? (
-                  <View style={{ width: 5, height: 5, borderRadius: 3, marginTop: 4, borderWidth: 1, borderColor: sel ? t.onAccent : t.accent }} />
                 ) : (
                   <View style={{ height: 9 }} />
                 )}
