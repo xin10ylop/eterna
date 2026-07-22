@@ -21,6 +21,7 @@ export function ProfileScreen({ navigation }: Props) {
   const setNotifications = useEterna((s) => s.setNotifications);
   const savedClinicIds = useEterna((s) => s.savedClinicIds);
   const treatments = useEterna((s) => s.treatments);
+  const setGuidePending = useEterna((s) => s.setGuidePending);
   const signOut = useEterna((s) => s.signOut);
 
   return (
@@ -108,6 +109,15 @@ export function ProfileScreen({ navigation }: Props) {
             title={tr('profile.myClinics')}
             subtitle={tr('profile.saved', { n: savedClinicIds.length })}
             onPress={() => navigation.navigate('MyClinics')}
+          />
+          <Row
+            title={tr('profile.guide')}
+            subtitle={tr('profile.guideSub')}
+            onPress={() => {
+              // Home watches this flag and starts the tour when we land back on it
+              setGuidePending(true);
+              navigation.goBack();
+            }}
             last
           />
         </Card>

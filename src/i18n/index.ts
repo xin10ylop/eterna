@@ -135,6 +135,28 @@ const en: Dict = {
   'common.remove': 'Remove',
   'common.cancel': 'Cancel',
   'common.today': 'Today',
+
+  'guide.step': '{n} of {total}',
+  'guide.skip': 'Skip',
+  'guide.next': 'Next',
+  'guide.done': 'Done',
+  'guide.avatar.title': 'Your body is the map',
+  'guide.avatar.body':
+    'Each glow is a part of you. Deep maroon means something is coming up, and it breathes faster as the day gets closer. Red means book it now. A quiet shimmer means all good. Tap any part to see what belongs there.',
+  'guide.events.title': 'Getting ready for something?',
+  'guide.events.body':
+    'Add a wedding, an Eid, any big day. Eterna helps you get every ritual fresh right on time.',
+  'guide.bookings.title': 'Your next visits',
+  'guide.bookings.body':
+    'What you already booked, at a glance. Tap one to see it on your calendar.',
+  'guide.tabs.title': 'Everything else lives here',
+  'guide.tabs.body':
+    'Planning shows your week and your routine. Discover finds clinics near you. Budget watches your spending. The + adds a new ritual.',
+  'guide.finish.title': 'That’s all you need',
+  'guide.finish.body':
+    'Glance at your avatar, tap a glow, book. Eterna remembers everything else. You can replay this guide from your profile.',
+  'profile.guide': 'How Eterna works',
+  'profile.guideSub': 'Replay the quick tour',
 };
 
 const ar: Dict = {
@@ -252,6 +274,27 @@ const ar: Dict = {
   'common.remove': 'إزالة',
   'common.cancel': 'إلغاء',
   'common.today': 'اليوم',
+
+  'guide.step': '{n} من {total}',
+  'guide.skip': 'تخطي',
+  'guide.next': 'التالي',
+  'guide.done': 'تم',
+  'guide.avatar.title': 'جسمك هو الخريطة',
+  'guide.avatar.body':
+    'كل توهج يمثل جزءًا منك. العنابي الداكن يعني أن موعدًا يقترب، ويتنفس أسرع كلما اقترب اليوم. الأحمر يعني احجزي الآن. اللمعة الهادئة تعني أن كل شيء على ما يرام. المسي أي جزء لرؤية ما يخصه.',
+  'guide.events.title': 'تستعدين لمناسبة؟',
+  'guide.events.body':
+    'أضيفي زفافًا أو عيدًا أو أي يوم مهم، وستساعدك إيترنا لتكون كل طقوسك جاهزة في وقتها.',
+  'guide.bookings.title': 'زياراتك القادمة',
+  'guide.bookings.body': 'ما حجزتِه بالفعل في لمحة. المسي أي حجز لرؤيته في تقويمك.',
+  'guide.tabs.title': 'كل شيء آخر هنا',
+  'guide.tabs.body':
+    'التقويم يعرض أسبوعك وروتينك. اكتشفي تجد لك العيادات القريبة. الميزانية تراقب إنفاقك. زر + يضيف طقسًا جديدًا.',
+  'guide.finish.title': 'هذا كل ما تحتاجينه',
+  'guide.finish.body':
+    'ألقي نظرة على صورتك، المسي التوهج، واحجزي. إيترنا تتذكر الباقي. يمكنك إعادة هذا الدليل من ملفك الشخصي.',
+  'profile.guide': 'كيف تعمل إيترنا',
+  'profile.guideSub': 'إعادة الجولة السريعة',
 };
 
 const fr: Dict = {
@@ -369,6 +412,28 @@ const fr: Dict = {
   'common.remove': 'Retirer',
   'common.cancel': 'Annuler',
   'common.today': "Aujourd'hui",
+
+  'guide.step': '{n} sur {total}',
+  'guide.skip': 'Passer',
+  'guide.next': 'Suivant',
+  'guide.done': 'Terminé',
+  'guide.avatar.title': 'Votre corps est la carte',
+  'guide.avatar.body':
+    'Chaque halo est une partie de vous. Le bordeaux profond signale un soin qui approche, et il respire plus vite à mesure que le jour arrive. Le rouge veut dire réservez maintenant. Une lueur discrète veut dire que tout va bien. Touchez une zone pour voir ce qui s’y rapporte.',
+  'guide.events.title': 'Un grand jour approche ?',
+  'guide.events.body':
+    'Ajoutez un mariage, un Aïd, une occasion. Eterna vous aide à ce que chaque soin soit frais au bon moment.',
+  'guide.bookings.title': 'Vos prochaines visites',
+  'guide.bookings.body':
+    'Ce qui est déjà réservé, en un coup d’œil. Touchez pour le voir dans votre agenda.',
+  'guide.tabs.title': 'Tout le reste est ici',
+  'guide.tabs.body':
+    'Agenda montre votre semaine et votre routine. Découvrir trouve des cliniques près de vous. Budget veille sur vos dépenses. Le + ajoute un soin.',
+  'guide.finish.title': 'C’est tout ce qu’il faut',
+  'guide.finish.body':
+    'Un regard sur votre avatar, un halo touché, une réservation. Eterna retient le reste. Vous pouvez revoir ce guide depuis votre profil.',
+  'profile.guide': 'Comment marche Eterna',
+  'profile.guideSub': 'Revoir la visite rapide',
 };
 
 const DICTS: Record<Lang, Dict> = { en, ar, fr };

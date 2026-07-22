@@ -3,17 +3,19 @@ import { Animated, Pressable, View } from 'react-native';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { AVATAR_MARKERS } from '../../data/seed';
 import type { ZoneId } from '../../types';
-import type { GlowStatus } from '../../services/logic';
+import type { GlowStatus, ZoneGlowInfo } from '../../services/logic';
 
 /**
- * Status glow on the avatar — hair, face, body, hands, feet.
+ * Status glow on the avatar — head, body, hands, feet.
  *
- * No dot, no object: the body part itself glows, and colour + rhythm carry the
- * Three breathing glows, no traffic-light palette:
- *   all good  — a soft mauve light, slow and small. Mauve is the one hue that
- *               stays visible on cream/skin without drifting toward the red.
- *   coming up — a dense deep-espresso glow, medium breath.
- *   book now  — a red glow, fast breath.
+ * Two colours only, so the rule fits in one sentence: maroon means coming up,
+ * red means overdue — and the faster it breathes, the closer it is.
+ *   calm — a whisper of light, barely there. Keeps the area visibly tappable
+ *          without reading as a status.
+ *   soon — a dense maroon glow whose breath ACCELERATES as the due date nears
+ *          (a countdown she can feel: slow when the window opens, urgent when
+ *          it's almost due).
+ *   due  — red, the fastest breath of all, largest and brightest.
  * A marker's status is the most urgent among the zones it covers.
  */
 
@@ -25,45 +27,68 @@ const C = CANVAS / 2;
 // saturated (a high white centre would wash it out against the warm figure).
 const STYLE: Record<
   GlowStatus,
-  { rgb: string; core: number; period: number; oMin: number; oMax: number; sMin: number; sMax: number; r: number }
+  {
+    rgb: string;
+    core: number;
+    mid: number;
+    period: number;
+    oMin: number;
+    oMax: number;
+    sMin: number;
+    sMax: number;
+    r: number;
+  }
 > = {
-  // breath speed carries urgency: red fastest, espresso middle, mauve slowest
-  calm: { rgb: '122,84,124', core: 0.24, period: 3100, oMin: 0.55, oMax: 0.8, sMin: 0.92, sMax: 1.04, r: 19 },
-  soon: { rgb: '112,50,28', core: 0.14, period: 2300, oMin: 0.85, oMax: 1.0, sMin: 0.9, sMax: 1.15, r: 22 },
-  due: { rgb: '188,34,24', core: 0.3, period: 1100, oMin: 0.88, oMax: 1.0, sMin: 0.9, sMax: 1.2, r: 23 },
+  // calm is deliberately quiet: warm white, small, slow — presence, not alarm
+  calm: { rgb: '255,252,246', core: 0.5, mid: 0.36, period: 3600, oMin: 0.35, oMax: 0.6, sMin: 0.95, sMax: 1.03, r: 16 },
+  // soon's period is a placeholder — it's recomputed from urgency below
+  soon: { rgb: '112,50,28', core: 0.14, mid: 0.74, period: 3000, oMin: 0.85, oMax: 1.0, sMin: 0.9, sMax: 1.15, r: 22 },
+  due: { rgb: '188,34,24', core: 0.3, mid: 0.74, period: 1100, oMin: 0.88, oMax: 1.0, sMin: 0.9, sMax: 1.2, r: 23 },
 };
+
+// The maroon countdown: the window just opened → slow; due tomorrow → fast.
+// Red (1100ms) stays fastest so the hierarchy never inverts.
+const SOON_PERIOD_FAR = 3000;
+const SOON_PERIOD_NEAR = 1600;
 
 const AnimatedSvg = Animated.createAnimatedComponent(Svg);
 
-function worst(a: GlowStatus, b: GlowStatus): GlowStatus {
-  if (a === 'due' || b === 'due') return 'due';
-  if (a === 'soon' || b === 'soon') return 'soon';
-  return 'calm';
+const RANK: Record<GlowStatus, number> = { calm: 0, soon: 1, due: 2 };
+
+function worst(a: ZoneGlowInfo, b: ZoneGlowInfo): ZoneGlowInfo {
+  if (RANK[b.status] !== RANK[a.status]) return RANK[b.status] > RANK[a.status] ? b : a;
+  return b.urgency > a.urgency ? b : a;
 }
 
 function Glow({
   status,
+  urgency,
   label,
   onPress,
 }: {
   status: GlowStatus;
+  urgency: number;
   label: string;
   onPress: () => void;
 }) {
   const s = STYLE[status];
+  const period =
+    status === 'soon'
+      ? Math.round(SOON_PERIOD_FAR - (SOON_PERIOD_FAR - SOON_PERIOD_NEAR) * urgency)
+      : s.period;
   const pulse = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     pulse.setValue(0);
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulse, { toValue: 1, duration: s.period / 2, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0, duration: s.period / 2, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: period / 2, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: period / 2, useNativeDriver: true }),
       ]),
     );
     loop.start();
     return () => loop.stop();
-  }, [pulse, s.period]);
+  }, [pulse, period]);
 
   return (
     <Pressable
@@ -86,7 +111,7 @@ function Glow({
         <Defs>
           <RadialGradient id={`glow-${label}`} cx="50%" cy="50%" r="50%">
             <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={s.core} />
-            <Stop offset="42%" stopColor={`rgb(${s.rgb})`} stopOpacity={0.74} />
+            <Stop offset="42%" stopColor={`rgb(${s.rgb})`} stopOpacity={s.mid} />
             <Stop offset="100%" stopColor={`rgb(${s.rgb})`} stopOpacity={0} />
           </RadialGradient>
         </Defs>
@@ -100,15 +125,15 @@ export function ZoneMarkers({
   zoneGlows,
   onOpenZone,
 }: {
-  zoneGlows: Partial<Record<ZoneId, GlowStatus>>;
+  zoneGlows: Partial<Record<ZoneId, ZoneGlowInfo>>;
   onOpenZone: (zone: ZoneId) => void;
 }) {
   return (
     <View style={{ position: 'absolute', inset: 0 }} pointerEvents="box-none">
       {AVATAR_MARKERS.map((m) => {
-        const status = m.zones.reduce<GlowStatus>(
-          (acc, z) => worst(acc, zoneGlows[z] ?? 'calm'),
-          'calm',
+        const info = m.zones.reduce<ZoneGlowInfo>(
+          (acc, z) => worst(acc, zoneGlows[z] ?? { status: 'calm', urgency: 0 }),
+          { status: 'calm', urgency: 0 },
         );
         return (
           <View
@@ -121,7 +146,12 @@ export function ZoneMarkers({
               marginTop: -CANVAS / 2,
             }}
           >
-            <Glow status={status} label={m.label} onPress={() => onOpenZone(m.id)} />
+            <Glow
+              status={info.status}
+              urgency={info.urgency}
+              label={m.label}
+              onPress={() => onOpenZone(m.id)}
+            />
           </View>
         );
       })}

@@ -1,15 +1,18 @@
-import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { CompositeScreenProps } from '@react-navigation/native';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../components/ui';
 import { Entrance } from '../../components/anim/Entrance';
 import { AvatarFigure } from '../../components/avatar/AvatarFigure';
 import { ZoneMarkers } from '../../components/avatar/ZoneMarkers';
+import { FRONT_ASPECT } from '../../components/avatar/config';
+import { GuideTour, type GuideRect, type GuideStep } from '../../components/GuideTour';
 import { ZONES } from '../../data/seed';
-import { needsAttention, treatmentStatus, zoneGlow, type GlowStatus } from '../../services/logic';
+import { needsAttention, treatmentStatus, zoneGlowInfo, type ZoneGlowInfo } from '../../services/logic';
 import { diffDays, formatMedium, todayISO } from '../../lib/dates';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
@@ -35,9 +38,19 @@ export function HomeScreen({ navigation }: Props) {
   const treatments = useEterna((s) => s.treatments);
   const appointments = useEterna((s) => s.appointments);
   const events = useEterna((s) => s.events);
+  const guidePending = useEterna((s) => s.guidePending);
+  const setGuidePending = useEterna((s) => s.setGuidePending);
   // measure the space the figure gets, so it fills it and never spills into the
   // header, chip, or the link below
   const [stageH, setStageH] = useState(0);
+
+  // first-run tour: measure the real elements, then spotlight them one by one
+  const stageRef = useRef<View>(null);
+  const eventsRef = useRef<View>(null);
+  const bookingsRef = useRef<View>(null);
+  const [guideRects, setGuideRects] = useState<Record<string, GuideRect> | null>(null);
+  const { width: winW, height: winH } = useWindowDimensions();
+  const tabBarH = useBottomTabBarHeight();
 
   const upcomingEvents = useMemo(
     () =>
@@ -52,10 +65,79 @@ export function HomeScreen({ navigation }: Props) {
     [treatments, appointments],
   );
   const zoneGlows = useMemo(() => {
-    const m: Partial<Record<ZoneId, GlowStatus>> = {};
-    for (const z of ZONES) m[z.id] = zoneGlow(z.id, treatments, appointments);
+    const m: Partial<Record<ZoneId, ZoneGlowInfo>> = {};
+    for (const z of ZONES) m[z.id] = zoneGlowInfo(z.id, treatments, appointments);
     return m;
   }, [treatments, appointments]);
+
+  useEffect(() => {
+    if (!guidePending || stageH === 0) {
+      setGuideRects(null);
+      return;
+    }
+    // wait for the entrance animations to settle before measuring
+    const timer = setTimeout(() => {
+      const measure = (ref: React.RefObject<View | null>, key: string) =>
+        new Promise<[string, GuideRect] | null>((res) => {
+          if (!ref.current) return res(null);
+          ref.current.measureInWindow((x, y, w, h) =>
+            res(w > 0 && h > 0 ? [key, { x, y, w, h }] : null),
+          );
+        });
+      Promise.all([
+        measure(stageRef, 'stage'),
+        measure(eventsRef, 'events'),
+        measure(bookingsRef, 'bookings'),
+      ]).then((entries) => {
+        const m: Record<string, GuideRect> = {};
+        for (const e of entries) if (e) m[e[0]] = e[1];
+        setGuideRects(m);
+      });
+    }, 650);
+    return () => clearTimeout(timer);
+  }, [guidePending, stageH]);
+
+  const guideSteps = useMemo<GuideStep[] | null>(() => {
+    if (!guideRects || !guideRects.stage) return null;
+    const steps: GuideStep[] = [];
+    // hug the figure itself, not the whole stage, so the spotlight has shape
+    const st = guideRects.stage;
+    const figH = Math.min(540, st.h - 8);
+    const figW = figH * FRONT_ASPECT;
+    steps.push({
+      key: 'avatar',
+      rect: { x: st.x + st.w / 2 - figW / 2, y: st.y + st.h / 2 - figH / 2, w: figW, h: figH },
+      title: tx('guide.avatar.title'),
+      body: tx('guide.avatar.body'),
+    });
+    if (guideRects.events)
+      steps.push({
+        key: 'events',
+        rect: guideRects.events,
+        title: tx('guide.events.title'),
+        body: tx('guide.events.body'),
+      });
+    if (guideRects.bookings)
+      steps.push({
+        key: 'bookings',
+        rect: guideRects.bookings,
+        title: tx('guide.bookings.title'),
+        body: tx('guide.bookings.body'),
+      });
+    steps.push({
+      key: 'tabs',
+      rect: { x: 6, y: winH - tabBarH, w: winW - 12, h: tabBarH },
+      title: tx('guide.tabs.title'),
+      body: tx('guide.tabs.body'),
+    });
+    steps.push({
+      key: 'finish',
+      rect: null,
+      title: tx('guide.finish.title'),
+      body: tx('guide.finish.body'),
+    });
+    return steps;
+  }, [guideRects, tx, winW, winH, tabBarH]);
 
   // the next few visits already on the books, soonest first
   const nextBookings = useMemo(
@@ -136,13 +218,14 @@ export function HomeScreen({ navigation }: Props) {
           </Pressable>
         </View>
 
-        {/* events — every upcoming one as a small date card, add always visible */}
+        {/* events — every upcoming one as a small date card, add always visible.
+            The wrapper carries the margin so the tour can measure a clean box. */}
+        <View ref={eventsRef} collapsable={false} style={{ marginTop: spacing.m }}>
         {upcomingEvents.length === 0 ? (
           <Pressable
             accessibilityRole="button"
             onPress={() => navigation.navigate('EventPrep', { add: true })}
             style={({ pressed }) => ({
-              marginTop: spacing.m,
               alignSelf: 'center',
               flexDirection: 'row',
               alignItems: 'center',
@@ -163,7 +246,7 @@ export function HomeScreen({ navigation }: Props) {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            style={{ flexGrow: 0, marginTop: spacing.m }}
+            style={{ flexGrow: 0 }}
             contentContainerStyle={{
               flexGrow: 1,
               justifyContent: 'center',
@@ -241,9 +324,12 @@ export function HomeScreen({ navigation }: Props) {
             </Pressable>
           </ScrollView>
         )}
+        </View>
 
         {/* figure — sized to the measured stage so it can't overlap anything */}
         <View
+          ref={stageRef}
+          collapsable={false}
           style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
           onLayout={(e) => setStageH(e.nativeEvent.layout.height)}
         >
@@ -270,10 +356,11 @@ export function HomeScreen({ navigation }: Props) {
 
         {/* approaching bookings — tap one to see it on the calendar */}
         {nextBookings.length > 0 ? (
+          <View ref={bookingsRef} collapsable={false} style={{ marginTop: spacing.s }}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            style={{ flexGrow: 0, marginTop: spacing.s }}
+            style={{ flexGrow: 0 }}
             contentContainerStyle={{
               flexGrow: 1,
               justifyContent: 'center',
@@ -309,10 +396,13 @@ export function HomeScreen({ navigation }: Props) {
               </Pressable>
             ))}
           </ScrollView>
+          </View>
         ) : null}
 
         <View style={{ paddingBottom: spacing.l }} />
       </View>
+
+      {guideSteps ? <GuideTour steps={guideSteps} onDone={() => setGuidePending(false)} /> : null}
     </Screen>
   );
 }

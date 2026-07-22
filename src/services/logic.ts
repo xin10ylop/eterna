@@ -13,6 +13,12 @@ export function nextDueISO(t: Treatment): string {
  * Status is about *booking*, not lateness. If an appointment is on the books
  * for this cycle she's sorted; otherwise it escalates as the interval elapses.
  */
+/** Lead scales with the interval: a 10-day window is right for a monthly ritual
+ *  but would make a weekly/daily one read "coming up" forever. Cap at LEAD_DAYS. */
+export function treatmentLead(t: Treatment): number {
+  return Math.min(LEAD_DAYS, Math.max(1, Math.ceil(cadenceDays(t.cadence) / 3)));
+}
+
 export function treatmentStatus(t: Treatment, appointments: Appointment[]): TreatmentStatus {
   const today = todayISO();
   const hasPending = appointments.some((a) => a.treatmentId === t.id && a.dateISO >= today);
@@ -23,10 +29,7 @@ export function treatmentStatus(t: Treatment, appointments: Appointment[]): Trea
   if (hasPending) return 'booked';
   const days = diffDays(today, nextDueISO(t));
   if (days < 0) return 'bookNow';
-  // Lead scales with the interval: a 10-day window is right for a monthly ritual
-  // but would make a weekly/daily one read "coming up" forever. Cap at LEAD_DAYS.
-  const lead = Math.min(LEAD_DAYS, Math.max(1, Math.ceil(cadenceDays(t.cadence) / 3)));
-  if (days <= lead) return 'comingUp';
+  if (days <= treatmentLead(t)) return 'comingUp';
   return 'onTrack';
 }
 
@@ -34,29 +37,40 @@ export function needsAttention(status: TreatmentStatus): boolean {
   return status === 'comingUp' || status === 'bookNow';
 }
 
-/** The three glow levels the avatar shows. onTrack + booked both read calm. */
+/** What the avatar shows. Two colours only: maroon for "coming up", red for
+ *  "overdue". calm is not a colour — just a quiet shimmer so the area stays
+ *  tappable without shouting. */
 export type GlowStatus = 'calm' | 'soon' | 'due';
 
-export function glowForStatus(status: TreatmentStatus): GlowStatus {
-  if (status === 'bookNow') return 'due';
-  if (status === 'comingUp') return 'soon';
-  return 'calm';
+export interface ZoneGlowInfo {
+  status: GlowStatus;
+  /** For `soon`: how far through the booking window we are (0 = the window just
+   *  opened, 1 = due tomorrow). Drives the breathing speed — the glow pulses
+   *  faster as the day approaches. 1 for `due`, 0 for `calm`. */
+  urgency: number;
 }
 
-/** Worst glow among a zone's treatments (due > soon > calm). */
-export function zoneGlow(
+/** Worst glow among a zone's treatments (due > soon > calm), with the highest
+ *  urgency among the "soon" ones so the pulse tracks the closest deadline. */
+export function zoneGlowInfo(
   zone: ZoneId,
   treatments: Treatment[],
   appointments: Appointment[],
-): GlowStatus {
-  let g: GlowStatus = 'calm';
+): ZoneGlowInfo {
+  let status: GlowStatus = 'calm';
+  let urgency = 0;
   for (const tr of treatments) {
     if (tr.zone !== zone) continue;
-    const s = glowForStatus(treatmentStatus(tr, appointments));
-    if (s === 'due') return 'due';
-    if (s === 'soon') g = 'soon';
+    const s = treatmentStatus(tr, appointments);
+    if (s === 'bookNow') return { status: 'due', urgency: 1 };
+    if (s === 'comingUp') {
+      const days = Math.max(0, diffDays(todayISO(), nextDueISO(tr)));
+      const u = Math.min(1, Math.max(0, 1 - days / Math.max(1, treatmentLead(tr))));
+      status = 'soon';
+      urgency = Math.max(urgency, u);
+    }
   }
-  return g;
+  return { status, urgency };
 }
 
 /** A zone needs attention when any of its treatments does. */

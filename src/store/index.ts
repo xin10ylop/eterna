@@ -75,6 +75,9 @@ interface EternaState {
 
   // ui
   toast: string | null;
+  /** First-run tour: true right after onboarding (and when replayed from
+   *  Profile); Home shows the guided tour and clears it when done. */
+  guidePending: boolean;
 
   // actions
   setDraft(patch: Partial<OnboardingDraft>): void;
@@ -98,6 +101,7 @@ interface EternaState {
   toggleEventTreatment(eventId: string, treatmentId: string): void;
   removeEvent(id: string): void;
   setShowPastEvents(v: boolean): void;
+  setGuidePending(v: boolean): void;
 
   showToast(msg: string): void;
   clearToast(): void;
@@ -122,6 +126,7 @@ export const useEterna = create<EternaState>((set, get) => ({
   showPastEvents: false,
 
   toast: null,
+  guidePending: false,
 
   setDraft: (patch) => set((s) => ({ draft: { ...s.draft, ...patch } })),
 
@@ -142,6 +147,8 @@ export const useEterna = create<EternaState>((set, get) => ({
         apptReminder: d.apptReminder,
       },
       draft: emptyDraft,
+      // her first Home shows the quick guided tour
+      guidePending: true,
     });
   },
 
@@ -301,6 +308,7 @@ export const useEterna = create<EternaState>((set, get) => ({
     })),
   removeEvent: (id) => set((s) => ({ events: s.events.filter((e) => e.id !== id) })),
   setShowPastEvents: (v) => set({ showPastEvents: v }),
+  setGuidePending: (v) => set({ guidePending: v }),
 
   showToast: (msg) => {
     if (toastTimer) clearTimeout(toastTimer);
