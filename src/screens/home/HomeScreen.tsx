@@ -85,19 +85,15 @@ export function HomeScreen({ navigation }: Props) {
           }}
         >
           <View style={{ flex: 1 }}>
-            {name ? (
-              <>
-                <Text style={{ fontSize: 15, color: t.sub, fontWeight: '600' }}>{greeting},</Text>
-                <Text style={[type.largeTitle, { color: t.text, marginTop: 2 }]} numberOfLines={1}>
-                  {name}
-                </Text>
-              </>
-            ) : (
-              <Text style={[type.largeTitle, { color: t.text }]} numberOfLines={1}>
-                {greeting}
-              </Text>
-            )}
-            <Text style={{ fontSize: 13.5, color: t.sub, marginTop: 3 }}>{line}</Text>
+            <Text
+              style={{ fontSize: 26, fontWeight: '700', color: t.text, letterSpacing: -0.4 }}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+            >
+              {name ? `${greeting}, ${name}` : greeting}
+            </Text>
+            <Text style={{ fontSize: 13.5, color: t.sub, marginTop: 4 }}>{line}</Text>
           </View>
           <Pressable
             accessibilityRole="button"

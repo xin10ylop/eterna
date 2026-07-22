@@ -4,7 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { IconButton, PrimaryButton, ProgressBar, Screen } from '../../components/ui';
 import { CalendarPicker } from '../../components/ui/CalendarPicker';
-import { eventReadiness, type EventRef } from '../../services/logic';
+import { eventItems, eventProgress, unplannedUpcoming, type EventItem } from '../../services/logic';
 import { addDays, diffDays, formatMedium, todayISO } from '../../lib/dates';
 import { cardShadow, radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
@@ -16,15 +16,11 @@ type Props = NativeStackScreenProps<RootStackParamList, 'EventPrep'>;
 const RED = '#C83A2C';
 
 /**
- * Events, and one connected picture of prep across all of them:
- *   • each event shows how ready it is (booked / total)
- *   • "To schedule" — what still needs booking, with the ideal date; a single
- *     visit that keeps a ritual fresh for several events is shown as one row
- *     tagged with each event (never a silent merge)
- *   • "Booked" — appointments already covering an event, including ones made
- *     before the event was even added (coverage is derived from real dates)
- *   • "Add-ons" — add anything extra for an event; it flows into the plan
- * Nothing is assumed; everything the app infers is shown and reversible.
+ * Events built around HER choices. Setting an event asks what she wants ready
+ * for it; each event then shows those picks and where each stands (booked / still
+ * to book / already fresh). If a pick is also chosen for another event it's
+ * flagged — never silently merged — so she coordinates herself. A final section
+ * shows her other (non-event) bookings so she manages everything together.
  */
 export function EventPrepScreen({ navigation, route }: Props) {
   const t = useTheme();
@@ -35,6 +31,7 @@ export function EventPrepScreen({ navigation, route }: Props) {
   const clinics = useEterna((s) => s.clinics);
   const addEvent = useEterna((s) => s.addEvent);
   const removeEvent = useEterna((s) => s.removeEvent);
+  const toggleEventTreatment = useEterna((s) => s.toggleEventTreatment);
   const showPast = useEterna((s) => s.showPastEvents);
   const setShowPast = useEterna((s) => s.setShowPastEvents);
 
@@ -52,57 +49,75 @@ export function EventPrepScreen({ navigation, route }: Props) {
         .sort((a, b) => b.dateISO.localeCompare(a.dateISO)),
     [events],
   );
-  const readiness = useMemo(
-    () => eventReadiness(events, treatments, appointments),
+  const other = useMemo(
+    () => unplannedUpcoming(events, treatments, appointments),
     [events, treatments, appointments],
   );
 
   const [adding, setAdding] = useState(events.length === 0 || !!route.params?.add);
   const [name, setName] = useState('');
   const [dateISO, setDateISO] = useState(addDays(todayISO(), 28));
+  const [picks, setPicks] = useState<string[]>([]);
+  const [editing, setEditing] = useState<string | null>(null); // event id whose picker is open
+
   const save = () => {
-    addEvent(name.trim() || 'My event', dateISO);
+    addEvent(name.trim() || 'My event', dateISO, picks);
     setName('');
     setDateISO(addDays(todayISO(), 28));
+    setPicks([]);
     setAdding(false);
   };
 
   const clinicName = (id: string) => clinics.find((c) => c.id === id)?.name ?? '';
-  const multi = upcoming.length > 1;
 
-  /** Which events an item falls before — chips, with a link + note when shared. */
-  const EventTags = ({ item }: { item: { events: EventRef[]; shared: boolean } }) =>
-    multi ? (
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: 4, alignItems: 'center' }}>
-        {item.shared ? <Ionicons name="link" size={12} color={t.accent} /> : null}
-        {item.events.map((e) => (
-          <View
-            key={e.id}
-            style={{
-              backgroundColor: t.accentSoft,
-              borderRadius: radii.pill,
-              paddingHorizontal: 8,
-              paddingVertical: 2,
-            }}
+  /** Selectable list of her rituals — used to choose picks (new or existing). */
+  const RitualChecklist = ({
+    selected,
+    onToggle,
+  }: {
+    selected: string[];
+    onToggle: (id: string) => void;
+  }) => (
+    <View style={{ gap: 6 }}>
+      {treatments.map((tr) => {
+        const on = selected.includes(tr.id);
+        return (
+          <Pressable
+            key={tr.id}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: on }}
+            onPress={() => onToggle(tr.id)}
+            style={({ pressed }) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.m,
+              paddingVertical: 10,
+              paddingHorizontal: spacing.m,
+              borderRadius: radii.m,
+              backgroundColor: on ? t.accentSoft : t.surfaceAlt,
+              opacity: pressed ? 0.7 : 1,
+            })}
           >
-            <Text style={{ fontSize: 11, fontWeight: '600', color: t.accent }}>{e.name}</Text>
-          </View>
-        ))}
-        {item.shared ? <Text style={{ fontSize: 11, color: t.muted }}>· {tx('event.shared')}</Text> : null}
-      </View>
-    ) : null;
-
-  const rowBase = {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: spacing.m,
-    backgroundColor: t.bg,
-    borderRadius: radii.card,
-    borderWidth: 1,
-    padding: spacing.m,
-    ...cardShadow,
-  };
-  const sectionLabel = { marginTop: spacing.l, marginBottom: spacing.xs };
+            <View
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: 11,
+                borderWidth: 1.5,
+                borderColor: on ? t.accent : t.muted,
+                backgroundColor: on ? t.accent : 'transparent',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {on ? <Ionicons name="checkmark" size={14} color={t.onAccent} /> : null}
+            </View>
+            <Text style={{ flex: 1, fontSize: 15, fontWeight: '600', color: t.text }}>{tr.name}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
 
   return (
     <Screen>
@@ -125,11 +140,11 @@ export function EventPrepScreen({ navigation, route }: Props) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* add-event editor */}
+        {/* add-event editor — name, date, and what she wants ready */}
         {adding ? (
           <View
             style={{
-              gap: spacing.m,
+              gap: spacing.l,
               backgroundColor: t.surfaceAlt,
               borderRadius: radii.card,
               borderWidth: 1,
@@ -161,6 +176,13 @@ export function EventPrepScreen({ navigation, route }: Props) {
               <Text style={[type.label, { color: t.muted }]}>{tx('event.when')}</Text>
               <CalendarPicker value={dateISO} onSelect={setDateISO} minISO={addDays(todayISO(), 1)} />
             </View>
+            <View style={{ gap: spacing.s }}>
+              <Text style={[type.label, { color: t.muted }]}>{tx('event.want')}</Text>
+              <RitualChecklist
+                selected={picks}
+                onToggle={(id) => setPicks((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]))}
+              />
+            </View>
             <View style={{ flexDirection: 'row', gap: spacing.s }}>
               {events.length > 0 ? (
                 <Pressable
@@ -186,32 +208,47 @@ export function EventPrepScreen({ navigation, route }: Props) {
           </View>
         ) : null}
 
-        {/* event cards with readiness */}
+        {upcoming.length === 0 && !adding ? (
+          <Text style={{ fontSize: 14, color: t.sub, lineHeight: 20, paddingVertical: spacing.m }}>
+            {tx('event.empty')}
+          </Text>
+        ) : null}
+
+        {/* one card per event, built from her picks */}
         {upcoming.map((ev) => {
           const d = diffDays(todayISO(), ev.dateISO);
-          const r = readiness.perEvent.find((p) => p.id === ev.id);
-          const total = r?.total ?? 0;
-          const booked = r?.booked ?? 0;
+          const items = eventItems(ev, treatments, appointments, events);
+          const prog = eventProgress(items);
+          const isEditing = editing === ev.id;
           return (
             <View
               key={ev.id}
-              style={{ backgroundColor: t.accentSoft, borderRadius: radii.card, padding: spacing.m, gap: spacing.s }}
+              style={{
+                backgroundColor: t.bg,
+                borderRadius: radii.card,
+                borderWidth: 1,
+                borderColor: t.border,
+                padding: spacing.m,
+                gap: spacing.s,
+                ...cardShadow,
+              }}
             >
+              {/* header */}
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
                 <View
                   style={{
                     width: 42,
                     height: 42,
                     borderRadius: 12,
-                    backgroundColor: t.bg,
+                    backgroundColor: t.accentSoft,
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 >
-                  <Ionicons name="calendar" size={19} color={t.accent} />
+                  <Ionicons name="sparkles" size={18} color={t.accent} />
                 </View>
                 <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '700', color: t.text }}>
+                  <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: '700', color: t.text }}>
                     {ev.name}
                   </Text>
                   <Text style={{ fontSize: 12.5, color: t.accent, marginTop: 1 }}>
@@ -228,156 +265,90 @@ export function EventPrepScreen({ navigation, route }: Props) {
                   <Ionicons name="close" size={18} color={t.muted} />
                 </Pressable>
               </View>
-              {total > 0 ? (
-                <View style={{ gap: 5 }}>
-                  <ProgressBar value={booked / total} />
+
+              {items.length > 0 ? (
+                <View style={{ gap: 4 }}>
+                  <ProgressBar value={prog.total ? prog.done / prog.total : 0} />
                   <Text style={{ fontSize: 11.5, color: t.sub }}>
-                    {tx('event.ready', { done: booked, total })}
+                    {tx('event.ready', { done: prog.done, total: prog.total })}
                   </Text>
                 </View>
+              ) : null}
+
+              {/* her chosen rituals */}
+              {items.map((it) => (
+                <EventItemRow key={it.treatment.id} it={it} tx={tx} t={t} clinicName={clinicName} navigation={navigation} />
+              ))}
+
+              {/* edit picks */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ expanded: isEditing }}
+                onPress={() => setEditing(isEditing ? null : ev.id)}
+                style={({ pressed }) => ({
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  paddingVertical: spacing.s,
+                  opacity: pressed ? 0.6 : 1,
+                })}
+              >
+                <Ionicons name={isEditing ? 'chevron-up' : 'add'} size={16} color={t.accent} />
+                <Text style={{ fontSize: 13.5, fontWeight: '600', color: t.accent }}>
+                  {tx('event.editPicks')}
+                </Text>
+              </Pressable>
+              {isEditing ? (
+                <RitualChecklist
+                  selected={ev.treatmentIds}
+                  onToggle={(id) => toggleEventTreatment(ev.id, id)}
+                />
               ) : null}
             </View>
           );
         })}
 
-        {upcoming.length === 0 && !adding ? (
-          <Text style={{ fontSize: 14, color: t.sub, lineHeight: 20, paddingVertical: spacing.m }}>
-            {tx('event.empty')}
-          </Text>
-        ) : null}
-
-        {/* TO SCHEDULE */}
-        {readiness.toBook.length > 0 ? (
-          <Text style={[type.label, { color: t.muted }, sectionLabel]}>{tx('event.toBook')}</Text>
-        ) : null}
-        {readiness.toBook.map((item, idx) => {
-          const [mon, day] = formatMedium(item.doByISO).split(' ');
-          return (
-            <View
-              key={`tb-${item.treatment.id}-${idx}`}
-              style={{ ...rowBase, borderColor: item.shared ? t.accent : t.border }}
-            >
-              <View style={{ alignItems: 'center', width: 44 }}>
-                <Text style={{ fontSize: 11, fontWeight: '700', color: item.urgent ? RED : t.accent }}>
-                  {mon.toUpperCase()}
-                </Text>
-                <Text style={{ fontSize: 18, fontWeight: '800', color: t.text }}>{day}</Text>
-              </View>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
-                  {item.treatment.name}
-                </Text>
-                <Text numberOfLines={1} style={{ fontSize: 12.5, color: item.urgent ? RED : t.sub, marginTop: 1 }}>
-                  {item.urgent ? tx('event.asap') : tx('event.doBy', { date: formatMedium(item.doByISO) })}
-                  {clinicName(item.treatment.clinicId) ? ` · ${clinicName(item.treatment.clinicId)}` : ''}
-                  {item.treatment.atHome ? ` · ${tx('common.atHome')}` : ''}
-                </Text>
-                <EventTags item={item} />
-              </View>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Book ${item.treatment.name}`}
-                onPress={() => navigation.navigate('Book', { treatmentId: item.treatment.id })}
-                style={({ pressed }) => ({
-                  paddingVertical: 8,
-                  paddingHorizontal: 16,
-                  borderRadius: radii.pill,
-                  backgroundColor: t.accent,
-                  transform: [{ scale: pressed ? 0.94 : 1 }],
-                })}
-              >
-                <Text style={{ color: t.onAccent, fontSize: 13.5, fontWeight: '700' }}>{tx('common.book')}</Text>
-              </Pressable>
-            </View>
-          );
-        })}
-
-        {upcoming.length > 0 && readiness.toBook.length === 0 ? (
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: spacing.s,
-              backgroundColor: t.surfaceAlt,
-              borderRadius: radii.card,
-              padding: spacing.m,
-              marginTop: spacing.s,
-            }}
-          >
-            <Ionicons name="checkmark-circle" size={20} color={t.positive} />
-            <Text style={{ flex: 1, fontSize: 14, color: t.sub }}>{tx('event.allSet')}</Text>
-          </View>
-        ) : null}
-
-        {/* BOOKED */}
-        {readiness.booked.length > 0 ? (
-          <Text style={[type.label, { color: t.muted }, sectionLabel]}>{tx('event.booked')}</Text>
-        ) : null}
-        {readiness.booked.map((item, idx) => {
-          const [mon, day] = formatMedium(item.dateISO).split(' ');
-          const sub = [item.timeLabel, clinicName(item.clinicId ?? '')].filter(Boolean).join(' · ');
-          return (
-            <View key={`bk-${idx}`} style={{ ...rowBase, borderColor: t.border }}>
-              <View style={{ alignItems: 'center', width: 44 }}>
-                <Text style={{ fontSize: 11, fontWeight: '700', color: t.positive }}>{mon.toUpperCase()}</Text>
-                <Text style={{ fontSize: 18, fontWeight: '800', color: t.text }}>{day}</Text>
-              </View>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
-                  {item.name}
-                </Text>
-                {sub ? (
-                  <Text numberOfLines={1} style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
-                    {sub}
-                  </Text>
-                ) : null}
-                <EventTags item={item} />
-              </View>
-              <Ionicons name="checkmark-circle" size={22} color={t.positive} />
-            </View>
-          );
-        })}
-
-        {/* ADD-ONS — anything extra for an event flows into the plan */}
-        {upcoming.length > 0 ? (
+        {/* her other bookings, not tied to an event — so she manages it all */}
+        {other.length > 0 ? (
           <>
-            <Text style={[type.label, { color: t.muted }, sectionLabel]}>{tx('event.addons')}</Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => navigation.navigate('AddRitual')}
-              style={({ pressed }) => ({
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: spacing.s,
-                borderRadius: radii.card,
-                borderWidth: 1,
-                borderColor: t.border,
-                borderStyle: 'dashed',
-                padding: spacing.m,
-                opacity: pressed ? 0.7 : 1,
-              })}
-            >
-              <View
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  backgroundColor: t.accentSoft,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Ionicons name="add" size={18} color={t.accent} />
-              </View>
-              <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: t.text }}>
-                {tx('event.addonCta')}
-              </Text>
-              <Ionicons name="chevron-forward" size={16} color={t.muted} />
-            </Pressable>
+            <Text style={[type.label, { color: t.muted, marginTop: spacing.l, marginBottom: spacing.xs }]}>
+              {tx('event.otherCalendar')}
+            </Text>
+            {other.map(({ appt, treatment }) => {
+              const [mon, day] = formatMedium(appt.dateISO).split(' ');
+              return (
+                <View
+                  key={appt.id}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.m,
+                    backgroundColor: t.surfaceAlt,
+                    borderRadius: radii.card,
+                    borderWidth: 1,
+                    borderColor: t.border,
+                    padding: spacing.m,
+                  }}
+                >
+                  <View style={{ alignItems: 'center', width: 44 }}>
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: t.sub }}>{mon.toUpperCase()}</Text>
+                    <Text style={{ fontSize: 18, fontWeight: '800', color: t.text }}>{day}</Text>
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
+                      {treatment?.name ?? 'Appointment'}
+                    </Text>
+                    <Text numberOfLines={1} style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
+                      {[appt.timeLabel, clinicName(appt.clinicId)].filter(Boolean).join(' · ')}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
           </>
         ) : null}
 
-        {/* PAST — the user chooses whether to see them; nothing is auto-deleted. */}
+        {/* PAST — her choice whether to see them; nothing is auto-deleted */}
         {past.length > 0 ? (
           <View style={{ marginTop: spacing.l }}>
             <Pressable
@@ -436,5 +407,79 @@ export function EventPrepScreen({ navigation, route }: Props) {
         ) : null}
       </ScrollView>
     </Screen>
+  );
+}
+
+/** One chosen ritual and where it stands for this event. */
+function EventItemRow({
+  it,
+  tx,
+  t,
+  clinicName,
+  navigation,
+}: {
+  it: EventItem;
+  tx: (k: string, v?: Record<string, string | number>) => string;
+  t: ReturnType<typeof useTheme>;
+  clinicName: (id: string) => string;
+  navigation: Props['navigation'];
+}) {
+  const handled = it.status !== 'toBook';
+  const statusLine =
+    it.status === 'booked'
+      ? tx('event.bookedOn', { date: formatMedium(it.apptDateISO ?? '') })
+      : it.status === 'fresh'
+        ? tx('event.setFresh')
+        : tx('event.bookBy', { date: formatMedium(it.dueISO) });
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.m,
+        paddingVertical: spacing.s,
+        borderTopWidth: 1,
+        borderTopColor: t.border,
+      }}
+    >
+      <Ionicons
+        name={handled ? 'checkmark-circle' : 'ellipse-outline'}
+        size={22}
+        color={handled ? t.positive : RED}
+      />
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
+          {it.treatment.name}
+        </Text>
+        <Text numberOfLines={1} style={{ fontSize: 12.5, color: it.status === 'toBook' ? RED : t.sub, marginTop: 1 }}>
+          {statusLine}
+          {it.treatment.atHome ? ` · ${tx('common.atHome')}` : ''}
+        </Text>
+        {it.alsoFor.length > 0 ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 3, flexWrap: 'wrap' }}>
+            <Ionicons name="link" size={12} color={t.accent} />
+            <Text style={{ fontSize: 11, color: t.accent }}>
+              {tx('event.alsoFor', { names: it.alsoFor.map((e) => e.name).join(', ') })}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+      {it.status === 'toBook' ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Book ${it.treatment.name}`}
+          onPress={() => navigation.navigate('Book', { treatmentId: it.treatment.id })}
+          style={({ pressed }) => ({
+            paddingVertical: 7,
+            paddingHorizontal: 15,
+            borderRadius: radii.pill,
+            backgroundColor: t.accent,
+            transform: [{ scale: pressed ? 0.94 : 1 }],
+          })}
+        >
+          <Text style={{ color: t.onAccent, fontSize: 13, fontWeight: '700' }}>{tx('common.book')}</Text>
+        </Pressable>
+      ) : null}
+    </View>
   );
 }

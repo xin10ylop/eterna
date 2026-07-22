@@ -170,104 +170,70 @@ export interface EventRef {
   dateISO: string;
 }
 
-/** A ritual that comes due before your events and isn't booked yet. */
-export interface PrepRitual {
+/** Where one of an event's chosen rituals stands. */
+export type EventItemStatus = 'booked' | 'toBook' | 'fresh';
+
+export interface EventItem {
   treatment: Treatment;
-  /** When it next comes due — roughly when to book it by. */
-  doByISO: string;
-  /** The events it falls before (so one booking can serve several). */
-  events: EventRef[];
-  /** Relevant to more than one event. */
-  shared: boolean;
-  /** Already overdue. */
-  urgent: boolean;
-}
-
-/** An appointment already on the books between now and your events. */
-export interface BookedItem {
-  treatment?: Treatment;
-  name: string;
-  dateISO: string;
-  timeLabel?: string;
-  clinicId?: string;
-  /** The events this visit comes before. */
-  events: EventRef[];
-  shared: boolean;
-}
-
-export interface EventReadiness {
-  /** Per event: how much of what falls before it is already booked. */
-  perEvent: { id: string; name: string; dateISO: string; total: number; booked: number }[];
-  /** Everything already booked between today and your last event. */
-  booked: BookedItem[];
-  /** Usuals (and one-off add-ons) that come due before an event and aren't booked. */
-  toBook: PrepRitual[];
+  status: EventItemStatus;
+  /** The date it's booked for, if booked before the event. */
+  apptDateISO?: string;
+  /** When it next comes due. */
+  dueISO: string;
+  /** Other upcoming events that ALSO chose this ritual — shown so she can
+   *  coordinate (one booking might do for both). Never merged for her. */
+  alsoFor: EventRef[];
 }
 
 /**
- * Your schedule from now until your events: what's already on the books, what
- * still needs booking, and which events each thing falls before. Everything is
- * derived from real dates — a booking made before an event existed still counts,
- * and anything that serves more than one event is tagged with each of them.
+ * The status of each ritual she chose for one event — nothing inferred beyond
+ * her own picks. `booked` = she has an appointment for it before the event;
+ * `fresh` = it stays fresh through the event, so it needs nothing; `toBook` =
+ * she wants it and it isn't handled yet. `alsoFor` flags picks shared with
+ * another event so she decides how to coordinate.
  */
-export function eventReadiness(
+export function eventItems(
+  event: SalonEvent,
+  treatments: Treatment[],
+  appointments: Appointment[],
+  allEvents: SalonEvent[],
+): EventItem[] {
+  const today = todayISO();
+  return event.treatmentIds
+    .map((id): EventItem | null => {
+      const tr = treatments.find((t) => t.id === id);
+      if (!tr) return null;
+      const appt = appointments
+        .filter((a) => a.treatmentId === id && a.dateISO >= today && a.dateISO <= event.dateISO)
+        .sort((a, b) => a.dateISO.localeCompare(b.dateISO))[0];
+      const due = nextDueISO(tr);
+      const status: EventItemStatus = appt ? 'booked' : due > event.dateISO ? 'fresh' : 'toBook';
+      const alsoFor: EventRef[] = allEvents
+        .filter((e) => e.id !== event.id && e.dateISO >= today && e.treatmentIds.includes(id))
+        .map((e) => ({ id: e.id, name: e.name, dateISO: e.dateISO }));
+      return { treatment: tr, status, apptDateISO: appt?.dateISO, dueISO: due, alsoFor };
+    })
+    .filter((x): x is EventItem => x !== null);
+}
+
+/** Ready when every ritual she chose is booked or still fresh. */
+export function eventProgress(items: EventItem[]): { done: number; total: number } {
+  return { total: items.length, done: items.filter((i) => i.status !== 'toBook').length };
+}
+
+/** Upcoming appointments she has that no upcoming event claimed — her routine /
+ *  other commitments, so she can manage everything together. */
+export function unplannedUpcoming(
   events: SalonEvent[],
   treatments: Treatment[],
   appointments: Appointment[],
-): EventReadiness {
+): { appt: Appointment; treatment?: Treatment }[] {
   const today = todayISO();
-  const upcoming = events
-    .filter((e) => diffDays(today, e.dateISO) >= 0)
-    .sort((a, b) => a.dateISO.localeCompare(b.dateISO));
-  if (upcoming.length === 0) return { perEvent: [], booked: [], toBook: [] };
-  const lastEvent = upcoming[upcoming.length - 1]!.dateISO;
-  const evRefs: EventRef[] = upcoming.map((e) => ({ id: e.id, name: e.name, dateISO: e.dateISO }));
-  const eventsFrom = (dateISO: string) => evRefs.filter((e) => e.dateISO >= dateISO);
-
-  // Already on the books between now and the last event — her usuals, whatever
-  // she's booked, whether or not she booked it "for" an event.
-  const booked: BookedItem[] = appointments
-    .filter((a) => a.dateISO >= today && a.dateISO <= lastEvent)
+  const claimed = new Set(
+    events.filter((e) => e.dateISO >= today).flatMap((e) => e.treatmentIds),
+  );
+  return appointments
+    .filter((a) => a.dateISO >= today && !claimed.has(a.treatmentId))
     .sort((a, b) => a.dateISO.localeCompare(b.dateISO))
-    .map((a) => {
-      const tr = treatments.find((t) => t.id === a.treatmentId);
-      const ev = eventsFrom(a.dateISO);
-      return {
-        treatment: tr,
-        name: tr?.name ?? 'Appointment',
-        dateISO: a.dateISO,
-        timeLabel: a.timeLabel,
-        clinicId: a.clinicId,
-        events: ev,
-        shared: ev.length > 1,
-      };
-    });
-  const bookedIds = new Set(booked.map((b) => b.treatment?.id).filter(Boolean));
-
-  // Usuals (and one-off add-ons) that come due on/before an event and aren't
-  // booked — what she still needs to schedule before her events.
-  const toBook: PrepRitual[] = [];
-  for (const tr of treatments) {
-    if (bookedIds.has(tr.id)) continue;
-    const due = nextDueISO(tr);
-    if (due > lastEvent) continue; // stays fresh past all her events → no prep needed
-    const ev = eventsFrom(due < today ? today : due);
-    if (!ev.length) continue;
-    toBook.push({
-      treatment: tr,
-      doByISO: due,
-      events: ev,
-      shared: ev.length > 1,
-      urgent: diffDays(today, due) < 0,
-    });
-  }
-  toBook.sort((a, b) => a.doByISO.localeCompare(b.doByISO));
-
-  const perEvent = upcoming.map((ev) => {
-    const b = booked.filter((x) => x.events.some((e) => e.id === ev.id)).length;
-    const tb = toBook.filter((x) => x.events.some((e) => e.id === ev.id)).length;
-    return { id: ev.id, name: ev.name, dateISO: ev.dateISO, total: b + tb, booked: b };
-  });
-
-  return { perEvent, booked, toBook };
+    .map((a) => ({ appt: a, treatment: treatments.find((t) => t.id === a.treatmentId) }));
 }

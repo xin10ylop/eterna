@@ -254,8 +254,10 @@ export const APPOINTMENTS: Appointment[] = [
  *  a ritual fresh for both, instead of double-booking. She sets these in-app;
  *  seeded here so the feature is visible. */
 export const SEED_EVENTS: SalonEvent[] = [
-  { id: 'ev-wedding', name: "Layla's wedding", dateISO: addDays(T, 26) },
-  { id: 'ev-eid', name: 'Eid gathering', dateISO: addDays(T, 32) },
+  // she picks what she wants ready for each; 't-mani' is in both on purpose, so
+  // the app can *show* the overlap (not silently merge it)
+  { id: 'ev-wedding', name: "Layla's wedding", dateISO: addDays(T, 26), treatmentIds: ['t-roots', 't-lipfiller', 't-mani', 't-facial'] },
+  { id: 'ev-eid', name: 'Eid gathering', dateISO: addDays(T, 32), treatmentIds: ['t-mani', 't-brows'] },
 ];
 
 /** Five skin tones (match the recolored render tones), light to deep. */

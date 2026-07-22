@@ -85,8 +85,9 @@ interface EternaState {
   toggleSavedClinic(clinicId: string): void;
   addOwnClinic(name: string): Clinic;
   setAvatar(patch: Partial<AvatarConfig>): void;
-  addEvent(name: string, dateISO: string): void;
+  addEvent(name: string, dateISO: string, treatmentIds: string[]): void;
   updateEvent(id: string, patch: Partial<Omit<SalonEvent, 'id'>>): void;
+  toggleEventTreatment(eventId: string, treatmentId: string): void;
   removeEvent(id: string): void;
   setShowPastEvents(v: boolean): void;
 
@@ -250,10 +251,23 @@ export const useEterna = create<EternaState>((set, get) => ({
         : { draft: { ...s.draft, avatar: { ...s.draft.avatar, ...patch } } },
     ),
 
-  addEvent: (name, dateISO) =>
-    set((s) => ({ events: [...s.events, { id: `ev-${Date.now()}`, name, dateISO }] })),
+  addEvent: (name, dateISO, treatmentIds) =>
+    set((s) => ({ events: [...s.events, { id: `ev-${Date.now()}`, name, dateISO, treatmentIds }] })),
   updateEvent: (id, patch) =>
     set((s) => ({ events: s.events.map((e) => (e.id === id ? { ...e, ...patch } : e)) })),
+  toggleEventTreatment: (eventId, treatmentId) =>
+    set((s) => ({
+      events: s.events.map((e) =>
+        e.id === eventId
+          ? {
+              ...e,
+              treatmentIds: e.treatmentIds.includes(treatmentId)
+                ? e.treatmentIds.filter((id) => id !== treatmentId)
+                : [...e.treatmentIds, treatmentId],
+            }
+          : e,
+      ),
+    })),
   removeEvent: (id) => set((s) => ({ events: s.events.filter((e) => e.id !== id) })),
   setShowPastEvents: (v) => set({ showPastEvents: v }),
 

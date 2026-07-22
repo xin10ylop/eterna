@@ -57,6 +57,8 @@ export interface SalonEvent {
   id: string;
   name: string;
   dateISO: string;
+  /** The rituals she wants ready for this event — chosen by her, never inferred. */
+  treatmentIds: string[];
 }
 
 export type CadenceUnit = 'day' | 'week' | 'month';
