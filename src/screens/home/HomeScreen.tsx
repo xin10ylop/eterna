@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { CompositeScreenProps } from '@react-navigation/native';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../components/ui';
@@ -10,7 +9,7 @@ import { Entrance } from '../../components/anim/Entrance';
 import { AvatarFigure } from '../../components/avatar/AvatarFigure';
 import { ZoneMarkers } from '../../components/avatar/ZoneMarkers';
 import { FRONT_ASPECT } from '../../components/avatar/config';
-import { GuideTour, type GuideRect, type GuideStep } from '../../components/GuideTour';
+import { GuideTour, useGuideRects, type GuideStep } from '../../components/GuideTour';
 import { ZONES } from '../../data/seed';
 import { needsAttention, treatmentStatus, zoneGlowInfo, type ZoneGlowInfo } from '../../services/logic';
 import { diffDays, formatMedium, todayISO } from '../../lib/dates';
@@ -38,19 +37,23 @@ export function HomeScreen({ navigation }: Props) {
   const treatments = useEterna((s) => s.treatments);
   const appointments = useEterna((s) => s.appointments);
   const events = useEterna((s) => s.events);
-  const guidePending = useEterna((s) => s.guidePending);
-  const setGuidePending = useEterna((s) => s.setGuidePending);
+  const guideStage = useEterna((s) => s.guideStage);
+  const guideTotal = useEterna((s) => s.guideTotal);
+  const setGuide = useEterna((s) => s.setGuide);
   // measure the space the figure gets, so it fills it and never spills into the
   // header, chip, or the link below
   const [stageH, setStageH] = useState(0);
 
-  // first-run tour: measure the real elements, then spotlight them one by one
+  // guided tour, chapter "home": measure the real elements, spotlight them one
+  // by one, then hand over to Planning. Chapter "finish" is the closing card.
   const stageRef = useRef<View>(null);
   const eventsRef = useRef<View>(null);
   const bookingsRef = useRef<View>(null);
-  const [guideRects, setGuideRects] = useState<Record<string, GuideRect> | null>(null);
-  const { width: winW, height: winH } = useWindowDimensions();
-  const tabBarH = useBottomTabBarHeight();
+  const guideRects = useGuideRects(
+    guideStage === 'home' && stageH > 0,
+    { stage: stageRef, events: eventsRef, bookings: bookingsRef },
+    650,
+  );
 
   const upcomingEvents = useMemo(
     () =>
@@ -70,35 +73,16 @@ export function HomeScreen({ navigation }: Props) {
     return m;
   }, [treatments, appointments]);
 
-  useEffect(() => {
-    if (!guidePending || stageH === 0) {
-      setGuideRects(null);
-      return;
-    }
-    // wait for the entrance animations to settle before measuring
-    const timer = setTimeout(() => {
-      const measure = (ref: React.RefObject<View | null>, key: string) =>
-        new Promise<[string, GuideRect] | null>((res) => {
-          if (!ref.current) return res(null);
-          ref.current.measureInWindow((x, y, w, h) =>
-            res(w > 0 && h > 0 ? [key, { x, y, w, h }] : null),
-          );
-        });
-      Promise.all([
-        measure(stageRef, 'stage'),
-        measure(eventsRef, 'events'),
-        measure(bookingsRef, 'bookings'),
-      ]).then((entries) => {
-        const m: Record<string, GuideRect> = {};
-        for (const e of entries) if (e) m[e[0]] = e[1];
-        setGuideRects(m);
-      });
-    }, 650);
-    return () => clearTimeout(timer);
-  }, [guidePending, stageH]);
+  // the tour continues on Planning (2 steps), Discover (1), Budget (1) and
+  // ends with a closing card back here (1) — the global counter needs them
+  const LATER_STEPS = 5;
 
   const guideSteps = useMemo<GuideStep[] | null>(() => {
-    if (!guideRects || !guideRects.stage) return null;
+    if (guideStage === 'finish')
+      return [
+        { key: 'finish', rect: null, title: tx('guide.finish.title'), body: tx('guide.finish.body') },
+      ];
+    if (guideStage !== 'home' || !guideRects?.stage) return null;
     const steps: GuideStep[] = [];
     // hug the figure itself, not the whole stage, so the spotlight has shape
     const st = guideRects.stage;
@@ -109,6 +93,7 @@ export function HomeScreen({ navigation }: Props) {
       rect: { x: st.x + st.w / 2 - figW / 2, y: st.y + st.h / 2 - figH / 2, w: figW, h: figH },
       title: tx('guide.avatar.title'),
       body: tx('guide.avatar.body'),
+      legend: 'glows',
     });
     if (guideRects.events)
       steps.push({
@@ -124,20 +109,13 @@ export function HomeScreen({ navigation }: Props) {
         title: tx('guide.bookings.title'),
         body: tx('guide.bookings.body'),
       });
-    steps.push({
-      key: 'tabs',
-      rect: { x: 6, y: winH - tabBarH, w: winW - 12, h: tabBarH },
-      title: tx('guide.tabs.title'),
-      body: tx('guide.tabs.body'),
-    });
-    steps.push({
-      key: 'finish',
-      rect: null,
-      title: tx('guide.finish.title'),
-      body: tx('guide.finish.body'),
-    });
     return steps;
-  }, [guideRects, tx, winW, winH, tabBarH]);
+  }, [guideStage, guideRects, tx]);
+
+  // the home chapter fixes the tour's global length once its steps are known
+  useEffect(() => {
+    if (guideStage === 'home' && guideSteps) setGuide({ total: guideSteps.length + LATER_STEPS });
+  }, [guideStage, guideSteps, setGuide, LATER_STEPS]);
 
   // the next few visits already on the books, soonest first
   const nextBookings = useMemo(
@@ -402,7 +380,22 @@ export function HomeScreen({ navigation }: Props) {
         <View style={{ paddingBottom: spacing.l }} />
       </View>
 
-      {guideSteps ? <GuideTour steps={guideSteps} onDone={() => setGuidePending(false)} /> : null}
+      {guideSteps ? (
+        <GuideTour
+          steps={guideSteps}
+          offset={guideStage === 'finish' ? Math.max(0, guideTotal - 1) : 0}
+          total={guideTotal}
+          onComplete={() => {
+            if (guideStage === 'home') {
+              setGuide({ stage: 'planning', offset: guideSteps.length });
+              navigation.navigate('Planning');
+            } else {
+              setGuide({ stage: null, offset: 0 });
+            }
+          }}
+          onSkip={() => setGuide({ stage: null, offset: 0 })}
+        />
+      ) : null}
     </Screen>
   );
 }

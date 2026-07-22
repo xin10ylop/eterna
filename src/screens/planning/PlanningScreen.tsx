@@ -1,10 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Screen, SectionLabel, Segmented } from '../../components/ui';
+import { GuideTour, useGuideRects, type GuideStep } from '../../components/GuideTour';
+import { useT } from '../../i18n';
 import {
   addDays,
   addMonths,
@@ -34,23 +36,71 @@ type Props = CompositeScreenProps<
  */
 export function PlanningScreen({ navigation, route }: Props) {
   const t = useTheme();
+  const tx = useT();
   const [tab, setTab] = useState('Schedule');
   // arriving from Home with a date (a tapped booking) → land on the calendar
   const focusDate = route.params?.dateISO;
   useEffect(() => {
     if (focusDate) setTab('Schedule');
   }, [focusDate]);
+
+  // guided tour, chapter "planning": the week strip, then the view switch
+  const guideStage = useEterna((s) => s.guideStage);
+  const guideOffset = useEterna((s) => s.guideOffset);
+  const guideTotal = useEterna((s) => s.guideTotal);
+  const setGuide = useEterna((s) => s.setGuide);
+  const segRef = useRef<View>(null);
+  const weekRef = useRef<View>(null);
+  useEffect(() => {
+    // the tour explains the calendar — make sure it's the visible view
+    if (guideStage === 'planning') setTab('Schedule');
+  }, [guideStage]);
+  const guideRects = useGuideRects(guideStage === 'planning', { week: weekRef, seg: segRef }, 500);
+  const guideSteps = useMemo<GuideStep[] | null>(() => {
+    if (guideStage !== 'planning' || !guideRects) return null;
+    const steps: GuideStep[] = [];
+    if (guideRects.week)
+      steps.push({
+        key: 'week',
+        rect: guideRects.week,
+        title: tx('guide.week.title'),
+        body: tx('guide.week.body'),
+      });
+    if (guideRects.seg)
+      steps.push({
+        key: 'views',
+        rect: guideRects.seg,
+        title: tx('guide.routine.title'),
+        body: tx('guide.routine.body'),
+      });
+    return steps.length > 0 ? steps : null;
+  }, [guideStage, guideRects, tx]);
+
   return (
     <Screen>
       <View style={{ paddingTop: spacing.s, gap: spacing.l, flex: 1 }}>
         <Text style={[type.largeTitle, { color: t.text }]}>Planning</Text>
-        <Segmented options={['Schedule', 'My routine']} value={tab} onChange={setTab} />
+        <View ref={segRef} collapsable={false}>
+          <Segmented options={['Schedule', 'My routine']} value={tab} onChange={setTab} />
+        </View>
         {tab === 'Schedule' ? (
-          <ScheduleView nav={navigation} focusDate={focusDate} />
+          <ScheduleView nav={navigation} focusDate={focusDate} weekRef={weekRef} />
         ) : (
           <RoutineView nav={navigation} />
         )}
       </View>
+      {guideSteps ? (
+        <GuideTour
+          steps={guideSteps}
+          offset={guideOffset}
+          total={guideTotal}
+          onComplete={() => {
+            setGuide({ stage: 'discover', offset: guideOffset + guideSteps.length });
+            navigation.navigate('Discover');
+          }}
+          onSkip={() => setGuide({ stage: null, offset: 0 })}
+        />
+      ) : null}
     </Screen>
   );
 }
@@ -61,7 +111,16 @@ const DAY_START = 8; // the visible day runs 8:00
 const DAY_END = 22; //  … to 22:00
 const HOUR_H = 54;
 
-function ScheduleView({ nav, focusDate }: { nav: Props['navigation']; focusDate?: string }) {
+function ScheduleView({
+  nav,
+  focusDate,
+  weekRef,
+}: {
+  nav: Props['navigation'];
+  focusDate?: string;
+  /** Guide target: the week strip block, measured by the tour. */
+  weekRef?: React.RefObject<View | null>;
+}) {
   const t = useTheme();
   const [selected, setSelected] = useState(todayISO());
   const [weekStart, setWeekStart] = useState(startOfWeek(todayISO()));
@@ -142,7 +201,7 @@ function ScheduleView({ nav, focusDate }: { nav: Props['navigation']; focusDate?
       </View>
 
       {/* the week: big day boxes; small arrows underneath move a week */}
-      <View style={{ gap: spacing.s }}>
+      <View ref={weekRef} collapsable={false} style={{ gap: spacing.s }}>
         <View style={{ flexDirection: 'row', gap: 6 }}>
           {Array.from({ length: 7 }).map((_, i) => {
             const iso = addDays(weekStart, i);

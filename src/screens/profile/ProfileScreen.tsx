@@ -21,7 +21,7 @@ export function ProfileScreen({ navigation }: Props) {
   const setNotifications = useEterna((s) => s.setNotifications);
   const savedClinicIds = useEterna((s) => s.savedClinicIds);
   const treatments = useEterna((s) => s.treatments);
-  const setGuidePending = useEterna((s) => s.setGuidePending);
+  const setGuide = useEterna((s) => s.setGuide);
   const signOut = useEterna((s) => s.signOut);
 
   return (
@@ -114,8 +114,8 @@ export function ProfileScreen({ navigation }: Props) {
             title={tr('profile.guide')}
             subtitle={tr('profile.guideSub')}
             onPress={() => {
-              // Home watches this flag and starts the tour when we land back on it
-              setGuidePending(true);
+              // Home watches this and starts the tour when we land back on it
+              setGuide({ stage: 'home', offset: 0, total: 0 });
               navigation.goBack();
             }}
             last

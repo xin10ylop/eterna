@@ -142,16 +142,31 @@ const en: Dict = {
   'guide.done': 'Done',
   'guide.avatar.title': 'Your body is the map',
   'guide.avatar.body':
-    'Each glow is a part of you. Deep maroon means something is coming up, and it breathes faster as the day gets closer. Red means book it now. A quiet shimmer means all good. Tap any part to see what belongs there.',
+    'Each glow is a part of you. The colour says what is needed, the breathing speed says how soon. Tap any part to see what belongs there.',
+  'guide.legend.calm': 'All good',
+  'guide.legend.calmSub': 'slow and light',
+  'guide.legend.soon': 'Coming up',
+  'guide.legend.soonSub': 'speeds up',
+  'guide.legend.due': 'Book now',
+  'guide.legend.dueSub': 'fastest',
   'guide.events.title': 'Getting ready for something?',
   'guide.events.body':
     'Add a wedding, an Eid, any big day. Eterna helps you get every ritual fresh right on time.',
   'guide.bookings.title': 'Your next visits',
   'guide.bookings.body':
     'What you already booked, at a glance. Tap one to see it on your calendar.',
-  'guide.tabs.title': 'Everything else lives here',
-  'guide.tabs.body':
-    'Planning shows your week and your routine. Discover finds clinics near you. Budget watches your spending. The + adds a new ritual.',
+  'guide.week.title': 'Your week at a glance',
+  'guide.week.body':
+    'Bookings show as dots, events sparkle. Tap a day to see it hour by hour, and the arrows move between weeks.',
+  'guide.routine.title': 'Two views',
+  'guide.routine.body':
+    'My routine lists everything you keep up with, grouped by body area, each with its clinic.',
+  'guide.discover.title': 'Find your places',
+  'guide.discover.body':
+    'Search salons and clinics, open one to see its services and prices, and save it to your clinics.',
+  'guide.budget.title': 'Your beauty budget',
+  'guide.budget.body':
+    'What you spent, what is booked, and what is coming, month by month. No surprises.',
   'guide.finish.title': 'That’s all you need',
   'guide.finish.body':
     'Glance at your avatar, tap a glow, book. Eterna remembers everything else. You can replay this guide from your profile.',
@@ -281,15 +296,28 @@ const ar: Dict = {
   'guide.done': 'تم',
   'guide.avatar.title': 'جسمك هو الخريطة',
   'guide.avatar.body':
-    'كل توهج يمثل جزءًا منك. العنابي الداكن يعني أن موعدًا يقترب، ويتنفس أسرع كلما اقترب اليوم. الأحمر يعني احجزي الآن. اللمعة الهادئة تعني أن كل شيء على ما يرام. المسي أي جزء لرؤية ما يخصه.',
+    'كل توهج يمثل جزءًا منك. اللون يخبرك بما هو مطلوب، وسرعة النبض تخبرك كم اقترب الموعد. المسي أي جزء لرؤية ما يخصه.',
+  'guide.legend.calm': 'كل شيء تمام',
+  'guide.legend.calmSub': 'هادئ وبطيء',
+  'guide.legend.soon': 'يقترب',
+  'guide.legend.soonSub': 'يتسارع',
+  'guide.legend.due': 'احجزي الآن',
+  'guide.legend.dueSub': 'الأسرع',
   'guide.events.title': 'تستعدين لمناسبة؟',
   'guide.events.body':
     'أضيفي زفافًا أو عيدًا أو أي يوم مهم، وستساعدك إيترنا لتكون كل طقوسك جاهزة في وقتها.',
   'guide.bookings.title': 'زياراتك القادمة',
   'guide.bookings.body': 'ما حجزتِه بالفعل في لمحة. المسي أي حجز لرؤيته في تقويمك.',
-  'guide.tabs.title': 'كل شيء آخر هنا',
-  'guide.tabs.body':
-    'التقويم يعرض أسبوعك وروتينك. اكتشفي تجد لك العيادات القريبة. الميزانية تراقب إنفاقك. زر + يضيف طقسًا جديدًا.',
+  'guide.week.title': 'أسبوعك في لمحة',
+  'guide.week.body':
+    'الحجوزات تظهر كنقاط، والمناسبات تلمع. المسي أي يوم لرؤيته ساعة بساعة، والأسهم تنقل بين الأسابيع.',
+  'guide.routine.title': 'طريقتان للعرض',
+  'guide.routine.body': 'روتيني يعرض كل ما تواظبين عليه، مجمّعًا حسب منطقة الجسم، مع عيادة كل طقس.',
+  'guide.discover.title': 'اعثري على أماكنك',
+  'guide.discover.body':
+    'ابحثي عن الصالونات والعيادات، افتحي أي مكان لرؤية خدماته وأسعاره، واحفظيه ضمن عياداتك.',
+  'guide.budget.title': 'ميزانية جمالك',
+  'guide.budget.body': 'ما أنفقتِه، وما هو محجوز، وما هو قادم، شهرًا بشهر. بلا مفاجآت.',
   'guide.finish.title': 'هذا كل ما تحتاجينه',
   'guide.finish.body':
     'ألقي نظرة على صورتك، المسي التوهج، واحجزي. إيترنا تتذكر الباقي. يمكنك إعادة هذا الدليل من ملفك الشخصي.',
@@ -419,16 +447,31 @@ const fr: Dict = {
   'guide.done': 'Terminé',
   'guide.avatar.title': 'Votre corps est la carte',
   'guide.avatar.body':
-    'Chaque halo est une partie de vous. Le bordeaux profond signale un soin qui approche, et il respire plus vite à mesure que le jour arrive. Le rouge veut dire réservez maintenant. Une lueur discrète veut dire que tout va bien. Touchez une zone pour voir ce qui s’y rapporte.',
+    'Chaque halo est une partie de vous. La couleur dit ce qu’il faut, le rythme dit pour quand. Touchez une zone pour voir ce qui s’y rapporte.',
+  'guide.legend.calm': 'Tout va bien',
+  'guide.legend.calmSub': 'doux et lent',
+  'guide.legend.soon': 'Approche',
+  'guide.legend.soonSub': 's’accélère',
+  'guide.legend.due': 'À réserver',
+  'guide.legend.dueSub': 'le plus rapide',
   'guide.events.title': 'Un grand jour approche ?',
   'guide.events.body':
     'Ajoutez un mariage, un Aïd, une occasion. Eterna vous aide à ce que chaque soin soit frais au bon moment.',
   'guide.bookings.title': 'Vos prochaines visites',
   'guide.bookings.body':
     'Ce qui est déjà réservé, en un coup d’œil. Touchez pour le voir dans votre agenda.',
-  'guide.tabs.title': 'Tout le reste est ici',
-  'guide.tabs.body':
-    'Agenda montre votre semaine et votre routine. Découvrir trouve des cliniques près de vous. Budget veille sur vos dépenses. Le + ajoute un soin.',
+  'guide.week.title': 'Votre semaine en un regard',
+  'guide.week.body':
+    'Les réservations sont des points, les événements scintillent. Touchez un jour pour le voir heure par heure, les flèches changent de semaine.',
+  'guide.routine.title': 'Deux vues',
+  'guide.routine.body':
+    'Ma routine liste tout ce que vous entretenez, par zone du corps, avec la clinique de chaque soin.',
+  'guide.discover.title': 'Trouvez vos adresses',
+  'guide.discover.body':
+    'Cherchez salons et cliniques, ouvrez-en un pour voir ses services et ses prix, et gardez-le dans vos cliniques.',
+  'guide.budget.title': 'Votre budget beauté',
+  'guide.budget.body':
+    'Ce que vous avez dépensé, ce qui est réservé, ce qui arrive, mois par mois. Sans surprise.',
   'guide.finish.title': 'C’est tout ce qu’il faut',
   'guide.finish.body':
     'Un regard sur votre avatar, un halo touché, une réservation. Eterna retient le reste. Vous pouvez revoir ce guide depuis votre profil.',

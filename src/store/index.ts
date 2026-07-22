@@ -22,6 +22,8 @@ import { setLocale } from '../lib/locale';
  * equivalent) and only `ui`/`session` stay client-side.
  */
 
+export type GuideStage = 'home' | 'planning' | 'discover' | 'budget' | 'finish';
+
 interface OnboardingDraft {
   email: string;
   firstName: string;
@@ -31,7 +33,8 @@ interface OnboardingDraft {
   weightKg: number | null;
   routine: string[]; // treatment names picked in the questionnaire
   avatar: AvatarConfig;
-  /** Her reminder choices from onboarding. */
+  /** Reminders on/off from onboarding; details stay on gentle defaults. */
+  notificationsOn: boolean;
   remindDaysBefore: number;
   apptReminder: 'morning' | 'dayBefore';
 }
@@ -50,6 +53,7 @@ const emptyDraft: OnboardingDraft = {
   weightKg: null,
   routine: [],
   avatar: defaultAvatar,
+  notificationsOn: true,
   remindDaysBefore: 5,
   apptReminder: 'morning',
 };
@@ -75,9 +79,13 @@ interface EternaState {
 
   // ui
   toast: string | null;
-  /** First-run tour: true right after onboarding (and when replayed from
-   *  Profile); Home shows the guided tour and clears it when done. */
-  guidePending: boolean;
+  /** First-run tour: which chapter is active. It starts on 'home' right after
+   *  onboarding (or a replay from Profile), then walks through the tabs —
+   *  planning → discover → budget → a closing card back on Home. null = off.
+   *  offset/total keep one global "step n of total" counter across chapters. */
+  guideStage: GuideStage | null;
+  guideOffset: number;
+  guideTotal: number;
 
   // actions
   setDraft(patch: Partial<OnboardingDraft>): void;
@@ -101,7 +109,7 @@ interface EternaState {
   toggleEventTreatment(eventId: string, treatmentId: string): void;
   removeEvent(id: string): void;
   setShowPastEvents(v: boolean): void;
-  setGuidePending(v: boolean): void;
+  setGuide(patch: Partial<{ stage: GuideStage | null; offset: number; total: number }>): void;
 
   showToast(msg: string): void;
   clearToast(): void;
@@ -126,7 +134,9 @@ export const useEterna = create<EternaState>((set, get) => ({
   showPastEvents: false,
 
   toast: null,
-  guidePending: false,
+  guideStage: null,
+  guideOffset: 0,
+  guideTotal: 0,
 
   setDraft: (patch) => set((s) => ({ draft: { ...s.draft, ...patch } })),
 
@@ -142,13 +152,15 @@ export const useEterna = create<EternaState>((set, get) => ({
         heightCm: d.heightCm,
         weightKg: d.weightKg,
         avatar: d.avatar,
-        notificationsOn: true,
+        notificationsOn: d.notificationsOn,
         remindDaysBefore: d.remindDaysBefore,
         apptReminder: d.apptReminder,
       },
       draft: emptyDraft,
-      // her first Home shows the quick guided tour
-      guidePending: true,
+      // her first Home starts the guided tour
+      guideStage: 'home',
+      guideOffset: 0,
+      guideTotal: 0,
     });
   },
 
@@ -308,7 +320,12 @@ export const useEterna = create<EternaState>((set, get) => ({
     })),
   removeEvent: (id) => set((s) => ({ events: s.events.filter((e) => e.id !== id) })),
   setShowPastEvents: (v) => set({ showPastEvents: v }),
-  setGuidePending: (v) => set({ guidePending: v }),
+  setGuide: (patch) =>
+    set((s) => ({
+      guideStage: patch.stage !== undefined ? patch.stage : s.guideStage,
+      guideOffset: patch.offset !== undefined ? patch.offset : s.guideOffset,
+      guideTotal: patch.total !== undefined ? patch.total : s.guideTotal,
+    })),
 
   showToast: (msg) => {
     if (toastTimer) clearTimeout(toastTimer);

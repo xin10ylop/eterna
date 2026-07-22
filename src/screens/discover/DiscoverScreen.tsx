@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -6,6 +6,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Chip, IconButton, Screen } from '../../components/ui';
 import { ClinicCardSkeleton } from '../../components/anim/Shimmer';
+import { GuideTour, useGuideRects, type GuideStep } from '../../components/GuideTour';
 import { formatAED } from '../../lib/money';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
@@ -37,6 +38,25 @@ export function DiscoverScreen({ navigation }: Props) {
     const id = setTimeout(() => setLoading(false), 700);
     return () => clearTimeout(id);
   }, []);
+
+  // guided tour, chapter "discover": one step on the search box
+  const guideStage = useEterna((s) => s.guideStage);
+  const guideOffset = useEterna((s) => s.guideOffset);
+  const guideTotal = useEterna((s) => s.guideTotal);
+  const setGuide = useEterna((s) => s.setGuide);
+  const searchRef = useRef<View>(null);
+  const guideRects = useGuideRects(guideStage === 'discover', { search: searchRef }, 500);
+  const guideSteps = useMemo<GuideStep[] | null>(() => {
+    if (guideStage !== 'discover' || !guideRects?.search) return null;
+    return [
+      {
+        key: 'discover',
+        rect: guideRects.search,
+        title: tr('guide.discover.title'),
+        body: tr('guide.discover.body'),
+      },
+    ];
+  }, [guideStage, guideRects, tr]);
 
   const list = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -71,6 +91,8 @@ export function DiscoverScreen({ navigation }: Props) {
           />
         </View>
         <View
+          ref={searchRef}
+          collapsable={false}
           style={{
             flexDirection: 'row',
             alignItems: 'center',
@@ -202,6 +224,18 @@ export function DiscoverScreen({ navigation }: Props) {
           })
         )}
       </ScrollView>
+      {guideSteps ? (
+        <GuideTour
+          steps={guideSteps}
+          offset={guideOffset}
+          total={guideTotal}
+          onComplete={() => {
+            setGuide({ stage: 'budget', offset: guideOffset + guideSteps.length });
+            navigation.navigate('Budget');
+          }}
+          onSkip={() => setGuide({ stage: null, offset: 0 })}
+        />
+      ) : null}
     </Screen>
   );
 }

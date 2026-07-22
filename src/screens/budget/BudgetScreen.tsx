@@ -1,10 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Svg, { Circle } from 'react-native-svg';
 import { Card, Screen, SectionLabel } from '../../components/ui';
+import { GuideTour, useGuideRects, type GuideStep } from '../../components/GuideTour';
+import { useT } from '../../i18n';
 import { ZONES } from '../../data/seed';
 import {
   bookedThisMonth,
@@ -55,6 +57,7 @@ function SpendRing({ fraction, size = 108 }: { fraction: number; size?: number }
  */
 export function BudgetScreen({ navigation }: Props) {
   const t = useTheme();
+  const tx = useT();
   const sessions = useEterna((s) => s.sessions);
   const appointments = useEterna((s) => s.appointments);
   const treatments = useEterna((s) => s.treatments);
@@ -98,6 +101,25 @@ export function BudgetScreen({ navigation }: Props) {
     .filter((a) => a.dateISO >= todayISO())
     .sort((a, b) => (a.dateISO < b.dateISO ? -1 : 1));
 
+  // guided tour, chapter "budget": one step on the hero, then back Home to close
+  const guideStage = useEterna((s) => s.guideStage);
+  const guideOffset = useEterna((s) => s.guideOffset);
+  const guideTotal = useEterna((s) => s.guideTotal);
+  const setGuide = useEterna((s) => s.setGuide);
+  const heroRef = useRef<View>(null);
+  const guideRects = useGuideRects(guideStage === 'budget', { hero: heroRef }, 500);
+  const guideSteps = useMemo<GuideStep[] | null>(() => {
+    if (guideStage !== 'budget' || !guideRects?.hero) return null;
+    return [
+      {
+        key: 'budget',
+        rect: guideRects.hero,
+        title: tx('guide.budget.title'),
+        body: tx('guide.budget.body'),
+      },
+    ];
+  }, [guideStage, guideRects, tx]);
+
   return (
     <Screen>
       <View style={{ paddingTop: spacing.s }}>
@@ -109,6 +131,7 @@ export function BudgetScreen({ navigation }: Props) {
         showsVerticalScrollIndicator={false}
       >
         {/* hero */}
+        <View ref={heroRef} collapsable={false}>
         <Card>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.l }}>
             <View style={{ flex: 1 }}>
@@ -138,6 +161,7 @@ export function BudgetScreen({ navigation }: Props) {
             </View>
           </View>
         </Card>
+        </View>
 
         {/* six month bars */}
         <Card>
@@ -290,6 +314,18 @@ export function BudgetScreen({ navigation }: Props) {
           )}
         </View>
       </ScrollView>
+      {guideSteps ? (
+        <GuideTour
+          steps={guideSteps}
+          offset={guideOffset}
+          total={guideTotal}
+          onComplete={() => {
+            setGuide({ stage: 'finish', offset: guideOffset + guideSteps.length });
+            navigation.navigate('Home');
+          }}
+          onSkip={() => setGuide({ stage: null, offset: 0 })}
+        />
+      ) : null}
     </Screen>
   );
 }
