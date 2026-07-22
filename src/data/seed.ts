@@ -29,11 +29,12 @@ export const ZONES: Zone[] = [
 ];
 
 /**
- * The five fixed markers shown on the Home avatar — hair, face, body, hands,
- * feet. Each carries a matching line icon and aggregates related zones so the
- * figure stays uncluttered; tapping opens the primary zone. Positions are fixed
- * % of the avatar display box, measured against the rendered figure so every
- * marker lands exactly on its body part. `icon` is an Ionicons glyph name.
+ * The four fixed markers shown on the Home avatar — head (face, lips, hair),
+ * body, hands, feet. Each aggregates related zones so the figure stays
+ * uncluttered; tapping opens everything the glow covers. Positions are exact
+ * % of the display box, computed from the rendered figure's pixel centroids
+ * (the box aspect matches the image, so they map 1:1). `icon` is an Ionicons
+ * glyph name.
  */
 export const AVATAR_MARKERS: {
   id: ZoneId;
@@ -42,13 +43,10 @@ export const AVATAR_MARKERS: {
   zones: ZoneId[];
   marker: { xPct: number; yPct: number };
 }[] = [
-  // on the falling hair beside the face — at the crown it read as a second
-  // face glow, two lights stacked on the head
-  { id: 'hair', label: 'Hair', icon: 'sparkles-outline', zones: ['hair'], marker: { xPct: 32, yPct: 17 } },
-  { id: 'face', label: 'Face', icon: 'happy-outline', zones: ['face', 'lips'], marker: { xPct: 50, yPct: 13 } },
+  { id: 'face', label: 'Face & hair', icon: 'happy-outline', zones: ['face', 'lips', 'hair'], marker: { xPct: 50, yPct: 12 } },
   { id: 'torso', label: 'Body', icon: 'body-outline', zones: ['torso', 'hips'], marker: { xPct: 50, yPct: 28 } },
-  { id: 'hands', label: 'Hands', icon: 'hand-left-outline', zones: ['hands'], marker: { xPct: 13, yPct: 54 } },
-  { id: 'legs', label: 'Feet', icon: 'footsteps-outline', zones: ['legs'], marker: { xPct: 54, yPct: 96 } },
+  { id: 'hands', label: 'Hands', icon: 'hand-left-outline', zones: ['hands'], marker: { xPct: 13, yPct: 52 } },
+  { id: 'legs', label: 'Feet', icon: 'footsteps-outline', zones: ['legs'], marker: { xPct: 59.5, yPct: 95 } },
 ];
 
 export const PRACTITIONERS: Practitioner[] = [

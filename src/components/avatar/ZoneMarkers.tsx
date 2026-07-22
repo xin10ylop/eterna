@@ -27,8 +27,9 @@ const STYLE: Record<
   GlowStatus,
   { rgb: string; core: number; period: number; oMin: number; oMax: number; sMin: number; sMax: number; r: number }
 > = {
-  calm: { rgb: '122,84,124', core: 0.24, period: 4200, oMin: 0.55, oMax: 0.8, sMin: 0.92, sMax: 1.04, r: 19 },
-  soon: { rgb: '112,50,28', core: 0.14, period: 3000, oMin: 0.85, oMax: 1.0, sMin: 0.9, sMax: 1.15, r: 22 },
+  // breath speed carries urgency: red fastest, espresso middle, mauve slowest
+  calm: { rgb: '122,84,124', core: 0.24, period: 3100, oMin: 0.55, oMax: 0.8, sMin: 0.92, sMax: 1.04, r: 19 },
+  soon: { rgb: '112,50,28', core: 0.14, period: 2300, oMin: 0.85, oMax: 1.0, sMin: 0.9, sMax: 1.15, r: 22 },
   due: { rgb: '188,34,24', core: 0.3, period: 1100, oMin: 0.88, oMax: 1.0, sMin: 0.9, sMax: 1.2, r: 23 },
 };
 
