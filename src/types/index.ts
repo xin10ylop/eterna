@@ -166,4 +166,6 @@ export interface Profile {
   avatar: AvatarConfig;
   notificationsOn: boolean;
   remindDaysBefore: number;
+  /** When the appointment-day reminder lands. */
+  apptReminder?: 'morning' | 'dayBefore';
 }

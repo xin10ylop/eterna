@@ -18,6 +18,7 @@ export type RootStackParamList = {
   AvatarStudio: { fromProfile?: boolean } | undefined;
   AvatarEdit: undefined;
   Notifications: undefined;
+  Legal: { doc: 'terms' | 'privacy' };
   Ready: undefined;
   // main
   Tabs: NavigatorScreenParams<TabParamList> | undefined;

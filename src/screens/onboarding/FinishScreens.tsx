@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Image, Text, View } from 'react-native';
+import { Animated, Pressable, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { GhostButton, IOSSwitch, PrimaryButton, Screen } from '../../components/ui';
@@ -23,46 +23,131 @@ export function NotificationsScreen({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Notifications'>) {
   const t = useTheme();
-  const [slots, setSlots] = useState([
-    { key: 'due', icon: 'notifications-outline' as const, label: 'Before something’s due', time: '5 days ahead', on: true },
-    { key: 'appt', icon: 'calendar-outline' as const, label: 'Appointment reminders', time: 'Morning of', on: true },
-    { key: 'quiet', icon: 'moon-outline' as const, label: 'Quiet hours', time: '22:00 – 8:00', on: true },
-  ]);
-  const toggle = (key: string) =>
-    setSlots((s) => s.map((x) => (x.key === key ? { ...x, on: !x.on } : x)));
+  const setDraft = useEterna((s) => s.setDraft);
+  const [dueOn, setDueOn] = useState(true);
+  const [lead, setLead] = useState(5);
+  const [apptOn, setApptOn] = useState(true);
+  const [apptWhen, setApptWhen] = useState<'morning' | 'dayBefore'>('morning');
+
+  const save = () => {
+    setDraft({ remindDaysBefore: dueOn ? lead : 0, apptReminder: apptWhen });
+    navigation.navigate('Ready');
+  };
 
   return (
     <OnboardingShell
       step={5}
-      title="Your quiet reminders"
-      subtitle="One gentle nudge per ritual, never a daily buzz."
+      title="Your reminders, your way"
+      subtitle="Choose exactly when Eterna may nudge you. One quiet note per ritual, never a stream."
       cta="Set reminders"
-      onNext={() => navigation.navigate('Ready')}
+      onNext={save}
       footer={<GhostButton title="Maybe later" onPress={() => navigation.navigate('Ready')} />}
     >
       <View style={{ gap: spacing.m, paddingTop: spacing.l }}>
-        {slots.map((s) => (
-          <View
-            key={s.key}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: spacing.m,
-              backgroundColor: s.on ? t.accentSoft : t.surfaceAlt,
-              borderRadius: radii.l,
-              borderWidth: 1,
-              borderColor: s.on ? t.accent : t.border,
-              padding: spacing.l,
-            }}
-          >
-            <Ionicons name={s.icon} size={20} color={s.on ? t.accent : t.muted} />
+        {/* time to book — she picks the lead */}
+        <View
+          style={{
+            backgroundColor: dueOn ? t.accentSoft : t.surfaceAlt,
+            borderRadius: radii.l,
+            borderWidth: 1,
+            borderColor: dueOn ? t.accent : t.border,
+            padding: spacing.l,
+            gap: spacing.m,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
+            <Ionicons name="notifications-outline" size={20} color={dueOn ? t.accent : t.muted} />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>{s.label}</Text>
-              <Text style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>{s.time}</Text>
+              <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>When something needs booking</Text>
+              <Text style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>Ahead of each ritual coming due</Text>
             </View>
-            <IOSSwitch on={s.on} onToggle={() => toggle(s.key)} />
+            <IOSSwitch on={dueOn} onToggle={() => setDueOn((v) => !v)} />
           </View>
-        ))}
+          {dueOn ? (
+            <View style={{ flexDirection: 'row', gap: spacing.s }}>
+              {[3, 5, 7].map((n) => {
+                const on = lead === n;
+                return (
+                  <Pressable
+                    key={n}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: on }}
+                    onPress={() => setLead(n)}
+                    style={{
+                      flex: 1,
+                      alignItems: 'center',
+                      paddingVertical: 10,
+                      borderRadius: radii.m,
+                      backgroundColor: on ? t.accent : t.bg,
+                      borderWidth: 1,
+                      borderColor: on ? t.accent : t.border,
+                    }}
+                  >
+                    <Text style={{ fontSize: 13.5, fontWeight: '700', color: on ? t.onAccent : t.text }}>
+                      {n} days ahead
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          ) : null}
+        </View>
+
+        {/* appointment reminders — she picks the moment */}
+        <View
+          style={{
+            backgroundColor: apptOn ? t.accentSoft : t.surfaceAlt,
+            borderRadius: radii.l,
+            borderWidth: 1,
+            borderColor: apptOn ? t.accent : t.border,
+            padding: spacing.l,
+            gap: spacing.m,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
+            <Ionicons name="calendar-outline" size={20} color={apptOn ? t.accent : t.muted} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>Appointment reminders</Text>
+              <Text style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>So a booked visit is never missed</Text>
+            </View>
+            <IOSSwitch on={apptOn} onToggle={() => setApptOn((v) => !v)} />
+          </View>
+          {apptOn ? (
+            <View style={{ flexDirection: 'row', gap: spacing.s }}>
+              {(
+                [
+                  { key: 'morning', label: 'Morning of' },
+                  { key: 'dayBefore', label: 'A day before' },
+                ] as const
+              ).map((o) => {
+                const on = apptWhen === o.key;
+                return (
+                  <Pressable
+                    key={o.key}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: on }}
+                    onPress={() => setApptWhen(o.key)}
+                    style={{
+                      flex: 1,
+                      alignItems: 'center',
+                      paddingVertical: 10,
+                      borderRadius: radii.m,
+                      backgroundColor: on ? t.accent : t.bg,
+                      borderWidth: 1,
+                      borderColor: on ? t.accent : t.border,
+                    }}
+                  >
+                    <Text style={{ fontSize: 13.5, fontWeight: '700', color: on ? t.onAccent : t.text }}>
+                      {o.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          ) : null}
+        </View>
+
+        {/* what a nudge looks like */}
         <View
           style={{
             backgroundColor: t.surface,
@@ -78,8 +163,7 @@ export function NotificationsScreen({
           </Text>
         </View>
         <Text style={{ fontSize: 12, color: t.muted, lineHeight: 17 }}>
-          Gentle reminders at the times you chose keep rituals on rhythm, you can change them any
-          time in Profile.
+          You can change any of this later in Profile, per ritual too.
         </Text>
       </View>
     </OnboardingShell>

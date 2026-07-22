@@ -17,6 +17,7 @@ import { ClinicsScreen } from '../screens/onboarding/ClinicsScreen';
 import { PlanScreen } from '../screens/onboarding/PlanScreen';
 import { AvatarStudioScreen } from '../screens/onboarding/AvatarStudioScreen';
 import { NotificationsScreen, ReadyScreen } from '../screens/onboarding/FinishScreens';
+import { LegalScreen } from '../screens/onboarding/LegalScreen';
 
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { ZoneDetailScreen } from '../screens/home/ZoneDetailScreen';
@@ -169,6 +170,7 @@ export function RootNavigator() {
             <Stack.Screen name="Plan" component={PlanScreen} />
             <Stack.Screen name="AvatarStudio" component={AvatarStudioScreen} />
             <Stack.Screen name="Notifications" component={NotificationsScreen} />
+            <Stack.Screen name="Legal" component={LegalScreen} options={{ presentation: 'modal' }} />
             <Stack.Screen name="Ready" component={ReadyScreen} />
           </Stack.Group>
         ) : (

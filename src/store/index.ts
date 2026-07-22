@@ -31,6 +31,9 @@ interface OnboardingDraft {
   weightKg: number | null;
   routine: string[]; // treatment names picked in the questionnaire
   avatar: AvatarConfig;
+  /** Her reminder choices from onboarding. */
+  remindDaysBefore: number;
+  apptReminder: 'morning' | 'dayBefore';
 }
 
 const defaultAvatar: AvatarConfig = {
@@ -47,6 +50,8 @@ const emptyDraft: OnboardingDraft = {
   weightKg: null,
   routine: [],
   avatar: defaultAvatar,
+  remindDaysBefore: 5,
+  apptReminder: 'morning',
 };
 
 interface EternaState {
@@ -133,7 +138,8 @@ export const useEterna = create<EternaState>((set, get) => ({
         weightKg: d.weightKg,
         avatar: d.avatar,
         notificationsOn: true,
-        remindDaysBefore: 5,
+        remindDaysBefore: d.remindDaysBefore,
+        apptReminder: d.apptReminder,
       },
       draft: emptyDraft,
     });

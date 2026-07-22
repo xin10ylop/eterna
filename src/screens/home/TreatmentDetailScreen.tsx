@@ -34,6 +34,7 @@ export function TreatmentDetailScreen({ navigation, route }: Props) {
   const logDone = useEterna((s) => s.logDone);
   const cancelAppointment = useEterna((s) => s.cancelAppointment);
   const showToast = useEterna((s) => s.showToast);
+  const remindDays = useEterna((s) => s.profile?.remindDaysBefore ?? 5);
 
   if (!tr) {
     return (
@@ -155,7 +156,7 @@ export function TreatmentDetailScreen({ navigation, route }: Props) {
         {/* settings */}
         <Card style={{ paddingVertical: 4 }}>
           <Row
-            title="Remind me 5 days before"
+            title={remindDays > 0 ? `Remind me ${remindDays} days before` : 'Reminders off'}
             right={<IOSSwitch on={tr.reminderOn} onToggle={() => toggleReminder(tr.id)} />}
           />
           <Row title="Clinic" subtitle={clinic ? `${clinic.name} · ${clinic.distanceKm} km` : 'Not set'} last />
