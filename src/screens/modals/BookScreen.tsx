@@ -41,7 +41,7 @@ export function BookScreen({ navigation, route }: Props) {
   if (!tr) {
     return (
       <Screen>
-        <Text style={{ marginTop: 100, textAlign: 'center', color: t.sub }}>Treatment not found.</Text>
+        <Text style={{ marginTop: 100, textAlign: 'center', color: t.sub }}>{tx('book.notFound')}</Text>
       </Screen>
     );
   }
@@ -56,7 +56,7 @@ export function BookScreen({ navigation, route }: Props) {
             onDone={() => {
               // let her actually enjoy the "all set" moment before we leave
               setTimeout(() => {
-                showToast(`Booked ${formatLong(day)} at ${time}`);
+                showToast(tx('book.bookedToast', { date: formatLong(day), time }));
                 navigation.goBack();
               }, 2200);
             }}
@@ -64,7 +64,7 @@ export function BookScreen({ navigation, route }: Props) {
           <Entrance delay={500}>
             <Text style={[type.title, { color: t.text, textAlign: 'center' }]}>{tx('book.allSet')}</Text>
             <Text style={{ fontSize: 15, color: t.sub, textAlign: 'center', marginTop: 4 }}>
-              {tr.name} · {formatLong(day)} at {time}
+              {tr.name} · {tx('book.dateAtTime', { date: formatLong(day), time })}
             </Text>
           </Entrance>
           {/* expectation-setting summary (Uber post-booking sheet) */}
@@ -80,7 +80,7 @@ export function BookScreen({ navigation, route }: Props) {
               }}
             >
               <Text style={{ fontSize: 13, color: t.sub, textAlign: 'center' }}>
-                {clinic?.name} · {formatAED(tr.price)} · reminder 5 days before
+                {clinic?.name} · {formatAED(tr.price)} · {tx('book.reminderBefore', { n: 5 })}
               </Text>
             </View>
           </Entrance>
@@ -92,7 +92,7 @@ export function BookScreen({ navigation, route }: Props) {
   return (
     <Screen padded={false}>
       <View style={{ paddingHorizontal: spacing.xl, flexDirection: 'row', alignItems: 'center', gap: spacing.m, paddingTop: spacing.s }}>
-        <IconButton name="close" onPress={() => navigation.goBack()} accessibilityLabel="Close" />
+        <IconButton name="close" onPress={() => navigation.goBack()} accessibilityLabel={tx('book.close')} />
         <View style={{ flex: 1 }}>
           <Text style={[type.title, { color: t.text }]}>{tx('book.title', { name: tr.name.toLowerCase() })}</Text>
           <Text style={{ fontSize: 14, color: t.sub, marginTop: 2 }}>{clinic?.name}</Text>

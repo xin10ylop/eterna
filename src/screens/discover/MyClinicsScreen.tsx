@@ -45,7 +45,7 @@ export function MyClinicsScreen({ navigation }: Props) {
   return (
     <Screen>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m, paddingTop: spacing.s }}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Back" />
+        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel={tr('clinics.back')} />
         <View style={{ flex: 1 }}>
           <Text style={[type.title, { color: t.text }]}>{tr('clinics.title')}</Text>
           <Text style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>{tr('clinics.saved', { n: saved.length })}</Text>

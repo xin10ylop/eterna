@@ -126,9 +126,9 @@ export function HomeScreen({ navigation }: Props) {
         .slice(0, 3)
         .map((appt) => ({
           appt,
-          name: treatments.find((tr) => tr.id === appt.treatmentId)?.name ?? 'Appointment',
+          name: treatments.find((tr) => tr.id === appt.treatmentId)?.name ?? tx('budget.appointment'),
         })),
-    [appointments, treatments],
+    [appointments, treatments, tx],
   );
 
   const hour = new Date().getHours();

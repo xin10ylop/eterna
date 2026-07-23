@@ -8,6 +8,7 @@ import { ServiceMenu } from '../../components/ServiceMenu';
 import { formatAED } from '../../lib/money';
 import { radii, spacing } from '../../theme';
 import { useEterna, useTheme } from '../../store';
+import { useT } from '../../i18n';
 import type { RootStackParamList } from '../../navigation/types';
 
 /**
@@ -16,6 +17,7 @@ import type { RootStackParamList } from '../../navigation/types';
  */
 export function ClinicsScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Clinics'>) {
   const t = useTheme();
+  const tr = useT();
   const clinics = useEterna((s) => s.clinics);
   const myServices = useEterna((s) => s.myServices);
   const toggleMyService = useEterna((s) => s.toggleMyService);
@@ -32,11 +34,11 @@ export function ClinicsScreen({ navigation }: NativeStackScreenProps<RootStackPa
     <OnboardingShell
       step={2}
       alignTop
-      title="Where do you go?"
-      subtitle="Search your places, then tick what you do at each. Change it any time."
-      cta={chosenCount > 0 ? `Continue with ${chosenCount}` : 'Continue'}
+      title={tr('clinicsob.title')}
+      subtitle={tr('clinicsob.subtitle')}
+      cta={chosenCount > 0 ? tr('clinicsob.continueWith', { n: chosenCount }) : tr('lang.continue')}
       onNext={() => navigation.navigate('Plan')}
-      footer={<GhostButton title="Skip for now" onPress={() => navigation.navigate('Plan')} />}
+      footer={<GhostButton title={tr('clinicsob.skipForNow')} onPress={() => navigation.navigate('Plan')} />}
     >
       <View style={{ gap: spacing.s, paddingTop: spacing.s }}>
         {/* search first — she finds HER clinic, the app assumes nothing */}
@@ -56,9 +58,9 @@ export function ClinicsScreen({ navigation }: NativeStackScreenProps<RootStackPa
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Search your clinic"
+            placeholder={tr('clinicsob.searchPlaceholder')}
             placeholderTextColor={t.muted}
-            accessibilityLabel="Search your clinic"
+            accessibilityLabel={tr('clinicsob.searchPlaceholder')}
             returnKeyType="search"
             autoCorrect={false}
             style={{ flex: 1, paddingVertical: 11, fontSize: 15, color: t.text }}
@@ -66,7 +68,7 @@ export function ClinicsScreen({ navigation }: NativeStackScreenProps<RootStackPa
         </View>
         {results.length === 0 ? (
           <Text style={{ fontSize: 13.5, color: t.sub, paddingVertical: spacing.s }}>
-            Nothing found. You can add your own places later in My clinics.
+            {tr('clinicsob.empty')}
           </Text>
         ) : null}
         {results.map((c) => {
@@ -113,7 +115,7 @@ export function ClinicsScreen({ navigation }: NativeStackScreenProps<RootStackPa
                   </Text>
                   {mine.length > 0 ? (
                     <Text style={{ fontSize: 12, color: t.accent, marginTop: 1 }}>
-                      {mine.length} chosen
+                      {tr('clinicsob.chosen', { n: mine.length })}
                     </Text>
                   ) : null}
                 </View>

@@ -11,6 +11,7 @@ import { formatAED } from '../../lib/money';
 import { PRACTITIONERS } from '../../data/seed';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
+import { useT } from '../../i18n';
 import type { RootStackParamList } from '../../navigation/types';
 import type { ClinicService, Treatment, ZoneId } from '../../types';
 
@@ -43,6 +44,7 @@ const UNIT_MAP: Record<string, 'day' | 'week' | 'month'> = { Days: 'day', Weeks:
  */
 export function AddRitualScreen({ navigation }: Props) {
   const t = useTheme();
+  const tx = useT();
   const { scrollRef, scrollFocusedIntoView } = useKeyboardScroll();
   const clinics = useEterna((s) => s.clinics);
   const savedIds = useEterna((s) => s.savedClinicIds);
@@ -83,15 +85,15 @@ export function AddRitualScreen({ navigation }: Props) {
       oneOff: oneOff || undefined,
     };
     addTreatment(treatment);
-    showToast(`Added ${offering.name}`);
+    showToast(tx('addritual.addedToast', { name: offering.name }));
     navigation.goBack();
   };
 
   return (
     <Screen>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m, paddingTop: spacing.s }}>
-        <IconButton name="close" onPress={() => navigation.goBack()} accessibilityLabel="Close" />
-        <Text style={[type.title, { color: t.text }]}>Add a ritual</Text>
+        <IconButton name="close" onPress={() => navigation.goBack()} accessibilityLabel={tx('addritual.close')} />
+        <Text style={[type.title, { color: t.text }]}>{tx('addritual.title')}</Text>
       </View>
 
       <ScrollView
@@ -105,7 +107,7 @@ export function AddRitualScreen({ navigation }: Props) {
       >
         {/* 1 · where — her clinics first */}
         <View style={{ gap: spacing.s }}>
-          <SectionLabel>Where?</SectionLabel>
+          <SectionLabel>{tx('addritual.where')}</SectionLabel>
           <View style={{ gap: spacing.s }}>
             {saved.map((c) => {
               const sel = clinicId === c.id;
@@ -164,7 +166,7 @@ export function AddRitualScreen({ navigation }: Props) {
               })}
             >
               <Ionicons name="search" size={15} color={t.accent} />
-              <Text style={{ fontSize: 14, fontWeight: '700', color: t.accent }}>Browse clinics</Text>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: t.accent }}>{tx('addritual.browseClinics')}</Text>
             </Pressable>
 
           </View>
@@ -173,7 +175,7 @@ export function AddRitualScreen({ navigation }: Props) {
         {/* 2 · what — that clinic's own menu, its prices and times */}
         {clinic ? (
           <View style={{ gap: spacing.s }}>
-            <SectionLabel>What do you get done at {clinic.name}?</SectionLabel>
+            <SectionLabel>{tx('addritual.whatAt', { clinic: clinic.name })}</SectionLabel>
             <ServiceMenu
               mode="pick"
               offerings={clinic.offerings}
@@ -188,15 +190,16 @@ export function AddRitualScreen({ navigation }: Props) {
         {clinic && offering ? (
           <>
             <View style={{ gap: spacing.s }}>
-              <SectionLabel>How often?</SectionLabel>
+              <SectionLabel>{tx('addritual.howOften')}</SectionLabel>
               <Segmented
                 options={['Repeats', 'Just once']}
+                labels={[tx('addritual.repeats'), tx('addritual.justOnce')]}
                 value={oneOff ? 'Just once' : 'Repeats'}
                 onChange={(v) => setOneOff(v === 'Just once')}
               />
               {oneOff ? (
                 <Text style={{ fontSize: 13, color: t.sub, paddingHorizontal: 4, lineHeight: 19 }}>
-                  A one-off. It won't repeat on your avatar, it only shows when you're prepping for an event.
+                  {tx('addritual.oneOffDesc')}
                 </Text>
               ) : (
                 <>
@@ -212,7 +215,7 @@ export function AddRitualScreen({ navigation }: Props) {
                     }}
                   >
                     <Pressable
-                      accessibilityLabel="Less often"
+                      accessibilityLabel={tx('addritual.lessOften')}
                       onPress={() => setCadence((c) => Math.max(0, c - 1))}
                       style={({ pressed }) => ({
                         width: 36,
@@ -235,10 +238,12 @@ export function AddRitualScreen({ navigation }: Props) {
                         textAlign: 'center',
                       }}
                     >
-                      {cadence === 0 ? 'Choose' : `${cadence} ${unit.toLowerCase()}`}
+                      {cadence === 0
+                        ? tx('addritual.choose')
+                        : `${cadence} ${tx('addritual.' + unit.toLowerCase()).toLowerCase()}`}
                     </Text>
                     <Pressable
-                      accessibilityLabel="More often"
+                      accessibilityLabel={tx('addritual.moreOften')}
                       onPress={() => setCadence((c) => Math.min(365, c + 1))}
                       style={({ pressed }) => ({
                         width: 36,
@@ -253,7 +258,12 @@ export function AddRitualScreen({ navigation }: Props) {
                       <Ionicons name="add" size={18} color={t.accent} />
                     </Pressable>
                   </View>
-                  <Segmented options={UNITS} value={unit} onChange={setUnit} />
+                  <Segmented
+                    options={UNITS}
+                    labels={[tx('addritual.days'), tx('addritual.weeks'), tx('addritual.months')]}
+                    value={unit}
+                    onChange={setUnit}
+                  />
                 </>
               )}
             </View>
@@ -261,9 +271,9 @@ export function AddRitualScreen({ navigation }: Props) {
             {/* at home */}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>At home</Text>
+                <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>{tx('common.atHome')}</Text>
                 <Text style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
-                  A home-visit beautician instead of the salon.
+                  {tx('addritual.atHomeDesc')}
                 </Text>
               </View>
               <IOSSwitch on={atHome} onToggle={() => setAtHome((v) => !v)} />
@@ -272,7 +282,7 @@ export function AddRitualScreen({ navigation }: Props) {
             {/* last done — real date, her pick */}
             {oneOff ? null : (
               <View style={{ gap: spacing.s }}>
-                <SectionLabel>Last done</SectionLabel>
+                <SectionLabel>{tx('addritual.lastDone')}</SectionLabel>
                 <CalendarPicker value={lastDoneISO} onSelect={setLastDoneISO} maxISO={todayISO()} />
               </View>
             )}
@@ -281,7 +291,7 @@ export function AddRitualScreen({ navigation }: Props) {
       </ScrollView>
 
       <View style={{ position: 'absolute', left: spacing.xl, right: spacing.xl, bottom: spacing.xxl }}>
-        <PrimaryButton title="Add to rituals" onPress={submit} disabled={!canSubmit} />
+        <PrimaryButton title={tx('addritual.addToRituals')} onPress={submit} disabled={!canSubmit} />
       </View>
     </Screen>
   );

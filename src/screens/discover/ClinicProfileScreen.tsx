@@ -161,7 +161,7 @@ export function ClinicProfileScreen({ navigation, route }: Props) {
 
         {/* quick actions */}
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.xl }}>
-          <ActionCircle icon="navigate" label={tr('discover.directions')} onPress={openMaps} />
+          <ActionCircle icon="location" label={tr('discover.directions')} onPress={openMaps} />
           {clinic.phone ? (
             <ActionCircle icon="call" label={tr('discover.call')} onPress={call} />
           ) : null}
@@ -181,47 +181,6 @@ export function ClinicProfileScreen({ navigation, route }: Props) {
             {clinic.about}
           </Text>
         ) : null}
-
-        {/* location card — full address, one tap to Google Maps */}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={tr('discover.openMaps')}
-          onPress={openMaps}
-          style={({ pressed }) => ({
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: spacing.m,
-            backgroundColor: t.surface,
-            borderRadius: radii.card,
-            borderWidth: 1,
-            borderColor: t.border,
-            padding: spacing.m,
-            opacity: pressed ? 0.7 : 1,
-          })}
-        >
-          <View
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 12,
-              backgroundColor: t.accentSoft,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Ionicons name="location" size={18} color={t.accent} />
-          </View>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Text numberOfLines={1} style={{ fontSize: 14.5, fontWeight: '600', color: t.text }}>
-              {clinic.address ?? 'Dubai'}
-            </Text>
-            <Text style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
-              {clinic.distanceKm > 0 ? `${clinic.distanceKm} km · ` : ''}
-              {tr('discover.openMaps')}
-            </Text>
-          </View>
-          <Ionicons name="open-outline" size={17} color={t.accent} />
-        </Pressable>
 
         {/* services — one row; opens the searchable fixed box */}
         <Pressable

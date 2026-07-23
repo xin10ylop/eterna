@@ -10,6 +10,7 @@ import { AvatarFigure } from '../../components/avatar/AvatarFigure';
 import { OnboardingShell } from './OnboardingShell';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
+import { useT } from '../../i18n';
 import type { RootStackParamList } from '../../navigation/types';
 
 /* ------------------------------- Notifications ------------------------------- */
@@ -24,6 +25,7 @@ export function NotificationsScreen({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Notifications'>) {
   const t = useTheme();
+  const tr = useT();
   const setDraft = useEterna((s) => s.setDraft);
   const [on, setOn] = useState(true);
 
@@ -35,11 +37,11 @@ export function NotificationsScreen({
   return (
     <OnboardingShell
       step={5}
-      title="Gentle reminders"
-      subtitle="One quiet note when something needs booking, never a stream."
-      cta="Continue"
+      title={tr('reminders.title')}
+      subtitle={tr('reminders.subtitle')}
+      cta={tr('lang.continue')}
       onNext={save}
-      footer={<GhostButton title="Maybe later" onPress={() => navigation.navigate('Ready')} />}
+      footer={<GhostButton title={tr('reminders.maybeLater')} onPress={() => navigation.navigate('Ready')} />}
     >
       <View style={{ gap: spacing.m, paddingTop: spacing.l }}>
         <View
@@ -54,9 +56,9 @@ export function NotificationsScreen({
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
             <Ionicons name="notifications-outline" size={20} color={on ? t.accent : t.muted} />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>Enable reminders</Text>
+              <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>{tr('reminders.enable')}</Text>
               <Text style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>
-                A few days before a ritual comes due
+                {tr('reminders.enableSub')}
               </Text>
             </View>
             <IOSSwitch on={on} onToggle={() => setOn((v) => !v)} />
@@ -75,11 +77,11 @@ export function NotificationsScreen({
         >
           <Text style={{ fontSize: 13, fontWeight: '700', color: t.text }}>Eterna</Text>
           <Text style={{ fontSize: 13, color: t.sub }}>
-            Lip filler is due Friday. Jamila Skin Clinic has 15:30 open.
+            {tr('reminders.sampleBody', { treatment: 'Lip filler', clinic: 'Jamila Skin Clinic', time: '15:30' })}
           </Text>
         </View>
         <Text style={{ fontSize: 12, color: t.muted, lineHeight: 17 }}>
-          You can switch this off any time in Profile.
+          {tr('reminders.footnote')}
         </Text>
       </View>
     </OnboardingShell>
@@ -90,6 +92,7 @@ export function NotificationsScreen({
 
 export function ReadyScreen({ navigation: _n }: NativeStackScreenProps<RootStackParamList, 'Ready'>) {
   const t = useTheme();
+  const tr = useT();
   const complete = useEterna((s) => s.completeOnboarding);
   const firstName = useEterna((s) => s.draft.firstName);
   const avatar = useEterna((s) => s.draft.avatar);
@@ -117,15 +120,15 @@ export function ReadyScreen({ navigation: _n }: NativeStackScreenProps<RootStack
         </View>
         <Entrance delay={600}>
           <Text style={[type.title, { color: t.text, textAlign: 'center' }]}>
-            {firstName ? `${firstName}, your space is ready` : 'Your space is ready'}
+            {firstName ? tr('ready.titleWithName', { name: firstName }) : tr('ready.title')}
           </Text>
           <Text style={{ fontSize: 15, color: t.sub, textAlign: 'center', maxWidth: 280, lineHeight: 22, marginTop: 6 }}>
-            Your rituals are on the avatar. Tap a glowing area to see what needs attention.
+            {tr('ready.subtitle')}
           </Text>
         </Entrance>
       </Animated.View>
       <View style={{ paddingBottom: spacing.xxl }}>
-        <PrimaryButton title="Enter Eterna" onPress={complete} />
+        <PrimaryButton title={tr('ready.enter')} onPress={complete} />
       </View>
     </Screen>
   );

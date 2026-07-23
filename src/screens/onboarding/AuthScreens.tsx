@@ -8,6 +8,7 @@ import { OnboardingShell } from './OnboardingShell';
 import { radii, spacing } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import { passwordStrength } from '../../lib/validation';
+import { useT } from '../../i18n';
 import type { RootStackParamList } from '../../navigation/types';
 
 /**
@@ -73,10 +74,11 @@ function Caption({ children }: { children: React.ReactNode }) {
 /** "or" rule between email and social auth (Airbnb / Etsy pattern). */
 function OrDivider() {
   const t = useTheme();
+  const tr = useT();
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m }}>
       <View style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: t.separator }} />
-      <Text style={{ fontSize: 12, color: t.muted }}>or</Text>
+      <Text style={{ fontSize: 12, color: t.muted }}>{tr('auth.or')}</Text>
       <View style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: t.separator }} />
     </View>
   );
@@ -119,58 +121,65 @@ function SocialButton({
 
 /** Apple + Google, stacked. Display-only: continues the demo flow. */
 function SocialAuth({ onContinue }: { onContinue: () => void }) {
+  const tr = useT();
   return (
     <View style={{ gap: spacing.s }}>
-      <SocialButton icon="logo-apple" label="Continue with Apple" onPress={onContinue} />
-      <SocialButton icon="logo-google" label="Continue with Google" onPress={onContinue} />
+      <SocialButton icon="logo-apple" label={tr('auth.appleContinue')} onPress={onContinue} />
+      <SocialButton icon="logo-google" label={tr('auth.googleContinue')} onPress={onContinue} />
     </View>
   );
 }
 
 export function SignUpScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'SignUp'>) {
   const t = useTheme();
+  const tr = useT();
   const setDraft = useEterna((s) => s.setDraft);
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const strength = passwordStrength(pw);
-  const strengthLabel = ['Too short', 'Okay', 'Good', 'Strong'][strength];
+  const strengthLabel = [
+    tr('auth.strength0'),
+    tr('auth.strength1'),
+    tr('auth.strength2'),
+    tr('auth.strength3'),
+  ][strength];
 
   return (
     <OnboardingShell
       step={null}
       alignTop
-      title="Create your account"
-      subtitle="Your rituals stay private to you."
-      cta="Agree and continue"
+      title={tr('auth.createTitle')}
+      subtitle={tr('auth.privateSub')}
+      cta={tr('auth.agreeContinue')}
       onNext={() => {
         if (email.trim()) setDraft({ email: email.trim() });
         navigation.navigate('Verify');
       }}
-      footer={<GhostButton title="I already have an account" onPress={() => navigation.navigate('SignIn')} />}
+      footer={<GhostButton title={tr('auth.haveAccount')} onPress={() => navigation.navigate('SignIn')} />}
     >
       <View style={{ gap: spacing.m, paddingTop: spacing.s }}>
         <JoinedFields>
           <JoinedInput
             value={email}
             onChangeText={setEmail}
-            placeholder="Email"
+            placeholder={tr('auth.emailPlaceholder')}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
             autoComplete="email"
             textContentType="emailAddress"
-            accessibilityLabel="Email"
+            accessibilityLabel={tr('auth.emailPlaceholder')}
           />
           <JoinedInput
             last
             value={pw}
             onChangeText={setPw}
-            placeholder="Password (8+ characters)"
+            placeholder={tr('auth.passwordCreatePlaceholder')}
             secureTextEntry
             autoCapitalize="none"
             autoComplete="new-password"
             textContentType="newPassword"
-            accessibilityLabel="Password"
+            accessibilityLabel={tr('auth.passwordPlaceholder')}
           />
         </JoinedFields>
         {pw.length > 0 ? (
@@ -192,27 +201,26 @@ export function SignUpScreen({ navigation }: NativeStackScreenProps<RootStackPar
           </View>
         ) : null}
         <Caption>
-          We'll email booking confirmations and ritual reminders, nothing else. Demo preview: you
-          can continue without filling this in.
+          {tr('auth.emailCaption')} {tr('auth.demoContinue')}
         </Caption>
         {/* Airbnb pattern: no checkbox — a legal line with tappable links, and
             the CTA itself is the agreement ("Agree and continue") */}
         <Text style={{ fontSize: 12.5, color: t.sub, lineHeight: 19 }}>
-          By selecting Agree and continue, I agree to Eterna's{' '}
+          {tr('auth.byAgreeing')}{' '}
           <Text
             accessibilityRole="link"
             onPress={() => navigation.navigate('Legal', { doc: 'terms' })}
             style={{ fontWeight: '700', textDecorationLine: 'underline', color: t.text }}
           >
-            Terms of Service
+            {tr('auth.terms')}
           </Text>{' '}
-          and acknowledge the{' '}
+          {tr('auth.acknowledge')}{' '}
           <Text
             accessibilityRole="link"
             onPress={() => navigation.navigate('Legal', { doc: 'privacy' })}
             style={{ fontWeight: '700', textDecorationLine: 'underline', color: t.text }}
           >
-            Privacy Policy
+            {tr('auth.privacy')}
           </Text>
           .
         </Text>
@@ -229,6 +237,7 @@ export function SignUpScreen({ navigation }: NativeStackScreenProps<RootStackPar
 }
 
 export function SignInScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'SignIn'>) {
+  const tr = useT();
   const setDraft = useEterna((s) => s.setDraft);
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
@@ -237,40 +246,40 @@ export function SignInScreen({ navigation }: NativeStackScreenProps<RootStackPar
     <OnboardingShell
       step={null}
       alignTop
-      title="Welcome back"
-      cta="Sign in"
+      title={tr('auth.welcomeBack')}
+      cta={tr('auth.signIn')}
       onNext={() => {
         if (email.trim()) setDraft({ email: email.trim() });
         navigation.navigate('Name');
       }}
-      footer={<GhostButton title="Create an account instead" onPress={() => navigation.navigate('SignUp')} />}
+      footer={<GhostButton title={tr('auth.createInstead')} onPress={() => navigation.navigate('SignUp')} />}
     >
       <View style={{ gap: spacing.m, paddingTop: spacing.s }}>
         <JoinedFields>
           <JoinedInput
             value={email}
             onChangeText={setEmail}
-            placeholder="Email"
+            placeholder={tr('auth.emailPlaceholder')}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
             autoComplete="email"
             textContentType="emailAddress"
-            accessibilityLabel="Email"
+            accessibilityLabel={tr('auth.emailPlaceholder')}
           />
           <JoinedInput
             last
             value={pw}
             onChangeText={setPw}
-            placeholder="Password"
+            placeholder={tr('auth.passwordPlaceholder')}
             secureTextEntry
             autoCapitalize="none"
             autoComplete="password"
             textContentType="password"
-            accessibilityLabel="Password"
+            accessibilityLabel={tr('auth.passwordPlaceholder')}
           />
         </JoinedFields>
-        <Caption>Demo preview: you can continue without filling this in.</Caption>
+        <Caption>{tr('auth.demoContinue')}</Caption>
         <OrDivider />
         <SocialAuth
           onContinue={() => {
@@ -285,6 +294,7 @@ export function SignInScreen({ navigation }: NativeStackScreenProps<RootStackPar
 
 export function VerifyScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Verify'>) {
   const t = useTheme();
+  const tr = useT();
   const email = useEterna((s) => s.draft.email);
   const [code, setCode] = useState('');
   const [done, setDone] = useState(false);
@@ -300,14 +310,14 @@ export function VerifyScreen({ navigation }: NativeStackScreenProps<RootStackPar
     <OnboardingShell
       step={null}
       alignTop
-      title="Check your inbox"
-      subtitle={`Enter the 6-digit code we sent to ${email || 'your email'}. Demo preview: continue any time.`}
-      cta="Verify"
+      title={tr('auth.checkInbox')}
+      subtitle={tr('auth.checkInboxSub', { email: email || tr('auth.yourEmail') })}
+      cta={tr('auth.verify')}
       onNext={() => navigation.navigate('Name')}
       footer={
         <View style={{ alignItems: 'center', paddingVertical: 6 }}>
           <LinkText onPress={() => { setCode(''); setDone(false); }}>
-            Didn't get it? Send again
+            {tr('auth.sendAgain')}
           </LinkText>
         </View>
       }
@@ -329,7 +339,7 @@ export function VerifyScreen({ navigation }: NativeStackScreenProps<RootStackPar
             textContentType="oneTimeCode"
             autoComplete="one-time-code"
             caretHidden
-            accessibilityLabel="6-digit code"
+            accessibilityLabel={tr('auth.codeInputLabel')}
             style={{
               width: '100%',
               paddingVertical: 18,
@@ -351,7 +361,7 @@ export function VerifyScreen({ navigation }: NativeStackScreenProps<RootStackPar
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.s }}>
             <AnimatedCheck size={28} />
             <Text style={{ fontSize: 14, fontWeight: '600', color: t.positive }}>
-              Code looks good
+              {tr('auth.codeLooksGood')}
             </Text>
           </View>
         ) : null}

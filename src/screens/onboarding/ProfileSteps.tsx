@@ -6,6 +6,7 @@ import { OnboardingShell } from './OnboardingShell';
 import { spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
 import { validateName } from '../../lib/validation';
+import { useT } from '../../i18n';
 import type { RootStackParamList } from '../../navigation/types';
 
 /**
@@ -24,6 +25,7 @@ function WhyWeAsk({ children }: { children: React.ReactNode }) {
 /* ----------------------------------- Name ----------------------------------- */
 
 export function NameScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Name'>) {
+  const tr = useT();
   const setDraft = useEterna((s) => s.setDraft);
   const draft = useEterna((s) => s.draft);
   const [first, setFirst] = useState(draft.firstName);
@@ -35,8 +37,8 @@ export function NameScreen({ navigation }: NativeStackScreenProps<RootStackParam
     <OnboardingShell
       step={0}
       alignTop
-      title="What should we call you?"
-      cta="Continue"
+      title={tr('name.title')}
+      cta={tr('lang.continue')}
       onNext={() => {
         const a = validateName(first, 'first name');
         // last name is optional — mononyms are common in the Gulf
@@ -50,7 +52,7 @@ export function NameScreen({ navigation }: NativeStackScreenProps<RootStackParam
     >
       <View style={{ gap: spacing.l, paddingTop: spacing.s }}>
         <Field
-          label="First name"
+          label={tr('name.first')}
           value={first}
           onChangeText={(v) => {
             setFirst(v);
@@ -61,7 +63,7 @@ export function NameScreen({ navigation }: NativeStackScreenProps<RootStackParam
           textContentType="givenName"
         />
         <Field
-          label="Last name (optional)"
+          label={tr('name.last')}
           value={last}
           onChangeText={(v) => {
             setLast(v);
@@ -71,7 +73,7 @@ export function NameScreen({ navigation }: NativeStackScreenProps<RootStackParam
           autoComplete="family-name"
           textContentType="familyName"
         />
-        <WhyWeAsk>Only your first name appears in the app, on your greeting, never shared.</WhyWeAsk>
+        <WhyWeAsk>{tr('name.whyWeAsk')}</WhyWeAsk>
       </View>
     </OnboardingShell>
   );
@@ -79,13 +81,15 @@ export function NameScreen({ navigation }: NativeStackScreenProps<RootStackParam
 
 /* --------------------------------- Birthday --------------------------------- */
 
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+const MONTH_KEYS = [
+  'birth.jan', 'birth.feb', 'birth.mar', 'birth.apr', 'birth.may', 'birth.jun',
+  'birth.jul', 'birth.aug', 'birth.sep', 'birth.oct', 'birth.nov', 'birth.dec',
 ];
 
 export function BirthdayScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Birthday'>) {
+  const tr = useT();
   const setDraft = useEterna((s) => s.setDraft);
+  const months = useMemo(() => MONTH_KEYS.map((k) => tr(k)), [tr]);
   const years = useMemo(() => {
     const now = new Date().getFullYear();
     return Array.from({ length: 70 }, (_, i) => String(now - 16 - i));
@@ -110,9 +114,9 @@ export function BirthdayScreen({ navigation }: NativeStackScreenProps<RootStackP
   return (
     <OnboardingShell
       step={1}
-      title="When were you born?"
-      subtitle="Used only to tailor suggestions to you."
-      cta="Continue"
+      title={tr('birth.title')}
+      subtitle={tr('birth.subtitle')}
+      cta={tr('lang.continue')}
       onNext={() => {
         const iso = `${years[yearIdx]}-${String(monthIdx + 1).padStart(2, '0')}-${String(
           safeDayIdx + 1,
@@ -123,9 +127,9 @@ export function BirthdayScreen({ navigation }: NativeStackScreenProps<RootStackP
     >
       <View style={{ paddingTop: spacing.s, alignItems: 'center' }}>
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.m }}>
-          <WheelPicker label="Day" items={days} index={safeDayIdx} onChange={setDayIdx} width={70} />
-          <WheelPicker label="Month" items={MONTHS} index={monthIdx} onChange={setMonthIdx} width={128} />
-          <WheelPicker label="Year" items={years} index={yearIdx} onChange={setYearIdx} width={88} />
+          <WheelPicker label={tr('birth.day')} items={days} index={safeDayIdx} onChange={setDayIdx} width={70} />
+          <WheelPicker label={tr('birth.month')} items={months} index={monthIdx} onChange={setMonthIdx} width={128} />
+          <WheelPicker label={tr('birth.year')} items={years} index={yearIdx} onChange={setYearIdx} width={88} />
         </View>
       </View>
     </OnboardingShell>
@@ -142,6 +146,7 @@ const LB = Array.from({ length: 211 }, (_, i) => 90 + i); // 90–300
 const ftIn = (inches: number) => `${Math.floor(inches / 12)}'${inches % 12}"`;
 
 export function MetricsScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Metrics'>) {
+  const tr = useT();
   const setDraft = useEterna((s) => s.setDraft);
   const [unit, setUnit] = useState('Metric');
   const metric = unit === 'Metric';
@@ -161,25 +166,30 @@ export function MetricsScreen({ navigation }: NativeStackScreenProps<RootStackPa
   return (
     <OnboardingShell
       step={2}
-      title="Your measurements"
-      subtitle="They keep body treatments and dosage history in context."
-      cta="Continue"
+      title={tr('metrics.title')}
+      subtitle={tr('metrics.subtitle')}
+      cta={tr('lang.continue')}
       onNext={submit}
     >
       <View style={{ gap: spacing.xl, paddingTop: spacing.s }}>
-        <Segmented options={['Metric', 'Imperial']} value={unit} onChange={setUnit} />
+        <Segmented
+          options={['Metric', 'Imperial']}
+          labels={[tr('metrics.metric'), tr('metrics.imperial')]}
+          value={unit}
+          onChange={setUnit}
+        />
         <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
           {metric ? (
             <>
               <WheelPicker
-                label="Height"
+                label={tr('metrics.height')}
                 items={CM.map((v) => `${v} cm`)}
                 index={hIdx}
                 onChange={setHIdx}
                 width={120}
               />
               <WheelPicker
-                label="Weight"
+                label={tr('metrics.weight')}
                 items={KG.map((v) => `${v} kg`)}
                 index={wIdx}
                 onChange={setWIdx}
@@ -189,14 +199,14 @@ export function MetricsScreen({ navigation }: NativeStackScreenProps<RootStackPa
           ) : (
             <>
               <WheelPicker
-                label="Height"
+                label={tr('metrics.height')}
                 items={IN.map(ftIn)}
                 index={hIdxIn}
                 onChange={setHIdxIn}
                 width={120}
               />
               <WheelPicker
-                label="Weight"
+                label={tr('metrics.weight')}
                 items={LB.map((v) => `${v} lb`)}
                 index={wIdxLb}
                 onChange={setWIdxLb}
@@ -205,10 +215,7 @@ export function MetricsScreen({ navigation }: NativeStackScreenProps<RootStackPa
             </>
           )}
         </View>
-        <WhyWeAsk>
-          This never limits what you can do in Eterna, it only keeps practitioner dosage notes in
-          context.
-        </WhyWeAsk>
+        <WhyWeAsk>{tr('metrics.whyWeAsk')}</WhyWeAsk>
       </View>
     </OnboardingShell>
   );
@@ -254,8 +261,16 @@ const ROUTINE_GROUPS: { title: string; items: { name: string; hint: string }[] }
   },
 ];
 
+const GROUP_TITLE_KEYS: Record<string, string> = {
+  Hair: 'routineq.groupHair',
+  Face: 'routineq.groupFace',
+  Nails: 'routineq.groupNails',
+  Body: 'routineq.groupBody',
+};
+
 export function RoutineScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Routine'>) {
   const t = useTheme();
+  const tr = useT();
   const setDraft = useEterna((s) => s.setDraft);
   const [picked, setPicked] = useState<string[]>(['Roots touch-up', 'Lip filler', 'Gel manicure']);
 
@@ -265,9 +280,9 @@ export function RoutineScreen({ navigation }: NativeStackScreenProps<RootStackPa
   return (
     <OnboardingShell
       step={2}
-      title="What do you keep up with?"
-      subtitle="Select everything in your routine, you can always add more later."
-      cta={picked.length ? `Continue with ${picked.length}` : 'Select at least one'}
+      title={tr('routineq.title')}
+      subtitle={tr('routineq.subtitle')}
+      cta={picked.length ? tr('routineq.continueWith', { n: picked.length }) : tr('routineq.selectAtLeastOne')}
       ctaDisabled={picked.length === 0}
       onNext={() => {
         setDraft({ routine: picked });
@@ -277,7 +292,7 @@ export function RoutineScreen({ navigation }: NativeStackScreenProps<RootStackPa
       <View style={{ gap: spacing.xl, paddingTop: spacing.s }}>
         {ROUTINE_GROUPS.map((g) => (
           <View key={g.title} style={{ gap: spacing.s }}>
-            <Text style={[type.label, { color: t.muted }]}>{g.title}</Text>
+            <Text style={[type.label, { color: t.muted }]}>{tr(GROUP_TITLE_KEYS[g.title] ?? g.title)}</Text>
             <View style={{ gap: spacing.s }}>
               {g.items.map((item) => (
                 <OptionCard
@@ -292,7 +307,7 @@ export function RoutineScreen({ navigation }: NativeStackScreenProps<RootStackPa
             </View>
           </View>
         ))}
-        <WhyWeAsk>This builds your ritual plan, nothing here is ever shared.</WhyWeAsk>
+        <WhyWeAsk>{tr('routineq.whyWeAsk')}</WhyWeAsk>
       </View>
     </OnboardingShell>
   );

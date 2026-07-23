@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { PrimaryButton, Screen } from '../../components/ui';
 import { radii, spacing, type } from '../../theme';
 import { useTheme } from '../../store';
+import { useT } from '../../i18n';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Features'>;
@@ -15,33 +16,38 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Features'>;
  * body line. No avatar figurine.
  */
 const SLIDES: {
-  eyebrow: string;
-  title: string;
-  body: string;
+  id: string;
+  eyebrowKey: string;
+  titleKey: string;
+  bodyKey: string;
   icon: keyof typeof Ionicons.glyphMap;
 }[] = [
   {
-    eyebrow: 'The avatar',
-    title: 'Your beauty, mapped',
-    body: 'Every treatment lives on her: hair, face, lips, hands, body. A soft glow shows what needs attention.',
+    id: 'avatar',
+    eyebrowKey: 'features.avatar.eyebrow',
+    titleKey: 'features.avatar.title',
+    bodyKey: 'features.avatar.body',
     icon: 'body-outline',
   },
   {
-    eyebrow: 'The memory',
-    title: 'Never lose track again',
-    body: 'Roots, filler, lashes, laser: each on its own rhythm, remembered with every product and practitioner note.',
+    id: 'memory',
+    eyebrowKey: 'features.memory.eyebrow',
+    titleKey: 'features.memory.title',
+    bodyKey: 'features.memory.body',
     icon: 'time-outline',
   },
   {
-    eyebrow: 'The plan',
-    title: 'Plan it. Budget it.',
-    body: 'See what is coming in a calendar, and know what this month and next will cost before it happens.',
+    id: 'plan',
+    eyebrowKey: 'features.plan.eyebrow',
+    titleKey: 'features.plan.title',
+    bodyKey: 'features.plan.body',
     icon: 'wallet-outline',
   },
 ];
 
 export function FeaturesScreen({ navigation }: Props) {
   const t = useTheme();
+  const tr = useT();
   const [page, setPage] = useState(0);
   const sv = useRef<ScrollView>(null);
   const W = Dimensions.get('window').width - spacing.xl * 2;
@@ -58,7 +64,7 @@ export function FeaturesScreen({ navigation }: Props) {
         >
           {SLIDES.map((s) => (
             <View
-              key={s.title}
+              key={s.id}
               style={{
                 width: W,
                 minHeight: Dimensions.get('window').height * 0.46,
@@ -81,10 +87,10 @@ export function FeaturesScreen({ navigation }: Props) {
                 <Ionicons name={s.icon} size={46} color={t.accent} />
               </View>
               <View style={{ alignItems: 'center', gap: spacing.s }}>
-                <Text style={[type.label, { color: t.accent }]}>{s.eyebrow}</Text>
-                <Text style={[type.display, { color: t.text, textAlign: 'center' }]}>{s.title}</Text>
+                <Text style={[type.label, { color: t.accent }]}>{tr(s.eyebrowKey)}</Text>
+                <Text style={[type.display, { color: t.text, textAlign: 'center' }]}>{tr(s.titleKey)}</Text>
                 <Text style={{ fontSize: 15, lineHeight: 22, color: t.sub, textAlign: 'center', maxWidth: 300 }}>
-                  {s.body}
+                  {tr(s.bodyKey)}
                 </Text>
               </View>
             </View>
@@ -106,7 +112,7 @@ export function FeaturesScreen({ navigation }: Props) {
       </View>
       <View style={{ paddingBottom: spacing.xxl, paddingTop: spacing.xl }}>
         <PrimaryButton
-          title={page < SLIDES.length - 1 ? 'Next' : 'Create my account'}
+          title={page < SLIDES.length - 1 ? tr('features.next') : tr('features.createAccount')}
           onPress={() => {
             if (page < SLIDES.length - 1) {
               sv.current?.scrollTo({ x: (page + 1) * W, animated: true });

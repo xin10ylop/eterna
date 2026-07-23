@@ -7,6 +7,7 @@ import { Sparkles } from '../../components/anim/Lottie';
 import { Entrance } from '../../components/anim/Entrance';
 import { radii, spacing } from '../../theme';
 import { useEterna, useTheme } from '../../store';
+import { useT } from '../../i18n';
 import type { RootStackParamList } from '../../navigation/types';
 
 /**
@@ -16,7 +17,7 @@ import type { RootStackParamList } from '../../navigation/types';
  * avatar studio asks for anything more.
  */
 
-const STEPS = ['Mapping your zones', 'Learning your rhythm', 'Fitting your budget'];
+const STEP_KEYS = ['planob.step1', 'planob.step2', 'planob.step3'];
 const STEP_MS = 900;
 
 function ChecklistRow({ state, label }: { state: 'done' | 'busy' | 'todo'; label: string }) {
@@ -45,11 +46,12 @@ function ChecklistRow({ state, label }: { state: 'done' | 'busy' | 'todo'; label
 
 export function PlanScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Plan'>) {
   const t = useTheme();
+  const tr = useT();
   const myServices = useEterna((s) => s.myServices);
   const firstName = useEterna((s) => s.draft.firstName);
-  const [phase, setPhase] = useState(0); // 0..STEPS.length building, then reveal
+  const [phase, setPhase] = useState(0); // 0..STEP_KEYS.length building, then reveal
   const fade = useRef(new Animated.Value(0)).current;
-  const ready = phase >= STEPS.length;
+  const ready = phase >= STEP_KEYS.length;
 
   useEffect(() => {
     if (ready) {
@@ -71,28 +73,34 @@ export function PlanScreen({ navigation }: NativeStackScreenProps<RootStackParam
 
   const rows = [
     {
+      key: 'avatar',
       icon: 'body-outline' as const,
-      title: picked > 0 ? `${picked} services at ${places} ${places === 1 ? 'place' : 'places'}` : 'Your clinics, your services',
-      body: 'Each ritual lives on your avatar and glows softly when it needs attention.',
+      title:
+        picked > 0
+          ? tr(places === 1 ? 'planob.servicesOne' : 'planob.servicesMany', { picked, places })
+          : tr('planob.defaultTitle'),
+      body: tr('planob.avatarBody'),
     },
     {
+      key: 'rhythm',
       icon: 'time-outline' as const,
-      title: 'A rhythm you set yourself',
-      body: 'You choose how often, ritual by ritual. Eterna just remembers with you.',
+      title: tr('planob.rhythmTitle'),
+      body: tr('planob.rhythmBody'),
     },
     {
+      key: 'budget',
       icon: 'wallet-outline' as const,
-      title: 'A budget that looks ahead',
-      body: 'Know what this month and next will cost before it happens.',
+      title: tr('planob.budgetTitle'),
+      body: tr('planob.budgetBody'),
     },
   ];
 
   return (
     <OnboardingShell
       step={4}
-      title={ready ? (firstName ? `${firstName}, here's your plan` : "Here's your plan") : 'One moment…'}
-      subtitle={ready ? 'Built from your answers, refine it any time.' : 'Eterna is preparing your space.'}
-      cta="Continue"
+      title={ready ? (firstName ? tr('planob.readyTitleName', { name: firstName }) : tr('planob.readyTitle')) : tr('planob.buildingTitle')}
+      subtitle={ready ? tr('planob.subtitleReady') : tr('planob.subtitleBuilding')}
+      cta={tr('lang.continue')}
       ctaDisabled={!ready}
       onNext={() => navigation.navigate('AvatarStudio')}
     >
@@ -100,10 +108,10 @@ export function PlanScreen({ navigation }: NativeStackScreenProps<RootStackParam
         <View style={{ paddingTop: spacing.l, alignItems: 'center', gap: spacing.l }}>
           <Sparkles size={140} />
           <View style={{ alignSelf: 'stretch' }}>
-            {STEPS.map((s, i) => (
+            {STEP_KEYS.map((s, i) => (
               <ChecklistRow
                 key={s}
-                label={s}
+                label={tr(s)}
                 state={i < phase ? 'done' : i === phase ? 'busy' : 'todo'}
               />
             ))}
@@ -112,7 +120,7 @@ export function PlanScreen({ navigation }: NativeStackScreenProps<RootStackParam
       ) : (
         <Animated.View style={{ opacity: fade, gap: spacing.m, paddingTop: spacing.l }}>
           {rows.map((r, i) => (
-            <Entrance key={r.title} delay={i * 120} distance={14}>
+            <Entrance key={r.key} delay={i * 120} distance={14}>
               <View
                 style={{
                   flexDirection: 'row',

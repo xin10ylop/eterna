@@ -113,10 +113,10 @@ export function DiscoverScreen({ navigation }: Props) {
             style={{ flex: 1, paddingVertical: 12, fontSize: 16, color: t.text }}
             autoCorrect={false}
             returnKeyType="search"
-            accessibilityLabel="Search places"
+            accessibilityLabel={tr('discover.searchPlaces')}
           />
           {query ? (
-            <Pressable onPress={() => setQuery('')} accessibilityLabel="Clear search">
+            <Pressable onPress={() => setQuery('')} accessibilityLabel={tr('discover.clearSearch')}>
               <Ionicons name="close-circle" size={18} color={t.muted} />
             </Pressable>
           ) : null}
@@ -201,10 +201,14 @@ export function DiscoverScreen({ navigation }: Props) {
                   </View>
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={saved ? `Remove ${c.name} from my clinics` : `Save ${c.name}`}
+                    accessibilityLabel={
+                      saved
+                        ? tr('discover.removeClinicA11y', { name: c.name })
+                        : tr('discover.saveClinicA11y', { name: c.name })
+                    }
                     onPress={() => {
                       toggleSaved(c.id);
-                      showToast(saved ? 'Removed from your clinics' : 'Saved to your clinics');
+                      showToast(saved ? tr('discover.removedToast') : tr('discover.savedToast'));
                     }}
                     style={({ pressed }) => ({
                       width: 38,

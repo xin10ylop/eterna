@@ -7,6 +7,7 @@ import { formatLong, formatMedium, humanizeDue, todayISO } from '../../lib/dates
 import { formatAED } from '../../lib/money';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
+import { useT } from '../../i18n';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TreatmentDetail'>;
@@ -19,6 +20,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'TreatmentDetail'>;
  */
 export function TreatmentDetailScreen({ navigation, route }: Props) {
   const t = useTheme();
+  const tx = useT();
   const tr = useEterna((s) => s.treatments.find((x) => x.id === route.params.treatmentId));
   // Select the stable array, then derive — filtering inside the selector returns
   // a brand-new array every render, which makes zustand's snapshot look changed
@@ -40,7 +42,7 @@ export function TreatmentDetailScreen({ navigation, route }: Props) {
     return (
       <Screen>
         <Text style={{ color: t.sub, marginTop: 100, textAlign: 'center' }}>
-          This treatment no longer exists.
+          {tx('tdetail.notFound')}
         </Text>
       </Screen>
     );
@@ -55,7 +57,7 @@ export function TreatmentDetailScreen({ navigation, route }: Props) {
 
   const statusLine =
     status === 'booked' && appt
-      ? `Booked ${formatMedium(appt.dateISO)}, ${appt.timeLabel}`
+      ? tx('tdetail.bookedOn', { date: formatMedium(appt.dateISO), time: appt.timeLabel })
       : humanizeDue(nextDueISO(tr));
   const statusColor = needsAttention(status)
     ? t.attention
@@ -66,7 +68,7 @@ export function TreatmentDetailScreen({ navigation, route }: Props) {
   return (
     <Screen>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m, paddingTop: spacing.s }}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Back" />
+        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel={tx('tdetail.back')} />
         <Text style={[type.title, { color: t.text, flex: 1 }]} numberOfLines={1}>
           {tr.name}
         </Text>
@@ -94,41 +96,46 @@ export function TreatmentDetailScreen({ navigation, route }: Props) {
           >
             <View style={{ flex: 1, alignItems: 'center' }}>
               <Text style={{ fontSize: 16, fontWeight: '700', color: t.text }}>
-                {tr.cadence.every} {tr.cadence.unit === 'day' ? 'd' : tr.cadence.unit === 'week' ? 'wk' : 'mo'}
+                {tr.cadence.every}{' '}
+                {tr.cadence.unit === 'day'
+                  ? tx('tdetail.unitDay')
+                  : tr.cadence.unit === 'week'
+                    ? tx('tdetail.unitWeek')
+                    : tx('tdetail.unitMonth')}
               </Text>
-              <Text style={{ fontSize: 11, color: t.muted, marginTop: 1 }}>how often</Text>
+              <Text style={{ fontSize: 11, color: t.muted, marginTop: 1 }}>{tx('tdetail.howOften')}</Text>
             </View>
             <View style={{ width: StyleSheet.hairlineWidth, alignSelf: 'stretch', backgroundColor: t.separator }} />
             <View style={{ flex: 1, alignItems: 'center' }}>
               <Text style={{ fontSize: 16, fontWeight: '700', color: t.text }}>
                 {formatAED(tr.price)}
               </Text>
-              <Text style={{ fontSize: 11, color: t.muted, marginTop: 1 }}>usual price</Text>
+              <Text style={{ fontSize: 11, color: t.muted, marginTop: 1 }}>{tx('book.usualPrice')}</Text>
             </View>
             <View style={{ width: StyleSheet.hairlineWidth, alignSelf: 'stretch', backgroundColor: t.separator }} />
             <View style={{ flex: 1, alignItems: 'center' }}>
               <Text style={{ fontSize: 16, fontWeight: '700', color: t.text }}>{ordered.length}</Text>
-              <Text style={{ fontSize: 11, color: t.muted, marginTop: 1 }}>sessions</Text>
+              <Text style={{ fontSize: 11, color: t.muted, marginTop: 1 }}>{tx('tdetail.sessions')}</Text>
             </View>
           </View>
           <Text style={{ fontSize: 13, color: t.sub }}>
-            {clinic?.name ?? 'Not set'}
-            {tr.atHome ? ' · At home' : ''}
+            {clinic?.name ?? tx('tdetail.notSet')}
+            {tr.atHome ? ` · ${tx('common.atHome')}` : ''}
           </Text>
           {tr.pkg ? (
             <View style={{ gap: 5, marginTop: spacing.m }}>
               <ProgressBar value={tr.pkg.done / tr.pkg.total} />
               <Text style={{ fontSize: 12, color: t.sub }}>
-                Package · {tr.pkg.done}/{tr.pkg.total} sessions done
+                {tx('tdetail.package', { done: tr.pkg.done, total: tr.pkg.total })}
               </Text>
             </View>
           ) : null}
           {appt ? (
             <GhostButton
-              title="Cancel booking"
+              title={tx('tdetail.cancelBooking')}
               onPress={() => {
                 cancelAppointment(appt.id);
-                showToast('Booking cancelled.');
+                showToast(tx('tdetail.bookingCancelled'));
               }}
               style={{ marginTop: spacing.m }}
             />
@@ -136,17 +143,17 @@ export function TreatmentDetailScreen({ navigation, route }: Props) {
           <View style={{ flexDirection: 'row', gap: spacing.s, marginTop: spacing.l }}>
             <View style={{ flex: 1 }}>
               <PrimaryButton
-                title="Book now"
+                title={tx('tdetail.bookNow')}
                 onPress={() => navigation.navigate('Book', { treatmentId: tr.id })}
                 style={{ paddingVertical: 12 }}
               />
             </View>
             <View style={{ flex: 1 }}>
               <GhostButton
-                title="Mark as done"
+                title={tx('tdetail.markDone')}
                 onPress={() => {
                   logDone(tr.id);
-                  showToast('Logged. You are back on schedule.');
+                  showToast(tx('tdetail.loggedToast'));
                 }}
               />
             </View>
@@ -156,14 +163,18 @@ export function TreatmentDetailScreen({ navigation, route }: Props) {
         {/* settings */}
         <Card style={{ paddingVertical: 4 }}>
           <Row
-            title={remindDays > 0 ? `Remind me ${remindDays} days before` : 'Reminders off'}
+            title={remindDays > 0 ? `${tx('profile.remind')} ${tx('profile.daysBefore', { n: remindDays })}` : tx('tdetail.remindersOff')}
             right={<IOSSwitch on={tr.reminderOn} onToggle={() => toggleReminder(tr.id)} />}
           />
-          <Row title="Clinic" subtitle={clinic ? `${clinic.name} · ${clinic.distanceKm} km` : 'Not set'} last />
+          <Row
+            title={tx('tdetail.clinic')}
+            subtitle={clinic ? `${clinic.name} · ${clinic.distanceKm} km` : tx('tdetail.notSet')}
+            last
+          />
         </Card>
 
         {/* history */}
-        <SectionLabel>History · {ordered.length} sessions</SectionLabel>
+        <SectionLabel>{tx('tdetail.history', { n: ordered.length })}</SectionLabel>
         {ordered.map((s, i) => {
           const sClinic = clinics.find((c) => c.id === s.clinicId);
           return (
@@ -230,7 +241,7 @@ export function TreatmentDetailScreen({ navigation, route }: Props) {
                     }}
                   >
                     <Text style={[type.label, { color: t.muted, marginBottom: 2 }]}>
-                      Practitioner notes
+                      {tx('tdetail.practitionerNotes')}
                     </Text>
                     <Text style={{ fontSize: 13, color: t.text, lineHeight: 19 }}>{s.notes}</Text>
                   </View>
@@ -242,7 +253,7 @@ export function TreatmentDetailScreen({ navigation, route }: Props) {
         {ordered.length === 0 ? (
           <Card>
             <Text style={{ fontSize: 14, color: t.sub }}>
-              No sessions yet. Book your first one and Eterna starts the record.
+              {tx('tdetail.noSessions')}
             </Text>
           </Card>
         ) : null}

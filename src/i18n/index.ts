@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useEterna } from '../store';
+import { extraAr, extraEn, extraFr } from './extra';
 
 /**
  * Lightweight i18n. English / Arabic / French, with Arabic driving RTL.
@@ -555,10 +556,16 @@ const fr: Dict = {
   'zone.legs': 'Jambes',
 };
 
-const DICTS: Record<Lang, Dict> = { en, ar, fr };
+// Screen translations from the full-app localization pass live in extra.ts;
+// the hand-written dictionaries above win on any key collision.
+const DICTS: Record<Lang, Dict> = {
+  en: { ...extraEn, ...en },
+  ar: { ...extraAr, ...ar },
+  fr: { ...extraFr, ...fr },
+};
 
 export function translate(lang: Lang, key: string, vars?: Record<string, string | number>): string {
-  let s = DICTS[lang][key] ?? en[key] ?? key;
+  let s = DICTS[lang][key] ?? DICTS.en[key] ?? key;
   if (vars) for (const k of Object.keys(vars)) s = s.split(`{${k}}`).join(String(vars[k]));
   return s;
 }

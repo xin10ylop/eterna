@@ -7,7 +7,16 @@ import { OB_STEPS } from './OnboardingShell';
 import { HAIR_COLORS, SKIN_TONES } from '../../data/seed';
 import { radii, spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
+import { useT } from '../../i18n';
 import type { RootStackParamList } from '../../navigation/types';
+
+/** HAIR_COLORS labels come from seed data in English; map them to i18n keys
+ *  here rather than editing the data file. */
+const HAIR_COLOR_KEYS: Record<string, string> = {
+  Brown: 'avatarob.hairBrown',
+  Black: 'avatarob.hairBlack',
+  Blonde: 'avatarob.hairBlonde',
+};
 
 /**
  * Avatar studio. A static, high-res figure with three clean pickers — skin
@@ -76,12 +85,17 @@ export function AvatarStudioScreen({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'AvatarStudio' | 'AvatarEdit'>) {
   const t = useTheme();
+  const tr = useT();
   const profile = useEterna((s) => s.profile);
   const draft = useEterna((s) => s.draft);
   const setAvatar = useEterna((s) => s.setAvatar);
   const showToast = useEterna((s) => s.showToast);
   const avatar = profile ? profile.avatar : draft.avatar;
   const signedIn = !!profile;
+  const hairColorOptions = HAIR_COLORS.map((c) => ({
+    ...c,
+    label: tr(HAIR_COLOR_KEYS[c.label] ?? c.label),
+  }));
 
   return (
     <Screen padded={false}>
@@ -92,7 +106,7 @@ export function AvatarStudioScreen({
             <IconButton
               name={signedIn ? 'close' : 'chevron-back'}
               onPress={() => navigation.goBack()}
-              accessibilityLabel="Back"
+              accessibilityLabel={tr('avatarob.back')}
             />
           ) : null}
           {!signedIn ? (
@@ -101,7 +115,7 @@ export function AvatarStudioScreen({
             </View>
           ) : null}
         </View>
-        <Text style={[type.display, { color: t.text }]}>Make her yours</Text>
+        <Text style={[type.display, { color: t.text }]}>{tr('avatarob.title')}</Text>
       </View>
 
       {/* static preview */}
@@ -112,7 +126,7 @@ export function AvatarStudioScreen({
       {/* pickers */}
       <View style={{ paddingHorizontal: spacing.xl, gap: spacing.l }}>
         <View style={{ gap: spacing.s }}>
-          <Text style={[type.label, { color: t.muted }]}>Skin tone</Text>
+          <Text style={[type.label, { color: t.muted }]}>{tr('avatarob.skinTone')}</Text>
           <View style={{ flexDirection: 'row', gap: spacing.m }}>
             {SKIN_TONES.map((c, i) => {
               const sel = avatar.skinTone === i;
@@ -120,7 +134,7 @@ export function AvatarStudioScreen({
                 <Pressable
                   key={c}
                   accessibilityRole="button"
-                  accessibilityLabel={`Skin tone ${i + 1}`}
+                  accessibilityLabel={tr('avatarob.skinToneN', { n: i + 1 })}
                   accessibilityState={{ selected: sel }}
                   onPress={() => setAvatar({ skinTone: i })}
                   style={{
@@ -138,9 +152,9 @@ export function AvatarStudioScreen({
         </View>
 
         <View style={{ gap: spacing.s }}>
-          <Text style={[type.label, { color: t.muted }]}>Hair color</Text>
+          <Text style={[type.label, { color: t.muted }]}>{tr('avatarob.hairColor')}</Text>
           <PillPicker
-            options={HAIR_COLORS}
+            options={hairColorOptions}
             value={avatar.hairColor}
             onChange={(i) => setAvatar({ hairColor: i })}
           />
@@ -150,10 +164,10 @@ export function AvatarStudioScreen({
       {/* pinned CTA */}
       <View style={{ paddingHorizontal: spacing.xl, paddingBottom: spacing.xxl, paddingTop: spacing.l }}>
         <PrimaryButton
-          title={signedIn ? 'Save' : 'Continue'}
+          title={signedIn ? tr('avatarob.save') : tr('lang.continue')}
           onPress={() => {
             if (signedIn) {
-              showToast('Saved');
+              showToast(tr('avatarob.saved'));
               if (navigation.canGoBack()) navigation.goBack();
               else navigation.navigate('Tabs');
             } else {

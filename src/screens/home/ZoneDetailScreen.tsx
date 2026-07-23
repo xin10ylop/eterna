@@ -2,11 +2,12 @@ import React from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Card, IconButton, Screen } from '../../components/ui';
-import { AVATAR_MARKERS, ZONES } from '../../data/seed';
+import { AVATAR_MARKERS } from '../../data/seed';
 import { nextDueISO, treatmentStatus } from '../../services/logic';
 import { cadenceEvery, formatMedium, humanizeDue, todayISO } from '../../lib/dates';
 import { spacing, type } from '../../theme';
 import { useEterna, useTheme } from '../../store';
+import { useT } from '../../i18n';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ZoneDetail'>;
@@ -14,11 +15,11 @@ type Props = NativeStackScreenProps<RootStackParamList, 'ZoneDetail'>;
 /** One fixed body zone: every treatment in it, most urgent first. */
 export function ZoneDetailScreen({ navigation, route }: Props) {
   const t = useTheme();
+  const tx = useT();
   // A marker aggregates zones (face+lips, torso+hips); show every treatment the
   // tapped glow actually covers, not just the primary zone.
   const marker = AVATAR_MARKERS.find((m) => m.id === route.params.zone);
   const zoneIds = marker?.zones ?? [route.params.zone];
-  const zone = ZONES.find((z) => z.id === route.params.zone);
   const treatments = useEterna((s) => s.treatments);
   const appointments = useEterna((s) => s.appointments);
   const clinics = useEterna((s) => s.clinics);
@@ -34,8 +35,8 @@ export function ZoneDetailScreen({ navigation, route }: Props) {
   return (
     <Screen>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m, paddingTop: spacing.s }}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Back" />
-        <Text style={[type.title, { color: t.text }]}>{marker?.label ?? zone?.label ?? 'Zone'}</Text>
+        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel={tx('zdetail.back')} />
+        <Text style={[type.title, { color: t.text }]}>{tx('zone.' + route.params.zone)}</Text>
       </View>
 
       <ScrollView
@@ -46,7 +47,7 @@ export function ZoneDetailScreen({ navigation, route }: Props) {
         {inZone.length === 0 ? (
           <Card>
             <Text style={{ fontSize: 15, color: t.sub }}>
-              Nothing tracked here yet. Add a treatment with the plus button.
+              {tx('zdetail.empty')}
             </Text>
           </Card>
         ) : (
@@ -57,9 +58,9 @@ export function ZoneDetailScreen({ navigation, route }: Props) {
               .sort((a, b) => a.dateISO.localeCompare(b.dateISO))[0];
             const statusLine =
               status === 'booked' && appt
-                ? `Booked ${formatMedium(appt.dateISO)} at ${appt.timeLabel}`
+                ? tx('zdetail.bookedOn', { date: formatMedium(appt.dateISO), time: appt.timeLabel })
                 : status === 'bookNow'
-                  ? 'Time to book'
+                  ? tx('zdetail.timeToBook')
                   : humanizeDue(nextDueISO(tr));
             return (
               <Card key={tr.id} onPress={() => navigation.navigate('TreatmentDetail', { treatmentId: tr.id })}>
@@ -82,9 +83,9 @@ export function ZoneDetailScreen({ navigation, route }: Props) {
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 16, fontWeight: '600', color: t.text }}>{tr.name}</Text>
                     <Text style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>
-                      {statusLine} · every {cadenceEvery(tr.cadence)} · {clinic?.name}
-                      {tr.pkg ? ` · ${tr.pkg.done}/${tr.pkg.total} sessions` : ''}
-                      {tr.atHome ? ' · At home' : ''}
+                      {statusLine} · {tx('planning.every', { c: cadenceEvery(tr.cadence) })} · {clinic?.name}
+                      {tr.pkg ? ` · ${tx('zdetail.sessions', { done: tr.pkg.done, total: tr.pkg.total })}` : ''}
+                      {tr.atHome ? ` · ${tx('common.atHome')}` : ''}
                     </Text>
                   </View>
                 </View>

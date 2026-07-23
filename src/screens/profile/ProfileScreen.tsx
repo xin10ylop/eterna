@@ -27,7 +27,7 @@ export function ProfileScreen({ navigation }: Props) {
   return (
     <Screen>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.m, paddingTop: spacing.s }}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Back" />
+        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel={tr('profile.back')} />
         <Text style={[type.title, { color: t.text }]}>{tr('profile.title')}</Text>
       </View>
 
@@ -54,10 +54,10 @@ export function ProfileScreen({ navigation }: Props) {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 17, fontWeight: '600', color: t.text }}>
-                {profile ? `${profile.firstName} ${profile.lastName}`.trim() : 'You'}
+                {profile ? `${profile.firstName} ${profile.lastName}`.trim() : tr('profile.you')}
               </Text>
               <Text style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>
-                {profile?.email || 'demo account'} · {tr('profile.ritualsTracked', { n: treatments.length })}
+                {profile?.email || tr('profile.demoAccount')} · {tr('profile.ritualsTracked', { n: treatments.length })}
               </Text>
               {profile?.heightCm && profile?.weightKg ? (
                 <Text style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>
