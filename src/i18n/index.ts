@@ -172,6 +172,31 @@ const en: Dict = {
     'Glance at your avatar, tap a glow, book. Eterna remembers everything else. You can replay this guide from your profile.',
   'profile.guide': 'How Eterna works',
   'profile.guideSub': 'Replay the quick tour',
+
+  'planning.title': 'Planning',
+  'planning.schedule': 'Schedule',
+  'planning.routine': 'My routine',
+  'planning.every': 'every {c}',
+
+  'budget.title': 'Budget',
+  'budget.spentThisMonth': 'Spent this month',
+  'budget.ofPlanned': 'of {x} planned',
+  'budget.stillBooked': 'Still booked this month',
+  'budget.expectedNext': 'Expected next month',
+  'budget.lastMonths': 'Last months',
+  'budget.monthlyAverage': 'monthly average',
+  'budget.byArea': 'This month by area',
+  'budget.upcoming': 'Upcoming appointments',
+  'budget.nothingBooked': 'Nothing booked yet.',
+  'budget.appointment': 'Appointment',
+
+  'zone.hair': 'Hair',
+  'zone.face': 'Face',
+  'zone.lips': 'Lips',
+  'zone.torso': 'Body',
+  'zone.hands': 'Hands',
+  'zone.hips': 'Hips',
+  'zone.legs': 'Legs',
 };
 
 const ar: Dict = {
@@ -324,6 +349,31 @@ const ar: Dict = {
     'ألقي نظرة على صورتك، المسي التوهج، واحجزي. إيترنا تتذكر الباقي. يمكنك إعادة هذا الدليل من ملفك الشخصي.',
   'profile.guide': 'كيف تعمل إيترنا',
   'profile.guideSub': 'إعادة الجولة السريعة',
+
+  'planning.title': 'التقويم',
+  'planning.schedule': 'الجدول',
+  'planning.routine': 'روتيني',
+  'planning.every': 'كل {c}',
+
+  'budget.title': 'الميزانية',
+  'budget.spentThisMonth': 'أُنفق هذا الشهر',
+  'budget.ofPlanned': 'من {x} مخطط',
+  'budget.stillBooked': 'محجوز هذا الشهر',
+  'budget.expectedNext': 'متوقع الشهر القادم',
+  'budget.lastMonths': 'الأشهر الماضية',
+  'budget.monthlyAverage': 'متوسط شهري',
+  'budget.byArea': 'هذا الشهر حسب المنطقة',
+  'budget.upcoming': 'المواعيد القادمة',
+  'budget.nothingBooked': 'لا حجوزات بعد.',
+  'budget.appointment': 'موعد',
+
+  'zone.hair': 'الشعر',
+  'zone.face': 'الوجه',
+  'zone.lips': 'الشفاه',
+  'zone.torso': 'الجسم',
+  'zone.hands': 'اليدان',
+  'zone.hips': 'الأرداف',
+  'zone.legs': 'الساقان',
 };
 
 const fr: Dict = {
@@ -478,6 +528,31 @@ const fr: Dict = {
     'Un regard sur votre avatar, un halo touché, une réservation. Eterna retient le reste. Vous pouvez revoir ce guide depuis votre profil.',
   'profile.guide': 'Comment marche Eterna',
   'profile.guideSub': 'Revoir la visite rapide',
+
+  'planning.title': 'Agenda',
+  'planning.schedule': 'Calendrier',
+  'planning.routine': 'Ma routine',
+  'planning.every': 'tous les {c}',
+
+  'budget.title': 'Budget',
+  'budget.spentThisMonth': 'Dépensé ce mois',
+  'budget.ofPlanned': 'sur {x} prévu',
+  'budget.stillBooked': 'Réservé ce mois',
+  'budget.expectedNext': 'Prévu le mois prochain',
+  'budget.lastMonths': 'Derniers mois',
+  'budget.monthlyAverage': 'moyenne mensuelle',
+  'budget.byArea': 'Ce mois par zone',
+  'budget.upcoming': 'Rendez-vous à venir',
+  'budget.nothingBooked': 'Rien de réservé.',
+  'budget.appointment': 'Rendez-vous',
+
+  'zone.hair': 'Cheveux',
+  'zone.face': 'Visage',
+  'zone.lips': 'Lèvres',
+  'zone.torso': 'Corps',
+  'zone.hands': 'Mains',
+  'zone.hips': 'Hanches',
+  'zone.legs': 'Jambes',
 };
 
 const DICTS: Record<Lang, Dict> = { en, ar, fr };

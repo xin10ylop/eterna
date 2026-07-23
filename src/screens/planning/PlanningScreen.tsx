@@ -91,8 +91,13 @@ export function PlanningScreen({ navigation, route }: Props) {
   return (
     <Screen>
       <View style={{ paddingTop: spacing.s, gap: spacing.l, flex: 1 }}>
-        <Text style={[type.largeTitle, { color: t.text }]}>Planning</Text>
-        <Segmented options={['Schedule', 'My routine']} value={tab} onChange={setTab} />
+        <Text style={[type.largeTitle, { color: t.text }]}>{tx('planning.title')}</Text>
+        <Segmented
+          options={['Schedule', 'My routine']}
+          labels={[tx('planning.schedule'), tx('planning.routine')]}
+          value={tab}
+          onChange={setTab}
+        />
         {tab === 'Schedule' ? (
           <ScheduleView nav={navigation} focusDate={focusDate} weekRef={weekRef} />
         ) : (
@@ -406,6 +411,7 @@ function RoutineView({
   listRef?: React.RefObject<View | null>;
 }) {
   const t = useTheme();
+  const tx = useT();
   const treatments = useEterna((s) => s.treatments);
   const appointments = useEterna((s) => s.appointments);
   const clinics = useEterna((s) => s.clinics);
@@ -426,7 +432,7 @@ function RoutineView({
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: spacing.l, paddingBottom: 120 }}>
       {groups.map((g) => (
         <View key={g.zone.id} style={{ gap: spacing.s }}>
-          <SectionLabel>{g.zone.label}</SectionLabel>
+          <SectionLabel>{tx('zone.' + g.zone.id)}</SectionLabel>
           <Card style={{ paddingVertical: 4 }}>
             {g.items.map((tr, i) => {
               const status = treatmentStatus(tr, appointments);
@@ -453,8 +459,8 @@ function RoutineView({
                       {tr.name}
                     </Text>
                     <Text numberOfLines={1} style={{ fontSize: 12.5, color: t.sub, marginTop: 1 }}>
-                      every {cadenceEvery(tr.cadence)} · {clinicName(tr.clinicId)}
-                      {tr.atHome ? ' · At home' : ''}
+                      {tx('planning.every', { c: cadenceEvery(tr.cadence) })} · {clinicName(tr.clinicId)}
+                      {tr.atHome ? ` · ${tx('common.atHome')}` : ''}
                     </Text>
                   </View>
                   <Text style={{ fontSize: 13.5, fontWeight: '600', color: t.sub }}>

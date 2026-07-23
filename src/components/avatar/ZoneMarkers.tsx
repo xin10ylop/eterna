@@ -42,7 +42,9 @@ const STYLE: Record<
   // calm: a "dark white" — warm greige deep enough to read over skin (hands,
   // torso), with a restrained white core so the hue isn't washed out. Still
   // the slowest breath of the three.
-  calm: { rgb: '134,102,84', core: 0.42, mid: 0.82, period: 2800, oMin: 0.64, oMax: 0.9, sMin: 0.96, sMax: 1.05, r: 20 },
+  // a desaturated warm-smoke grey — visible on skin, but clearly NOT the warm
+  // red-brown of maroon (the hue that made it read "too close to the brown")
+  calm: { rgb: '166,156,150', core: 0.4, mid: 0.86, period: 2800, oMin: 0.66, oMax: 0.92, sMin: 0.96, sMax: 1.05, r: 20 },
   // soon's period is a placeholder — it's recomputed from urgency below
   soon: { rgb: '96,40,24', core: 0.14, mid: 0.78, period: 2400, oMin: 0.85, oMax: 1.0, sMin: 0.9, sMax: 1.15, r: 22 },
   due: { rgb: '188,34,24', core: 0.3, mid: 0.74, period: 1100, oMin: 0.88, oMax: 1.0, sMin: 0.9, sMax: 1.2, r: 23 },

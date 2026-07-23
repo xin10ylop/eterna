@@ -123,7 +123,7 @@ export function BudgetScreen({ navigation }: Props) {
   return (
     <Screen>
       <View style={{ paddingTop: spacing.s }}>
-        <Text style={[type.largeTitle, { color: t.text }]}>Budget</Text>
+        <Text style={[type.largeTitle, { color: t.text }]}>{tx('budget.title')}</Text>
       </View>
       <ScrollView
         style={{ marginTop: spacing.l }}
@@ -135,26 +135,26 @@ export function BudgetScreen({ navigation }: Props) {
         <Card>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.l }}>
             <View style={{ flex: 1 }}>
-              <Text style={[type.label, { color: t.muted }]}>Spent this month</Text>
+              <Text style={[type.label, { color: t.muted }]}>{tx('budget.spentThisMonth')}</Text>
               <Text style={{ fontSize: 38, fontWeight: '700', color: t.text, letterSpacing: -1, marginTop: 4 }}>
                 {formatAED(spent)}
               </Text>
               <Text style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>
-                of {formatAED(spent + booked)} planned
+                {tx('budget.ofPlanned', { x: formatAED(spent + booked) })}
               </Text>
             </View>
             <SpendRing fraction={spent + booked > 0 ? spent / (spent + booked) : 0} />
           </View>
           <View style={{ flexDirection: 'row', gap: spacing.l, marginTop: spacing.m }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13, color: t.sub }}>Still booked this month</Text>
+              <Text style={{ fontSize: 13, color: t.sub }}>{tx('budget.stillBooked')}</Text>
               <Text style={{ fontSize: 17, fontWeight: '700', color: t.accent, marginTop: 2 }}>
                 {formatAED(booked)}
               </Text>
             </View>
             <View style={{ width: 1, backgroundColor: t.separator }} />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13, color: t.sub }}>Expected next month</Text>
+              <Text style={{ fontSize: 13, color: t.sub }}>{tx('budget.expectedNext')}</Text>
               <Text style={{ fontSize: 17, fontWeight: '700', color: t.text, marginTop: 2 }}>
                 {formatAED(nextMonth)}
               </Text>
@@ -165,12 +165,12 @@ export function BudgetScreen({ navigation }: Props) {
 
         {/* six month bars */}
         <Card>
-          <SectionLabel>Last months</SectionLabel>
+          <SectionLabel>{tx('budget.lastMonths')}</SectionLabel>
           {/* stat header: value + range (Apple Health chart grammar) */}
           <View style={{ marginBottom: spacing.m }}>
             <Text style={{ fontSize: 26, fontWeight: '700', color: t.text, letterSpacing: -0.5 }}>
               {formatAED(avgMonthly)}
-              <Text style={{ fontSize: 14, fontWeight: '500', color: t.sub }}>  monthly average</Text>
+              <Text style={{ fontSize: 14, fontWeight: '500', color: t.sub }}>  {tx('budget.monthlyAverage')}</Text>
             </Text>
             <Text style={{ fontSize: 12, color: t.muted, marginTop: 1 }}>
               {monthShort(months[0]?.monthISO ?? todayISO())} – {monthShort(months[months.length - 1]?.monthISO ?? todayISO())}
@@ -229,12 +229,12 @@ export function BudgetScreen({ navigation }: Props) {
         {/* zone breakdown */}
         {byZone.length > 0 ? (
           <Card>
-            <SectionLabel>This month by area</SectionLabel>
+            <SectionLabel>{tx('budget.byArea')}</SectionLabel>
             <View style={{ gap: spacing.m }}>
               {byZone.map(({ zone, total }) => (
                 <View key={zone.id} style={{ gap: 5 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <Text style={{ fontSize: 14, fontWeight: '600', color: t.text }}>{zone.label}</Text>
+                    <Text style={{ fontSize: 14, fontWeight: '600', color: t.text }}>{tx('zone.' + zone.id)}</Text>
                     <Text style={{ fontSize: 14, fontWeight: '600', color: t.sub }}>
                       {formatAED(total)}
                     </Text>
@@ -264,10 +264,10 @@ export function BudgetScreen({ navigation }: Props) {
 
         {/* upcoming */}
         <View style={{ gap: spacing.s }}>
-          <SectionLabel>Upcoming appointments</SectionLabel>
+          <SectionLabel>{tx('budget.upcoming')}</SectionLabel>
           {upcoming.length === 0 ? (
             <Card>
-              <Text style={{ fontSize: 14, color: t.sub }}>Nothing booked yet.</Text>
+              <Text style={{ fontSize: 14, color: t.sub }}>{tx('budget.nothingBooked')}</Text>
             </Card>
           ) : (
             upcoming.map((a) => {
@@ -298,7 +298,7 @@ export function BudgetScreen({ navigation }: Props) {
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
-                        {tr?.name ?? 'Appointment'}
+                        {tr?.name ?? tx('budget.appointment')}
                       </Text>
                       <Text style={{ fontSize: 13, color: t.sub, marginTop: 1 }}>
                         {formatLong(a.dateISO)} · {a.timeLabel} · {clinic?.name}

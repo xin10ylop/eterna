@@ -221,10 +221,14 @@ export function Segmented({
   options,
   value,
   onChange,
+  labels,
 }: {
   options: string[];
   value: string;
   onChange: (v: string) => void;
+  /** Optional display labels, parallel to `options`, so the value stays a
+   *  stable key while the text can be translated. */
+  labels?: string[];
 }) {
   const t = useTheme();
   return (
@@ -238,7 +242,7 @@ export function Segmented({
         borderColor: t.border,
       }}
     >
-      {options.map((o) => {
+      {options.map((o, i) => {
         const sel = o === value;
         return (
           <Pressable
@@ -259,7 +263,9 @@ export function Segmented({
               elevation: sel ? 1 : 0,
             }}
           >
-            <Text style={{ fontSize: 13, fontWeight: '600', color: sel ? t.text : t.sub }}>{o}</Text>
+            <Text style={{ fontSize: 13, fontWeight: '600', color: sel ? t.text : t.sub }}>
+              {labels?.[i] ?? o}
+            </Text>
           </Pressable>
         );
       })}

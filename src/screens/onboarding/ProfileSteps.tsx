@@ -91,7 +91,8 @@ export function BirthdayScreen({ navigation }: NativeStackScreenProps<RootStackP
     return Array.from({ length: 70 }, (_, i) => String(now - 16 - i));
   }, []);
   const [dayIdx, setDayIdx] = useState(14); // 15th
-  const [monthIdx, setMonthIdx] = useState(0);
+  const [monthIdx, setMonthIdx] = useState(5); // June — a middle month, so the
+  //                                              wheel opens centred, not on Jan
   const [yearIdx, setYearIdx] = useState(14); // ~30
 
   // days available depend on the chosen month/year (leap Februaries too)
