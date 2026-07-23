@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "runtimeVersion": "exposdk:54.0.0",
     "splash": {
       "backgroundColor": "#FFFFFF",
       "resizeMode": "contain"
