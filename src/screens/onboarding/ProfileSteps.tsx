@@ -79,27 +79,53 @@ export function NameScreen({ navigation }: NativeStackScreenProps<RootStackParam
 
 /* --------------------------------- Birthday --------------------------------- */
 
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
 export function BirthdayScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Birthday'>) {
   const setDraft = useEterna((s) => s.setDraft);
   const years = useMemo(() => {
     const now = new Date().getFullYear();
     return Array.from({ length: 70 }, (_, i) => String(now - 16 - i));
   }, []);
-  const [yearIdx, setYearIdx] = useState(14); // a sensible default, ~30
+  const [dayIdx, setDayIdx] = useState(14); // 15th
+  const [monthIdx, setMonthIdx] = useState(0);
+  const [yearIdx, setYearIdx] = useState(14); // ~30
+
+  // days available depend on the chosen month/year (leap Februaries too)
+  const daysInMonth = useMemo(
+    () => new Date(Number(years[yearIdx]), monthIdx + 1, 0).getDate(),
+    [years, yearIdx, monthIdx],
+  );
+  const days = useMemo(
+    () => Array.from({ length: daysInMonth }, (_, i) => String(i + 1)),
+    [daysInMonth],
+  );
+  // if the month shrank under the picked day (e.g. 31 → Feb), fall back cleanly
+  const safeDayIdx = Math.min(dayIdx, daysInMonth - 1);
 
   return (
     <OnboardingShell
       step={1}
-      title="What year were you born?"
+      title="When were you born?"
       subtitle="Used only to tailor suggestions to you."
       cta="Continue"
       onNext={() => {
-        setDraft({ birthdayISO: `${years[yearIdx]}-01-01` });
+        const iso = `${years[yearIdx]}-${String(monthIdx + 1).padStart(2, '0')}-${String(
+          safeDayIdx + 1,
+        ).padStart(2, '0')}`;
+        setDraft({ birthdayISO: iso });
         navigation.navigate('Clinics');
       }}
     >
-      <View style={{ gap: spacing.xl, paddingTop: spacing.s, alignItems: 'center' }}>
-        <WheelPicker items={years} index={yearIdx} onChange={setYearIdx} width={140} />
+      <View style={{ paddingTop: spacing.s, alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.m }}>
+          <WheelPicker label="Day" items={days} index={safeDayIdx} onChange={setDayIdx} width={70} />
+          <WheelPicker label="Month" items={MONTHS} index={monthIdx} onChange={setMonthIdx} width={128} />
+          <WheelPicker label="Year" items={years} index={yearIdx} onChange={setYearIdx} width={88} />
+        </View>
       </View>
     </OnboardingShell>
   );
