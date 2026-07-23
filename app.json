@@ -16,6 +16,7 @@
     },
     "android": {
       "package": "com.eterna.app",
+      "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF"
       }

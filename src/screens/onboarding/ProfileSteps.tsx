@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Field, OptionCard, Segmented, WheelPicker } from '../../components/ui';
 import { OnboardingShell } from './OnboardingShell';
@@ -111,6 +111,13 @@ export function BirthdayScreen({ navigation }: NativeStackScreenProps<RootStackP
   // if the month shrank under the picked day (e.g. 31 → Feb), fall back cleanly
   const safeDayIdx = Math.min(dayIdx, daysInMonth - 1);
 
+  // three wheels must fit every phone — on the narrowest screens (320pt) the
+  // fixed widths would clip, so the month column absorbs the difference
+  const { width: winW } = useWindowDimensions();
+  const dayW = 64;
+  const yearW = 84;
+  const monthW = Math.max(96, Math.min(128, winW - spacing.xl * 2 - dayW - yearW - spacing.s * 2));
+
   return (
     <OnboardingShell
       step={1}
@@ -126,10 +133,10 @@ export function BirthdayScreen({ navigation }: NativeStackScreenProps<RootStackP
       }}
     >
       <View style={{ paddingTop: spacing.s, alignItems: 'center' }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.m }}>
-          <WheelPicker label={tr('birth.day')} items={days} index={safeDayIdx} onChange={setDayIdx} width={70} />
-          <WheelPicker label={tr('birth.month')} items={months} index={monthIdx} onChange={setMonthIdx} width={128} />
-          <WheelPicker label={tr('birth.year')} items={years} index={yearIdx} onChange={setYearIdx} width={88} />
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.s }}>
+          <WheelPicker label={tr('birth.day')} items={days} index={safeDayIdx} onChange={setDayIdx} width={dayW} />
+          <WheelPicker label={tr('birth.month')} items={months} index={monthIdx} onChange={setMonthIdx} width={monthW} />
+          <WheelPicker label={tr('birth.year')} items={years} index={yearIdx} onChange={setYearIdx} width={yearW} />
         </View>
       </View>
     </OnboardingShell>
