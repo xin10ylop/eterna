@@ -54,10 +54,11 @@ export function BookScreen({ navigation, route }: Props) {
           <Confetti size={260} style={{ position: 'absolute', top: '12%' }} />
           <AnimatedCheck
             onDone={() => {
+              // let her actually enjoy the "all set" moment before we leave
               setTimeout(() => {
                 showToast(`Booked ${formatLong(day)} at ${time}`);
                 navigation.goBack();
-              }, 900);
+              }, 2200);
             }}
           />
           <Entrance delay={500}>
